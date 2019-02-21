@@ -8,7 +8,7 @@ def random_law(shape: Tuple, law_name: str, law_param: float, dtype: tf.DType = 
     """
     Return a tensorflow random generator.
 
-    Attribute:
+    Attributes:
 
         shape : Tuple
             Dimension of the tensor generate
@@ -46,7 +46,7 @@ def build_variable(shape: Tuple, initial_value: np.ndarray = None, law_name: str
     Build a tensorflow variable uninitialised using either a random number law generator or deterministic value
     allowing no implemented random law generator or the use of transfer learning methods.
 
-    Attribute:
+    Attributes:
 
     shape : Tuple
         Dimension of the tensor generate
@@ -86,7 +86,7 @@ def get_act_funct(act_funct_type : str = 'relu'):
     """
     Return a tensorflow activation method
 
-    Attribute:
+    Attributes:
 
         act_funct_type : str
             name of the activation function
@@ -113,7 +113,7 @@ def get_tf_tensor(name : str, graph : tf.Graph = None):
     """
     Return the tensorflow tensor with the given name
 
-    Attribute:
+    Attributes:
 
         name : str
             Name of the tensor which must be include in the graph.
@@ -137,7 +137,7 @@ def get_tf_operation(name : str, graph: tf.Graph = None):
     Return the tensorflow operation with the given name
 
 
-    Attribute:
+    Attributes:
 
     name : str
         Name of the tensor which must be include in the graph.
@@ -157,7 +157,7 @@ def get_all_tensor_name(graph: tf.Graph = None):
     """
     Return a list with all instance tensor in a graph.
 
-    Attribute:
+    Attributes:
 
     graph : tf.Graph
         Tensorflow grah object

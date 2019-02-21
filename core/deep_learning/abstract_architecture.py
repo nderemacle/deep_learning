@@ -151,7 +151,7 @@ class AbstractArchitecture(ABC):
            environment variable to False and raise the error.
 
 
-        Attribute:
+        Attributes:
 
             path_folder : str
                 path of the folder where all network parameters are saved
@@ -191,7 +191,7 @@ class AbstractArchitecture(ABC):
         """
         Return an optimizer which minimize a tensor f.
 
-        Attribute:
+        Attributes:
 
             f : Tensor
                 function to minimize
@@ -208,12 +208,12 @@ class AbstractArchitecture(ABC):
         else:
             return self._get_optimizer().minimize(f, name=f"{self.name}/{name}")
 
-    def _placeholder(self, dtype: tf.DType ,   shape : Tuple , name : str):
+    def _placeholder(self, dtype: tf.DType ,   shape : (Tuple, None) , name : str):
 
         """
         Set or restore a placeholder.
 
-        Attribute:
+        Attributes:
 
         dtype : Tensorflow type
             Type of the placeholder

@@ -274,7 +274,7 @@ class MinMaxLayer(AbstractLayer):
     def build(self, x_input : tf.Tensor) -> tf.Tensor:
 
         """
-        Buid the layer
+        Build the layer
         """
 
         return super().build(x_input)

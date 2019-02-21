@@ -245,7 +245,7 @@ class AbstractLoss(AbstractOperator, ABC):
     representing the final function to minimize to train the algorithm. In addition regularization can be applied on a
     list of weight transforming the final function to an optimize.
 
-    Attribute:
+    Attributes:
 
         penalization_rate : Tensor, float
             Penalization rate for the weight regularization.
@@ -350,7 +350,7 @@ class AbstractLoss(AbstractOperator, ABC):
         * if a list of weight was put in entry add a regularization part to the loss function
         * identify all output tensor
 
-        Attribute:
+        Attributes:
 
             y : tf.Tensor
                 tensor which contains all objective variable the algorithm learn

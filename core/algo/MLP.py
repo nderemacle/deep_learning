@@ -12,12 +12,11 @@ from core.deep_learning.loss import CrossEntropy
 class AbstractMlp(AbstractArchitecture, ABC):
 
     """
-    This class set the major cortex to build a Multi Layer Perceptron neural networK. This deep learning
-    architecture is at the bases of the field. The neural architecture take as input a linear vector of input
-    data which are fill in a succession of layer of neurons. In the end a last layer reduce the dimensionality
-    of the output network to match with the number of target variable to predict.
+    This class set the major cortex to build a Multi Layer Perceptron neural networK. . The neural architecture
+    takes as input a linear vector of input data put in a succession of layer of neurons. In the end a
+    last layer reduce the dimensionality of the network to match with the number of target variables to predict.
 
-    The abstract schema assume the child class defines the methods to set the loss function. In ths way it is simple
+    The abstract schema assume the child class must define the methods to set the loss function. In ths way it is simple
     to enlarge this architecture to any type of problems. In addition this abstract class forced the child class
     to define the get_param methods in order to avoid missing additional parameters which could be problematics when
     the network restoration process is run.
@@ -172,7 +171,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
         """ Given an input and a target array, fit the mlp during n_epoch.
 
-        Attribute:
+        Attributes:
 
             x : Array with shpe (n_observation, input_dim)
                 Array of input which must have a dimension equal to input_dim.
@@ -228,7 +227,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
         """Predict a label given an array of input x
 
-         Attribute:
+         Attributes:
 
             x : Array with shape (n_observation, input_dim)
                 Array of input which must have a dimension equal to input_dim.
@@ -276,7 +275,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
 class MlpClassifier(AbstractMlp):
 
     """
-    This class allow to train a MLP for classification task. The target array must be a One Hot Vector Encoding
+    This class allows to train a MLP for classification task. The target array must be a One Hot Vector Encoding
     with dimension equal to the number of label to predict. In addition the class provide an additional methods to
     predict directly the probability for each label.
 
@@ -288,7 +287,7 @@ class MlpClassifier(AbstractMlp):
 
     def _set_loss(self, weights : List[tf.Variable]):
 
-        """Use the crossentropy class to define the network loss function."""
+        """Use the cross entropy class to define the network loss function."""
 
         self.l_loss = CrossEntropy(penalization_rate=self.penalization_rate,
                                    penalization_type="L2",
@@ -305,9 +304,9 @@ class MlpClassifier(AbstractMlp):
     def predict_proba(self, x: np.ndarray, batch_size: int = None) -> np.ndarray:
 
         """
-        Predict a vector of probaiblity for each label.
+        Predict a vector of probability for each label.
 
-        Attribute:
+        Attributes:
 
             x : Array with shape (n_observation, input_dim)
                 Array of input which must have a dimension equal to input_dim.
