@@ -317,7 +317,7 @@ class MlpClassifier(AbstractMlp):
             y_pred = []
             for x_batch in [x] if batch_size is None else np.array_split(x, n_split, axis=0):
                 y_pred.append(self.sess.run(self.x_out,
-                                                    feed_dict={self.x: x_batch, self.keep_proba_tensor: 1.}))
+                                            feed_dict={self.x: x_batch, self.keep_proba_tensor: 1.}))
 
             y_pred = np.exp(np.concatenate(y_pred, 0))
 
