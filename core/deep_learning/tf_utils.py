@@ -3,10 +3,12 @@ from typing import Tuple
 import numpy as np
 import tensorflow as tf
 
+from core.utils.validation import is_in_graph, is_not_in_graph
+
 
 def random_law(shape: Tuple, law_name: str, law_param: float, dtype: tf.DType = tf.float32):
     """
-    Return a tensorflow random generator.
+    Return a Tensorflow random generator.
 
     Attributes:
 
@@ -39,10 +41,10 @@ def random_law(shape: Tuple, law_name: str, law_param: float, dtype: tf.DType = 
         raise TypeError(f"{law_name} isn't a valide law_name. Name must be in {list_law}")
 
 
-def build_variable(shape: Tuple, initial_value: np.ndarray = None, law_name: str = "uniform", law_param: float = 0.1,
-                   name: str = None, dtype: tf.DType = tf.float32):
+def variable(shape: Tuple, initial_value: np.ndarray = None, law_name: str = "uniform", law_param: float = 0.1,
+             name: str = None, dtype: tf.DType = tf.float32):
     """
-    Build a tensorflow variable uninitialised using either a random number law generator or deterministic value
+    Build a Tensorflow variable uninitialised using either a random number law generator or deterministic value
     allowing no implemented random law generator or the use of transfer learning methods.
 
     Attributes:
@@ -64,7 +66,7 @@ def build_variable(shape: Tuple, initial_value: np.ndarray = None, law_name: str
     name : str
         tensor name
 
-    dtype : tensorflow type
+    dtype : Tensorflow type
         type of values generate
 
     Output:
@@ -76,6 +78,8 @@ def build_variable(shape: Tuple, initial_value: np.ndarray = None, law_name: str
         initial_value = random_law(shape, law_name, law_param, dtype)
     else:
         assert initial_value.shape == shape
+
+    is_not_in_graph(name)
 
     return tf.Variable(initial_value, name=name)
 
@@ -106,29 +110,10 @@ def get_act_funct(act_funct_type: str = 'relu'):
             f"{act_funct_type} isn't a valide activation function. Methods must be in {list_act_funct}")
 
 
-def get_all_tensor_name(graph: tf.Graph = None):
-    """
-    Return a list with all instance tensor in a graph.
-
-    Attributes:
-
-    graph : tf.Graph
-        Tensorflow grah object
-
-    Output:
-        List of tensor name
-
-    """
-
-    _graph = tf.get_default_graph() if graph is None else graph
-
-    return [t.name for t in _graph.get_operations()]
-
-
 def get_tf_tensor(name: str, graph: tf.Graph = None):
     """
-    Return the tensorflow tensor with the given name. Each tensor must be include a scope or a sub scope.
-    Regarding the mechanise of the framework, if a tensoris instance at the network level its name should be
+    Return the Tensorflow tensor with the given name. Each tensor must be include a scope or a sub scope.
+    Regarding the mechanise of the framework, if a tensor is instance at the network level its name should be
     "NetworkName/TensorName" or should be "NetworkName/OperatorName/TensorName" if instance in an operator object.
 
     Attributes:
@@ -136,8 +121,8 @@ def get_tf_tensor(name: str, graph: tf.Graph = None):
         name : str
             Name of the tensor which must be include in the graph.
 
-        graph : tf.Graph
-            Tensorflow grah object
+        graph : tf.Graph or None
+            Tensorflow grah object. If None take the default graph.
 
     Output:
         Tensor
@@ -147,10 +132,8 @@ def get_tf_tensor(name: str, graph: tf.Graph = None):
 
     with _graph.as_default() as g:
         tensor_name = g.get_name_scope() + "/" + name
-        if tensor_name in get_all_tensor_name(graph=g):
-            return g.get_tensor_by_name(tensor_name + ":0")
-        else:
-            raise NameError(f"{tensor_name} does not exist.")
+        is_in_graph(tensor_name, g)
+        return g.get_tensor_by_name(tensor_name + ":0")
 
 
 def get_tf_operation(name: str, graph: tf.Graph = None):
@@ -164,8 +147,8 @@ def get_tf_operation(name: str, graph: tf.Graph = None):
     name : str
         Name of the tensor which must be include in the graph.
 
-    graph : tf.Graph
-        Tensorflow grah object
+    graph : tf.Graph or None
+        Tensorflow grah object. If None take the default graph.
 
     Output:
         Tensor
@@ -174,7 +157,13 @@ def get_tf_operation(name: str, graph: tf.Graph = None):
     _graph = tf.get_default_graph() if graph is None else graph
     with _graph.as_default() as g:
         operation_name = g.get_name_scope() + "/" + name
-        if operation_name in get_all_tensor_name(graph=g):
-            return g.get_operation_by_name(operation_name)
-        else:
-            raise NameError(f"{operation_name} does not exist.")
+        is_in_graph(operation_name, g)
+        return g.get_operation_by_name(operation_name)
+
+
+def identity(x: tf.Tensor, name: str, graph: tf.Graph = None):
+    _graph = tf.get_default_graph() if graph is None else graph
+
+    is_not_in_graph(name, _graph)
+
+    return tf.identity(x, name)

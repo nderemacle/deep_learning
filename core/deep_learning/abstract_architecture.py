@@ -3,18 +3,18 @@ import traceback
 from abc import ABC, abstractmethod
 from typing import Tuple
 
-import numpy as np
 import tensorflow as tf
 
 import core.deep_learning.env as env
 from core.deep_learning.tf_utils import get_tf_operation, get_tf_tensor
 from core.utils.reader_writer import write_pickle, read_pickle
+from core.utils.validation import is_not_in_graph
 
 
 class AbstractArchitecture(ABC):
     """
     This abstract class defines the cortex for a deep learning architecture. It allows to well configure the
-    tensorflow session and to launch the build or restore process. In addition it give access to functional methods
+    Tensorflow session and to launch the build or restore process. In addition it give access to functional methods
     such that optimizer setting.
 
     Attributes:
@@ -27,7 +27,7 @@ class AbstractArchitecture(ABC):
             future version
 
         graph : tf.Graph
-            graph of the network usefull to well define new tensor and restore them.
+            graph of the network useful to well define new tensor and restore them.
 
         sess : tf.Session
             tensorflow session useful for all interaction
@@ -142,7 +142,7 @@ class AbstractArchitecture(ABC):
         if not os.path.exists(path):
             raise TypeError(f"{path} does not exist.")
 
-        with self.graph.as_default() as graph:
+        with self.graph.as_default():
             saver = tf.train.import_meta_graph(path, clear_devices=True)
             saver.restore(self.sess, tf.train.latest_checkpoint(path_folder))
 
@@ -233,10 +233,5 @@ class AbstractArchitecture(ABC):
         if env.RESTORE:
             return get_tf_tensor(name, self.graph)
         else:
+            is_not_in_graph(name, self.graph)
             return tf.placeholder(dtype, shape, name)
-
-    def _check_array(self, x: np.ndarray, shape: Tuple):
-
-        assert isinstance(x, np.ndarray)
-        assert np.all([x_s == s if s != -1 else True for x_s, s in zip(x.shape, shape)])
-        assert np.all(np.isfinite(x))

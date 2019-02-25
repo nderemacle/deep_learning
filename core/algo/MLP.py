@@ -8,6 +8,7 @@ from core.deep_learning.abstract_architecture import AbstractArchitecture
 from core.deep_learning.abstract_operator import AbstractLoss
 from core.deep_learning.layer import FcLayer
 from core.deep_learning.loss import CrossEntropy
+from core.utils.validation import check_array
 
 
 class AbstractMlp(AbstractArchitecture, ABC):
@@ -191,8 +192,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
         """
 
-        self._check_array(x, shape=(-1, self.input_dim))
-        self._check_array(y, shape=(-1, self.output_dim))
+        check_array(x, shape=(-1, self.input_dim))
+        check_array(y, shape=(-1, self.output_dim))
 
         sample_index = np.arange(len(x))
         n_split = len(x) // batch_size
@@ -235,7 +236,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
             Array of predictions
          """
 
-        self._check_array(x, shape=(-1, self.input_dim))
+        check_array(x, shape=(-1, self.input_dim))
 
         n_split = 1 if batch_size is None else len(x) // batch_size
 
@@ -309,7 +310,7 @@ class MlpClassifier(AbstractMlp):
             Array of estimated probability
         """
 
-        self._check_array(x, shape=(-1, self.input_dim))
+        check_array(x, shape=(-1, self.input_dim))
 
         n_split = 1 if batch_size is None else len(x) // batch_size
 

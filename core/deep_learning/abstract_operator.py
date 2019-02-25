@@ -4,19 +4,20 @@ from typing import Tuple
 import tensorflow as tf
 
 import core.deep_learning.env as env
-from core.deep_learning.tf_utils import get_tf_tensor, get_act_funct
+from core.deep_learning.tf_utils import get_tf_tensor, get_act_funct, identity
+from core.utils.validation import check_tensor, check_variable
 
 
 class AbstractOperator(ABC):
     """Abstract class implementing the build or restore operator.
 
     The main objective of the framework is to build state of the art deep learning operator where the code
-    used to deploy a tensorflow operators is exactly the same than the code used to restore them. Today the framework
+    used to deploy a Tensorflow operators is exactly the same than the code used to restore them. Today the framework
     allows to restore a complete graph using a code different to the code used to initialized it. To tackle this problem
     the AbstractOperator define an abstract level which used the build methods like a way to build a first time
     a part of the graph and also a way to restore it. If the build methods is call when the RESTORE environment variable
     is True, all operators of a given graph used to build an algorithm activate their restore methods allowing
-    to correctly restore the tensorflow operator. However, if the RESTORE variable is False then the build methods
+    to correctly restore the Tensorflow operator. However, if the RESTORE variable is False then the build methods
     call a _build methods which should deploy the part of the graph.
 
     The main goal is to be more focus on the computation optimization allowing to develop faster more efficient and
@@ -40,13 +41,13 @@ class AbstractOperator(ABC):
             super().build(x_input)
 
         def _build(self, x_input : tf.Tensor):
-            self.x_input = tf.identity(x_input, name=f"{self.name}/x_input")
-            self.x_output = tf.identity(self.x_input ** (0.5), name=f"{self.name}/x_output")
+            self.x_input = tf.identity(x_input, name="x_input")
+            self.x_output = tf.identity(self.x_input ** (0.5), name="x_output")
 
         def restore(self):
             with tf.get_default_graph() as graph:
-                self.x_input = graph.get_tensor_by_name(f"{self.name}/x_input:0")
-                self.x_output = graph.get_tensor_by_name(f"{self.name}/x_output:0")
+                self.x_input = graph.get_tensor_by_name("x_input")
+                self.x_output = graph.get_tensor_by_name("x_output")
 
     """
 
@@ -168,7 +169,7 @@ class AbstractLayer(AbstractOperator, ABC):
 
         """
 
-        self.x = tf.identity(x, name="x")
+        self.x = identity(x, name="x")
 
         self._check_input()
 
@@ -182,7 +183,7 @@ class AbstractLayer(AbstractOperator, ABC):
         if (self.keep_proba != 1.) & (self.keep_proba is not None):
             self._apply_dropout()
 
-        self.x_out = tf.identity(self.x_out, name="x_out")
+        self.x_out = identity(self.x_out, name="x_out")
 
     @abstractmethod
     def build(self, *args):
@@ -278,15 +279,15 @@ class AbstractLoss(AbstractOperator, ABC):
             def __init__(self, penalization_rate: (tf.Tensor, float) = 0.5, penalization_type: str = None):
                 super().__init__(penalization_rate, penalization_type, "mae)
 
-            def build(self, output_network : tf.Tensor, y : tf.Tensor, list_weight : Tuple[tf.Variable]=())->tf.Tensor:
+            def build(self, x_out : tf.Tensor, y : tf.Tensor, list_weight : Tuple[tf.Variable]=())->tf.Tensor:
 
-                return super().build(y, output_network, list_weight)
+                return super().build(y, x_out, list_weight)
 
             def _set_predict(self):
                 self.y_predict = self.output_network
 
             def _set_loss(self):
-                self.loss= tf.reduce_mean(tf.abs(tf.sub(self.y, self.y_predict)))
+                self.loss= tf.reduce_mean(tf.abs(tf.sub(self.y, self.y_pred)))
 
             def restore(self):
                 super().restore()
@@ -321,9 +322,9 @@ class AbstractLoss(AbstractOperator, ABC):
 
         """Check all input tensor types"""
 
-        assert isinstance(self.y, tf.Tensor)
-        assert isinstance(self.x_out, tf.Tensor)
-        assert all([isinstance(w, tf.Variable) for w in self.weights])
+        check_tensor(self.y)
+        check_tensor(self.x_out)
+        [check_variable(w) for w in self.weights]
 
     @abstractmethod
     def _set_loss(self):
@@ -361,8 +362,8 @@ class AbstractLoss(AbstractOperator, ABC):
                 a series of weighs tensor which must be subject to a regularization function.
         """
 
-        self.y = tf.identity(y, name="y")
-        self.x_out = tf.identity(x_out, name="x_out")
+        self.y = identity(y, name="y")
+        self.x_out = identity(x_out, name="x_out")
 
         self.weights = weights
 
@@ -379,9 +380,9 @@ class AbstractLoss(AbstractOperator, ABC):
         else:
             self.loss_opt = self.loss
 
-        self.loss = tf.identity(self.loss, name="loss")
-        self.loss_opt = tf.identity(self.loss_opt, name="loss_opt")
-        self.y_pred = tf.identity(self.y_pred, name="y_pred")
+        self.loss = identity(self.loss, name="loss")
+        self.loss_opt = identity(self.loss_opt, name="loss_opt")
+        self.y_pred = identity(self.y_pred, name="y_pred")
 
     @abstractmethod
     def restore(self):

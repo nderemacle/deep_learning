@@ -2,7 +2,8 @@ import numpy as np
 import tensorflow as tf
 
 from core.deep_learning.abstract_operator import AbstractLayer
-from core.deep_learning.tf_utils import build_variable, get_tf_tensor
+from core.deep_learning.tf_utils import variable, get_tf_tensor
+from core.utils.validation import check_tensor
 
 
 class FcLayer(AbstractLayer):
@@ -53,8 +54,7 @@ class FcLayer(AbstractLayer):
     def _check_input(self):
         """Assert the input tensor have shape 2"""
 
-        assert isinstance(self.x, tf.Tensor)
-        assert len(self.x.shape) == 2
+        check_tensor(self.x, shape_dim=2)
 
     def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None):
         """Initialize the weight and biase. If init matrix are input variable are initialize using them.
@@ -72,8 +72,8 @@ class FcLayer(AbstractLayer):
         w_shape = (input_dim, self.size)
         b_shape = (self.size,)
 
-        self.w = build_variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
-        self.b = build_variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
+        self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
+        self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
 
     def _operator(self):
         """compute the linear operator b + X * W"""
@@ -168,8 +168,7 @@ class Conv1dLayer(AbstractLayer):
     def _check_input(self):
         """Assert the input tensor have size 3."""
 
-        assert isinstance(self.x, tf.Tensor)
-        assert len(self.x.shape) == 3
+        check_tensor(self.x, shape_dim=3)
 
     def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None):
         """Set all filter variable. Filter can be initialize using outside array.
@@ -187,8 +186,8 @@ class Conv1dLayer(AbstractLayer):
 
         w_shape = (self.filter_width, n_channel, self.n_filters)
         b_shape = (self.n_filters,)
-        self.w = build_variable(w_shape, w_init, self.law_name, self.law_param, f"w", tf.float32)
-        self.b = build_variable(b_shape, b_init, self.law_name, self.law_param, f"b", tf.float32)
+        self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
+        self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
 
     def _operator(self):
         """For simplicity we use the tf.nn.conv1d. According to the tensorflow documentation, this method is just a
@@ -211,8 +210,8 @@ class Conv1dLayer(AbstractLayer):
     def restore(self):
         """Restore all filter variabe an input/output tensor"""
 
-        self.w = get_tf_tensor(name="w:0")
-        self.b = get_tf_tensor(name="b:0")
+        self.w = get_tf_tensor(name="w")
+        self.b = get_tf_tensor(name="b")
         super().restore()
 
 
@@ -241,8 +240,7 @@ class MinMaxLayer(AbstractLayer):
 
         """Assert the input tnput tensor have 2 dimensions."""
 
-        assert isinstance(self.x, tf.Tensor)
-        assert len(self.x.shape) == 2
+        check_tensor(self.x, shape_dim=2)
 
     def _operator(self):
 
