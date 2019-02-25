@@ -12,7 +12,7 @@ class AbstractOperator(ABC):
     """Abstract class implementing the build or restore operator.
 
     The main objective of the framework is to build state of the art deep learning operator where the code
-    used to deploy a Tensorflow operators is exactly the same than the code used to restore them. Today the framework
+    used to deploy Tensorflow operators is exactly the same than the code used to restore them. Today the framework
     allows to restore a complete graph using a code different to the code used to initialized it. To tackle this problem
     the AbstractOperator define an abstract level which used the build methods like a way to build a first time
     a part of the graph and also a way to restore it. If the build methods is call when the RESTORE environment variable
