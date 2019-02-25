@@ -9,12 +9,14 @@ class Operator(AbstractOperator):
         super().__init__(name)
         self.has_build = False
         self.has_restore = False
+        self.x: tf.placeholder = None
 
     def build(self):
         super().build()
 
     def _build(self):
         self.has_build = True
+        self.x = tf.placeholder(tf.float32, name="x")
 
     def restore(self):
         self.has_restore = True
@@ -29,6 +31,7 @@ class TestAbstractOperator(tf.test.TestCase):
 
         self.assertTrue(op.has_build)
         self.assertFalse(op.has_restore)
+        self.assertEqual(op.x.name, "MyOp/x:0")
 
     def testRestore(self):
         op = Operator(name="MyOp")

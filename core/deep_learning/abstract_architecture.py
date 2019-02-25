@@ -71,8 +71,8 @@ class AbstractArchitecture(ABC):
 
         """Can be called to instance often used deep learning tensor"""
 
-        self.learning_rate = self._placeholder(tf.float32, None, name=f"{self.name}/learning_rate")
-        self.keep_proba_tensor = self._placeholder(tf.float32, None, name=f"{self.name}/keep_proba_tensor")
+        self.learning_rate = self._placeholder(tf.float32, None, name="learning_rate")
+        self.keep_proba_tensor = self._placeholder(tf.float32, None, name="keep_proba_tensor")
 
     def build(self, **args):
 
@@ -81,8 +81,9 @@ class AbstractArchitecture(ABC):
 
         self.__dict__.update(args)
         with self.graph.as_default():
-            self._build()
-            self.sess.run(tf.initializers.global_variables())
+            with tf.name_scope(self.name):
+                self._build()
+                self.sess.run(tf.initializers.global_variables())
 
     @abstractmethod
     def fit(self, *args):
@@ -152,6 +153,8 @@ class AbstractArchitecture(ABC):
         to activate all class restoration methods when build is call. If a failure append, set the RESTORE
         environment variable to False and raise the error.
 
+        Use the scope name to use the algorithm name for all tensor and operation of the network.
+
         Attributes:
 
             path_folder : str
@@ -165,7 +168,8 @@ class AbstractArchitecture(ABC):
 
         try:
             with self.graph.as_default():
-                self._build()
+                with tf.name_scope(self.name):
+                    self._build()
         except Exception as e:
             raise TypeError(traceback.format_exc())
         finally:
@@ -186,7 +190,7 @@ class AbstractArchitecture(ABC):
             raise TypeError(
                 f"{self.optimizer_name} isn't a valid optimiser. optimiser_type must be in {list_optimizer}")
 
-    def _minimize(self, f: tf.Tensor, name: str):
+    def _minimize(self, f: tf.Tensor, name: str = "optimizer"):
 
         """
         Return an optimizer which minimize a tensor f.
@@ -204,9 +208,9 @@ class AbstractArchitecture(ABC):
         """
 
         if env.RESTORE:
-            return get_tf_operation(f"{self.name}/{name}", self.graph)
+            return get_tf_operation(name, self.graph)
         else:
-            return self._get_optimizer().minimize(f, name=f"{self.name}/{name}")
+            return self._get_optimizer().minimize(f, name=name)
 
     def _placeholder(self, dtype: tf.DType, shape: (Tuple, None), name: str):
 
@@ -227,7 +231,7 @@ class AbstractArchitecture(ABC):
         """
 
         if env.RESTORE:
-            return get_tf_tensor(name + ":0", self.graph)
+            return get_tf_tensor(name, self.graph)
         else:
             return tf.placeholder(dtype, shape, name)
 

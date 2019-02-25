@@ -118,8 +118,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
         super()._build()
 
         # Define input and target tensor
-        self.x = self._placeholder(tf.float32, (None, self.input_dim), name=f"{self.name}/x")
-        self.y = self._placeholder(tf.float32, (None, self.output_dim), name=f"{self.name}/y")
+        self.x = self._placeholder(tf.float32, (None, self.input_dim), name=f"x")
+        self.y = self._placeholder(tf.float32, (None, self.output_dim), name=f"y")
 
         # Define all fully connected layer
         self.l_fc = []
@@ -130,7 +130,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
             self.l_fc.append(
                 FcLayer(size=s, act_funct=self.act_funct,
                         keep_proba=self.keep_proba_tensor,
-                        name=f"{self.name}/FcLayer{i}",
+                        name=f"FcLayer{i}",
                         law_name=self.law_name,
                         law_param=self.law_param))
 
@@ -142,7 +142,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.l_output = FcLayer(size=self.output_dim,
                                 act_funct=None,
                                 keep_proba=1.,
-                                name=f"{self.name}/OutputLayer",
+                                name=f"OutputLayer",
                                 law_name=self.law_name,
                                 law_param=self.law_param)
 
@@ -283,7 +283,7 @@ class MlpClassifier(AbstractMlp):
 
         self.l_loss = CrossEntropy(penalization_rate=self.penalization_rate,
                                    penalization_type="L2",
-                                   name=f"{self.name}/cross_entropy")
+                                   name=f"cross_entropy")
 
         self.loss_opt, self.y_pred = self.l_loss.build(y=self.y,
                                                        x_out=self.x_out,
@@ -291,7 +291,7 @@ class MlpClassifier(AbstractMlp):
 
         self.loss = self.l_loss.loss
 
-        self.optimizer = self._minimize(self.loss_opt, name=f"{self.name}/optimizer")
+        self.optimizer = self._minimize(self.loss_opt, name=f"optimizer")
 
     def predict_proba(self, x: np.ndarray, batch_size: int = None) -> np.ndarray:
         """

@@ -35,7 +35,7 @@ def main():
               optimizer_name="Adam")
 
     print("First training begin:")
-    clf.fit(x=x_train, y=one_hot_encoding(y_train), n_epoch=10, batch_size=32, learning_rate=1e-3, verbose=True)
+    clf.fit(x=x_train, y=one_hot_encoding(y_train), n_epoch=1, batch_size=32, learning_rate=1e-3, verbose=True)
 
     # Make prediction
     y_train_predict = clf.predict(x=x_train, batch_size=32)
@@ -53,7 +53,7 @@ def main():
 
     # Continue the training
     print("Second training begin:")
-    clf.fit(x=x_train, y=one_hot_encoding(y_train), n_epoch=10, batch_size=32, learning_rate=1e-3, verbose=True)
+    clf.fit(x=x_train, y=one_hot_encoding(y_train), n_epoch=1, batch_size=32, learning_rate=1e-3, verbose=True)
 
     # Make prediction
     y_train_predict = clf.predict(x=x_train, batch_size=32)

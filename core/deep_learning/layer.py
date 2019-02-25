@@ -72,8 +72,8 @@ class FcLayer(AbstractLayer):
         w_shape = (input_dim, self.size)
         b_shape = (self.size,)
 
-        self.w = build_variable(w_shape, w_init, self.law_name, self.law_param, f"{self.name}/w", tf.float32)
-        self.b = build_variable(b_shape, b_init, self.law_name, self.law_param, f"{self.name}/b", tf.float32)
+        self.w = build_variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
+        self.b = build_variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
 
     def _operator(self):
         """compute the linear operator b + X * W"""
@@ -94,8 +94,8 @@ class FcLayer(AbstractLayer):
         """Restore the input, output tensor and all variables."""
 
         super().restore()
-        self.w = get_tf_tensor(name=f"{self.name}/w:0")
-        self.b = get_tf_tensor(name=f"{self.name}/b:0")
+        self.w = get_tf_tensor(name="w")
+        self.b = get_tf_tensor(name="b")
 
 
 class Conv1dLayer(AbstractLayer):
@@ -187,8 +187,8 @@ class Conv1dLayer(AbstractLayer):
 
         w_shape = (self.filter_width, n_channel, self.n_filters)
         b_shape = (self.n_filters,)
-        self.w = build_variable(w_shape, w_init, self.law_name, self.law_param, f"{self.name}/w", tf.float32)
-        self.b = build_variable(b_shape, b_init, self.law_name, self.law_param, f"{self.name}/b", tf.float32)
+        self.w = build_variable(w_shape, w_init, self.law_name, self.law_param, f"w", tf.float32)
+        self.b = build_variable(b_shape, b_init, self.law_name, self.law_param, f"b", tf.float32)
 
     def _operator(self):
         """For simplicity we use the tf.nn.conv1d. According to the tensorflow documentation, this method is just a
@@ -211,8 +211,8 @@ class Conv1dLayer(AbstractLayer):
     def restore(self):
         """Restore all filter variabe an input/output tensor"""
 
-        self.w = get_tf_tensor(name=f"{self.name}/w:0")
-        self.b = get_tf_tensor(name=f"{self.name}/b:0")
+        self.w = get_tf_tensor(name="w:0")
+        self.b = get_tf_tensor(name="b:0")
         super().restore()
 
 

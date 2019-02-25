@@ -108,7 +108,9 @@ def get_act_funct(act_funct_type: str = 'relu'):
 
 def get_tf_tensor(name: str, graph: tf.Graph = None):
     """
-    Return the tensorflow tensor with the given name
+    Return the tensorflow tensor with the given name. Each tensor must be include a scope or a sub scope.
+    Regarding the mechanise of the framework, if a tensoris instance at the network level its name should be
+    "NetworkName/TensorName" or should be "NetworkName/OperatorName/TensorName" if instance in an operator object.
 
     Attributes:
 
@@ -125,13 +127,14 @@ def get_tf_tensor(name: str, graph: tf.Graph = None):
     _graph = tf.get_default_graph() if graph is None else graph
 
     with _graph.as_default() as g:
-        return g.get_tensor_by_name(name)
+        return g.get_tensor_by_name(g.get_name_scope() + "/" + name + ":0")
 
 
 def get_tf_operation(name: str, graph: tf.Graph = None):
     """
-    Return the tensorflow operation with the given name
-
+    Return the Tensorflow operation with the given name. Each operation must be include a scope or a sub scope.
+    Regarding the mechanise of the framework, if an operation is instance at the network level its name should be
+    "NetworkName/OperationName" or should be "NetworkName/OperatorName/OperationName" if instance in an operator object.
 
     Attributes:
 
@@ -147,7 +150,7 @@ def get_tf_operation(name: str, graph: tf.Graph = None):
 
     _graph = tf.get_default_graph() if graph is None else graph
     with _graph.as_default() as g:
-        return g.get_operation_by_name(name)
+        return g.get_operation_by_name(g.get_name_scope() + "/" + name)
 
 
 def get_all_tensor_name(graph: tf.Graph = None):

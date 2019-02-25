@@ -22,7 +22,7 @@ class AbstractOperator(ABC):
     The main goal is to be more focus on the computation optimization allowing to develop faster more efficient and
     robust algorithms.
 
-    In addition the methods store the name of the algorithm.
+    In addition the methods used the graph scope level to properly assign the name path of all tensor created.
 
     Attributes:
         name : str
@@ -56,10 +56,13 @@ class AbstractOperator(ABC):
 
     def build(self, *args):
 
-        if env.RESTORE:
-            self.restore()
-        else:
-            self._build(*args)
+        """Build or restore and existing operator using the valid scope name."""
+
+        with tf.name_scope(self.name):
+            if env.RESTORE:
+                self.restore()
+            else:
+                self._build(*args)
 
     @abstractmethod
     def _build(self, *args):
@@ -165,7 +168,7 @@ class AbstractLayer(AbstractOperator, ABC):
 
         """
 
-        self.x = tf.identity(x, name=f"{self.name}/x")
+        self.x = tf.identity(x, name="x")
 
         self._check_input()
 
@@ -179,7 +182,7 @@ class AbstractLayer(AbstractOperator, ABC):
         if (self.keep_proba != 1.) & (self.keep_proba is not None):
             self._apply_dropout()
 
-        self.x_out = tf.identity(self.x_out, name=f"{self.name}/x_out")
+        self.x_out = tf.identity(self.x_out, name="x_out")
 
     @abstractmethod
     def build(self, *args):
@@ -217,8 +220,8 @@ class AbstractLayer(AbstractOperator, ABC):
         """Method which restore all class tensor given the operator name and the current graph. The parent class can be
         call to restore standard input and output tensor avoiding code repetition."""
 
-        self.x = get_tf_tensor(name=f"{self.name}/x:0")
-        self.x_out = get_tf_tensor(name=f"{self.name}/x_out:0")
+        self.x = get_tf_tensor(name="x")
+        self.x_out = get_tf_tensor(name="x_out")
 
     def _apply_dropout(self):
 
@@ -358,8 +361,8 @@ class AbstractLoss(AbstractOperator, ABC):
                 a series of weighs tensor which must be subject to a regularization function.
         """
 
-        self.y = tf.identity(y, name=f"{self.name}/y")
-        self.x_out = tf.identity(x_out, name=f"{self.name}/x_out")
+        self.y = tf.identity(y, name="y")
+        self.x_out = tf.identity(x_out, name="x_out")
 
         self.weights = weights
 
@@ -376,20 +379,20 @@ class AbstractLoss(AbstractOperator, ABC):
         else:
             self.loss_opt = self.loss
 
-        self.loss = tf.identity(self.loss, name=f"{self.name}/loss")
-        self.loss_opt = tf.identity(self.loss_opt, name=f"{self.name}/loss_opt")
-        self.y_pred = tf.identity(self.y_pred, name=f"{self.name}/y_pred")
+        self.loss = tf.identity(self.loss, name="loss")
+        self.loss_opt = tf.identity(self.loss_opt, name="loss_opt")
+        self.y_pred = tf.identity(self.y_pred, name="y_pred")
 
     @abstractmethod
     def restore(self):
 
         """Restore all loss tensor attribute"""
 
-        self.loss = get_tf_tensor(name=f"{self.name}/loss:0")
-        self.loss_opt = get_tf_tensor(name=f"{self.name}/loss_opt:0")
-        self.y_pred = get_tf_tensor(name=f"{self.name}/y_pred:0")
-        self.y = get_tf_tensor(name=f"{self.name}/y:0")
-        self.x_out = get_tf_tensor(name=f"{self.name}/x_out:0")
+        self.loss = get_tf_tensor(name="loss")
+        self.loss_opt = get_tf_tensor(name="loss_opt")
+        self.y_pred = get_tf_tensor(name="y_pred")
+        self.y = get_tf_tensor(name="y")
+        self.x_out = get_tf_tensor(name="x_out")
 
     def _compute_penalization(self):
 

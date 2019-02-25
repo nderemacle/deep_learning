@@ -81,8 +81,8 @@ class TestCrossEntropy(tf.test.TestCase):
 
     def testComputePredict(self):
         x_out = np.array([[1., 0.5],
-                                   [2., 0.],
-                                   [3.4, 10.]])
+                          [2., 0.],
+                          [3.4, 10.]])
         loss = CrossEntropy()
 
         with self.test_session() as sess:
@@ -91,8 +91,8 @@ class TestCrossEntropy(tf.test.TestCase):
 
     def testComputeLoss(self):
         x_out = np.array([[1., 0.5],
-                                   [2., 0.],
-                                   [3.4, 10.]])
+                          [2., 0.],
+                          [3.4, 10.]])
 
         y = np.array([[1, 0],
                       [0, 1],
