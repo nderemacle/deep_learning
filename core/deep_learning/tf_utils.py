@@ -106,6 +106,25 @@ def get_act_funct(act_funct_type: str = 'relu'):
             f"{act_funct_type} isn't a valide activation function. Methods must be in {list_act_funct}")
 
 
+def get_all_tensor_name(graph: tf.Graph = None):
+    """
+    Return a list with all instance tensor in a graph.
+
+    Attributes:
+
+    graph : tf.Graph
+        Tensorflow grah object
+
+    Output:
+        List of tensor name
+
+    """
+
+    _graph = tf.get_default_graph() if graph is None else graph
+
+    return [t.name for t in _graph.get_operations()]
+
+
 def get_tf_tensor(name: str, graph: tf.Graph = None):
     """
     Return the tensorflow tensor with the given name. Each tensor must be include a scope or a sub scope.
@@ -127,7 +146,11 @@ def get_tf_tensor(name: str, graph: tf.Graph = None):
     _graph = tf.get_default_graph() if graph is None else graph
 
     with _graph.as_default() as g:
-        return g.get_tensor_by_name(g.get_name_scope() + "/" + name + ":0")
+        tensor_name = g.get_name_scope() + "/" + name
+        if tensor_name in get_all_tensor_name(graph=g):
+            return g.get_tensor_by_name(tensor_name + ":0")
+        else:
+            raise NameError(f"{tensor_name} does not exist.")
 
 
 def get_tf_operation(name: str, graph: tf.Graph = None):
@@ -150,23 +173,8 @@ def get_tf_operation(name: str, graph: tf.Graph = None):
 
     _graph = tf.get_default_graph() if graph is None else graph
     with _graph.as_default() as g:
-        return g.get_operation_by_name(g.get_name_scope() + "/" + name)
-
-
-def get_all_tensor_name(graph: tf.Graph = None):
-    """
-    Return a list with all instance tensor in a graph.
-
-    Attributes:
-
-    graph : tf.Graph
-        Tensorflow grah object
-
-    Output:
-        List of tensor name
-
-    """
-
-    _graph = tf.get_default_graph() if graph is None else graph
-
-    return [t.name for t in _graph.get_operations()]
+        operation_name = g.get_name_scope() + "/" + name
+        if operation_name in get_all_tensor_name(graph=g):
+            return g.get_operation_by_name(operation_name)
+        else:
+            raise NameError(f"{operation_name} does not exist.")
