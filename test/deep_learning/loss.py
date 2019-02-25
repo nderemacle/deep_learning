@@ -1,36 +1,37 @@
-import tensorflow as tf
-import numpy as np
 from typing import List
-from core.deep_learning.loss import CrossEntropy
-from core.deep_learning.abstract_operator import AbstractLoss
+
+import numpy as np
+import tensorflow as tf
+
 import core.deep_learning.env as env
+from core.deep_learning.abstract_operator import AbstractLoss
+from core.deep_learning.loss import CrossEntropy
 
 
-def test_predict(self : tf.test.TestCase, sess: tf.Session, loss : AbstractLoss, output_network : np.ndarray,
-                 expected_output : np.ndarray):
-
+def test_predict(self: tf.test.TestCase, sess: tf.Session, loss: AbstractLoss, output_network: np.ndarray,
+                 expected_output: np.ndarray):
     """Test the loss prediction tensor"""
 
-    loss.output_network = tf.placeholder(tf.float32, output_network.shape)
+    loss.x_out = tf.placeholder(tf.float32, output_network.shape)
     loss._set_predict()
-    output = sess.run(loss.y_predict, {loss.output_network: output_network})
+    output = sess.run(loss.y_pred, {loss.x_out: output_network})
     self.assertAllEqual(output, expected_output)
 
-def test_loss(self : tf.test.TestCase, sess : tf.Session, loss : AbstractLoss, output_network : np.ndarray,
-              expected_loss : float, y : np.ndarray, rtol : float = 1e-6):
 
+def test_loss(self: tf.test.TestCase, sess: tf.Session, loss: AbstractLoss, output_network: np.ndarray,
+              expected_loss: float, y: np.ndarray, rtol: float = 1e-6):
     """Test the loss computation"""
 
-    loss.output_network = tf.placeholder(tf.float32, output_network.shape)
+    loss.x_out = tf.placeholder(tf.float32, output_network.shape)
     loss.y = tf.placeholder(tf.float32, y.shape)
     loss._set_loss()
 
-    output = sess.run(loss.loss, {loss.output_network: output_network, loss.y: y})
+    output = sess.run(loss.loss, {loss.x_out: output_network, loss.y: y})
     self.assertAllClose(output, expected_loss, rtol=rtol)
 
 
-def test_restore(self: tf.test.TestCase, loss: AbstractLoss, output_network_shape : List[int], y_shape : List[int],
-                 tensors: List[str] = ("loss", "loss_opt", "y", "output_network", "y_predict"), weights : List = []):
+def test_restore(self: tf.test.TestCase, loss: AbstractLoss, output_network_shape: List[int], y_shape: List[int],
+                 tensors: List[str] = ("loss", "loss_opt", "y", "output_network", "y_predict"), weights: List = []):
     """This methods allow to test the restoration process of a Layer"""
 
     output_network = tf.placeholder(tf.float32, output_network_shape)
@@ -63,7 +64,6 @@ def test_restore(self: tf.test.TestCase, loss: AbstractLoss, output_network_shap
 class TesAbstractLoss(tf.test.TestCase):
 
     def testL2Penalization(self):
-
         W0 = np.array([1., 1., 1.])
         W1 = np.array([2., 2.])
         list_weight = [W0, W1]
@@ -73,14 +73,13 @@ class TesAbstractLoss(tf.test.TestCase):
         loss._compute_penalization()
 
         with self.test_session():
-            expected = (3 * (1 ** 2) + 2 * (2 ** 2))/2
+            expected = (3 * (1 ** 2) + 2 * (2 ** 2)) / 2
             self.assertEqual(loss.penality.eval(), expected)
 
 
 class TestCrossEntropy(tf.test.TestCase):
 
     def testComputePredict(self):
-
         output_network = np.array([[1., 0.5],
                                    [2., 0.],
                                    [3.4, 10.]])
@@ -91,7 +90,6 @@ class TestCrossEntropy(tf.test.TestCase):
             test_predict(self, sess, loss, output_network, expected_output)
 
     def testComputeLoss(self):
-
         output_network = np.array([[1., 0.5],
                                    [2., 0.],
                                    [3.4, 10.]])
@@ -110,18 +108,5 @@ class TestCrossEntropy(tf.test.TestCase):
             test_loss(self, sess, loss, output_network, expected_loss, y, rtol=1e-6)
 
     def testRestore(self):
-
         loss = CrossEntropy()
         test_restore(self, loss, [100, 10], [100, 10], tensors=["loss", "loss_opt", "y", "output_network", "y_predict"])
-
-
-
-
-
-
-
-
-
-
-
-

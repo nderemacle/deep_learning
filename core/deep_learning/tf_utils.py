@@ -1,10 +1,10 @@
-import tensorflow as tf
 from typing import Tuple
+
 import numpy as np
+import tensorflow as tf
 
 
 def random_law(shape: Tuple, law_name: str, law_param: float, dtype: tf.DType = tf.float32):
-
     """
     Return a tensorflow random generator.
 
@@ -33,15 +33,14 @@ def random_law(shape: Tuple, law_name: str, law_param: float, dtype: tf.DType = 
     if law_name == "normal":
         return tf.random_normal(shape=shape, stddev=law_param, dtype=dtype)
     elif law_name == "uniform":
-        return tf.random_uniform(shape=shape, minval=-law_param, maxval=law_param ,dtype=dtype)
+        return tf.random_uniform(shape=shape, minval=-law_param, maxval=law_param, dtype=dtype)
     else:
         list_law = ['normal', 'uniform']
         raise TypeError(f"{law_name} isn't a valide law_name. Name must be in {list_law}")
 
 
 def build_variable(shape: Tuple, initial_value: np.ndarray = None, law_name: str = "uniform", law_param: float = 0.1,
-                   name: str= None, dtype: tf.DType = tf.float32):
-
+                   name: str = None, dtype: tf.DType = tf.float32):
     """
     Build a tensorflow variable uninitialised using either a random number law generator or deterministic value
     allowing no implemented random law generator or the use of transfer learning methods.
@@ -81,8 +80,7 @@ def build_variable(shape: Tuple, initial_value: np.ndarray = None, law_name: str
     return tf.Variable(initial_value, name=name)
 
 
-def get_act_funct(act_funct_type : str = 'relu'):
-
+def get_act_funct(act_funct_type: str = 'relu'):
     """
     Return a tensorflow activation method
 
@@ -108,8 +106,7 @@ def get_act_funct(act_funct_type : str = 'relu'):
             f"{act_funct_type} isn't a valide activation function. Methods must be in {list_act_funct}")
 
 
-def get_tf_tensor(name : str, graph : tf.Graph = None):
-
+def get_tf_tensor(name: str, graph: tf.Graph = None):
     """
     Return the tensorflow tensor with the given name
 
@@ -128,11 +125,10 @@ def get_tf_tensor(name : str, graph : tf.Graph = None):
     _graph = tf.get_default_graph() if graph is None else graph
 
     with _graph.as_default() as g:
-
         return g.get_tensor_by_name(name)
 
-def get_tf_operation(name : str, graph: tf.Graph = None):
 
+def get_tf_operation(name: str, graph: tf.Graph = None):
     """
     Return the tensorflow operation with the given name
 
@@ -152,6 +148,7 @@ def get_tf_operation(name : str, graph: tf.Graph = None):
     _graph = tf.get_default_graph() if graph is None else graph
     with _graph.as_default() as g:
         return g.get_operation_by_name(name)
+
 
 def get_all_tensor_name(graph: tf.Graph = None):
     """

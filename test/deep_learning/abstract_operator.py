@@ -1,8 +1,7 @@
 import tensorflow as tf
 
-
-from core.deep_learning.abstract_operator import AbstractOperator
 import core.deep_learning.env as env
+from core.deep_learning.abstract_operator import AbstractOperator
 
 
 class Operator(AbstractOperator):
@@ -17,16 +16,13 @@ class Operator(AbstractOperator):
     def _build(self):
         self.has_build = True
 
-
     def restore(self):
-        self.has_restore= True
+        self.has_restore = True
 
 
 class TestAbstractOperator(tf.test.TestCase):
 
-
     def testBuild(self):
-
         op = Operator(name="MyOp")
         env.RESTORE = False
         op.build()
@@ -34,15 +30,10 @@ class TestAbstractOperator(tf.test.TestCase):
         self.assertTrue(op.has_build)
         self.assertFalse(op.has_restore)
 
-
     def testRestore(self):
-
         op = Operator(name="MyOp")
         env.RESTORE = True
         op.build()
 
         self.assertFalse(op.has_build)
         self.assertTrue(op.has_restore)
-
-
-

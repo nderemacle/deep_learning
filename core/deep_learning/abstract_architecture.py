@@ -1,16 +1,17 @@
 import os
 import traceback
 from abc import ABC, abstractmethod
-import tensorflow as tf
 from typing import Tuple
+
 import numpy as np
+import tensorflow as tf
 
 import core.deep_learning.env as env
-from core.utils.reader_writer import write_pickle, read_pickle
 from core.deep_learning.tf_utils import get_tf_operation, get_tf_tensor
+from core.utils.reader_writer import write_pickle, read_pickle
+
 
 class AbstractArchitecture(ABC):
-
     """
     This abstract class defines the cortex for a deep learning architecture. It allows to well configure the
     tensorflow session and to launch the build or restore process. In addition it give access to functional methods
@@ -44,7 +45,7 @@ class AbstractArchitecture(ABC):
             Tensor for dropout methods
     """
 
-    def __init__(self, name : str, use_gpu : bool = False):
+    def __init__(self, name: str, use_gpu: bool = False):
 
         self.name = name
         self.use_gpu = use_gpu
@@ -95,7 +96,7 @@ class AbstractArchitecture(ABC):
         """ The predict method to make prediction"""
         raise NotImplementedError
 
-    def save(self, path_folder : str):
+    def save(self, path_folder: str):
 
         """This methods allow to save all the tensorflow graph in a folder. The methods use the tensorflow saver method
             and save all network parameters in a pickle."""
@@ -144,12 +145,12 @@ class AbstractArchitecture(ABC):
             saver = tf.train.import_meta_graph(path, clear_devices=True)
             saver.restore(self.sess, tf.train.latest_checkpoint(path_folder))
 
-    def restore(self, path_folder : str):
+    def restore(self, path_folder: str):
 
-        """Restore the graph by activating all restoration process. The RESTORE environment is first set to True
-           to activate all class restoration methods when build is call. If a failure append, set the RESTORE
-           environment variable to False and raise the error.
-
+        """
+        Restore the graph by activating all restoration process. The RESTORE environment is first set to True
+        to activate all class restoration methods when build is call. If a failure append, set the RESTORE
+        environment variable to False and raise the error.
 
         Attributes:
 
@@ -170,7 +171,6 @@ class AbstractArchitecture(ABC):
         finally:
             env.RESTORE = False
 
-
     def _get_optimizer(self):
 
         """Return the valid optimizer."""
@@ -186,7 +186,7 @@ class AbstractArchitecture(ABC):
             raise TypeError(
                 f"{self.optimizer_name} isn't a valid optimiser. optimiser_type must be in {list_optimizer}")
 
-    def _minimize(self, f : tf.Tensor, name : str):
+    def _minimize(self, f: tf.Tensor, name: str):
 
         """
         Return an optimizer which minimize a tensor f.
@@ -208,7 +208,7 @@ class AbstractArchitecture(ABC):
         else:
             return self._get_optimizer().minimize(f, name=f"{self.name}/{name}")
 
-    def _placeholder(self, dtype: tf.DType ,   shape : (Tuple, None) , name : str):
+    def _placeholder(self, dtype: tf.DType, shape: (Tuple, None), name: str):
 
         """
         Set or restore a placeholder.
@@ -231,7 +231,7 @@ class AbstractArchitecture(ABC):
         else:
             return tf.placeholder(dtype, shape, name)
 
-    def _check_array(self, x : np.ndarray, shape : Tuple):
+    def _check_array(self, x: np.ndarray, shape: Tuple):
 
         assert isinstance(x, np.ndarray)
         assert np.all([x_s == s if s != -1 else True for x_s, s in zip(x.shape, shape)])

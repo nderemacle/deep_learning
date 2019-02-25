@@ -1,20 +1,19 @@
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
-from core.deep_learning.tf_utils import build_variable, get_tf_tensor
 from core.deep_learning.abstract_operator import AbstractLayer
+from core.deep_learning.tf_utils import build_variable, get_tf_tensor
 
 
 class FcLayer(AbstractLayer):
 
     def __init__(self,
-                 size : int,
-                 act_funct : (str, None) = "relu",
-                 keep_proba : (tf.Tensor, float) = 1.,
-                 name : str = "fc",
-                 law_name : str = "uniform",
-                 law_param : float = 0.1):
-
+                 size: int,
+                 act_funct: (str, None) = "relu",
+                 keep_proba: (tf.Tensor, float) = 1.,
+                 name: str = "fc",
+                 law_name: str = "uniform",
+                 law_param: float = 0.1):
         """
         Deployed a fully connected layer having a size equal to it number of neurons. It inherit to all trainning
         methods implement in the AbstractLayer class and can used it.
@@ -48,17 +47,16 @@ class FcLayer(AbstractLayer):
         super().__init__(act_funct, keep_proba, law_name, law_param, name)
 
         self.size = size
-        self.w : tf.Variable = None
-        self.b : tf.Variable = None
+        self.w: tf.Variable = None
+        self.b: tf.Variable = None
 
     def _check_input(self):
         """Assert the input tensor have shape 2"""
 
-        assert isinstance(self.x_input, tf.Tensor)
-        assert len(self.x_input.shape) == 2
+        assert isinstance(self.x, tf.Tensor)
+        assert len(self.x.shape) == 2
 
-    def _init_variable(self, w_init : np.ndarray = None, b_init : np.ndarray = None):
-
+    def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None):
         """Initialize the weight and biase. If init matrix are input variable are initialize using them.
 
         Attributes:
@@ -70,7 +68,7 @@ class FcLayer(AbstractLayer):
                 Matrix of biase to initialize biase. Must have a suitable dimension
         """
 
-        input_dim = self.x_input.shape[1].value
+        input_dim = self.x.shape[1].value
         w_shape = (input_dim, self.size)
         b_shape = (self.size,)
 
@@ -78,24 +76,21 @@ class FcLayer(AbstractLayer):
         self.b = build_variable(b_shape, b_init, self.law_name, self.law_param, f"{self.name}/b", tf.float32)
 
     def _operator(self):
-
         """compute the linear operator b + X * W"""
 
-        self.x_output = tf.add(self.b, tf.matmul(self.x_input, self.w))
+        self.x_out = tf.add(self.b, tf.matmul(self.x, self.w))
 
     def build(self,
-              x_input : tf.Tensor,
-              w_init : np.ndarray = None,
-              b_init : np.ndarray = None) -> tf.Tensor:
-
+              x: tf.Tensor,
+              w_init: np.ndarray = None,
+              b_init: np.ndarray = None) -> tf.Tensor:
         """
         Call the build parents method and return the layer output.
         """
 
-        return super().build(x_input, w_init, b_init)
+        return super().build(x, w_init, b_init)
 
     def restore(self):
-
         """Restore the input, output tensor and all variables."""
 
         super().restore()
@@ -106,15 +101,15 @@ class FcLayer(AbstractLayer):
 class Conv1dLayer(AbstractLayer):
 
     def __init__(self,
-                 filter_width : int,
-                 n_filters : int,
-                 stride : int = 1,
-                 padding : str = "VALID",
-                 act_funct : (str, None) = "relu",
-                 keep_proba : (tf.Tensor, float) = 1.,
-                 name : str = "conv",
-                 law_name : str = "uniform",
-                 law_param : float = 0.1):
+                 filter_width: int,
+                 n_filters: int,
+                 stride: int = 1,
+                 padding: str = "VALID",
+                 act_funct: (str, None) = "relu",
+                 keep_proba: (tf.Tensor, float) = 1.,
+                 name: str = "conv",
+                 law_name: str = "uniform",
+                 law_param: float = 0.1):
         """
         Build a 1d convolution layer. The filter take as input an array with shape (batch_size, Width, Channel),
         compute a convolution using one or many filter and return a tensor with size (batch_size, new_Width, n_filters).
@@ -167,19 +162,17 @@ class Conv1dLayer(AbstractLayer):
         self.stride = stride
         self.padding = padding
 
-        self.w : tf.Variable = None
-        self.b : tf.Variable = None
+        self.w: tf.Variable = None
+        self.b: tf.Variable = None
 
     def _check_input(self):
-
         """Assert the input tensor have size 3."""
 
-        assert isinstance(self.x_input, tf.Tensor)
-        assert len(self.x_input.shape) == 3
+        assert isinstance(self.x, tf.Tensor)
+        assert len(self.x.shape) == 3
 
-    def _init_variable(self, w_init : np.ndarray = None, b_init : np.ndarray = None):
-
-        """Set all filter variable. FIlter can be initialize using outside array.
+    def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None):
+        """Set all filter variable. Filter can be initialize using outside array.
 
         Attributes:
 
@@ -190,7 +183,7 @@ class Conv1dLayer(AbstractLayer):
                 Array which can be sue dto initialized biase filter variable
         """
 
-        width, n_channel = self.x_input.shape[1].value, self.x_input.shape[2].value
+        width, n_channel = self.x.shape[1].value, self.x.shape[2].value
 
         w_shape = (self.filter_width, n_channel, self.n_filters)
         b_shape = (self.n_filters,)
@@ -198,27 +191,24 @@ class Conv1dLayer(AbstractLayer):
         self.b = build_variable(b_shape, b_init, self.law_name, self.law_param, f"{self.name}/b", tf.float32)
 
     def _operator(self):
-
         """For simplicity we use the tf.nn.conv1d. According to the tensorflow documentation, this method is just a
           wrapper to tf.nn.conv2d and use a reshape step after and before the conv2d call. Can be improve
           in future version """
 
-        self.x_output = tf.nn.conv1d(self.x_input, self.w, self.stride, self.padding, data_format="NWC")
-        self.x_output = tf.add(self.b, self.x_output)
+        self.x_out = tf.nn.conv1d(self.x, self.w, self.stride, self.padding, data_format="NWC")
+        self.x_out = tf.add(self.b, self.x_out)
 
     def build(self,
-              x_input : tf.Tensor,
-              w_init : np.ndarray = None,
-              b_init : np.ndarray = None) -> tf.Tensor:
-
+              x: tf.Tensor,
+              w_init: np.ndarray = None,
+              b_init: np.ndarray = None) -> tf.Tensor:
         """
         Allow to build the convolution taking in entry the x_input tensor.
         """
 
-        return super().build(x_input, w_init, b_init)
+        return super().build(x, w_init, b_init)
 
     def restore(self):
-
         """Restore all filter variabe an input/output tensor"""
 
         self.w = get_tf_tensor(name=f"{self.name}/w:0")
@@ -228,10 +218,10 @@ class Conv1dLayer(AbstractLayer):
 
 class MinMaxLayer(AbstractLayer):
 
-    def __init__(self, n_entries : int, name : str = "minmax"):
+    def __init__(self, n_entries: int, name: str = "minmax"):
 
         """
-        This class allow to deployed a MinMaw layer. This layer output the top n_entries and the worse n_entries
+        This class allow to deployed a MinMax layer. This layer output the top n_entries and the worse n_entries
         of a 2d input tensor.
 
         Attributes:
@@ -251,59 +241,36 @@ class MinMaxLayer(AbstractLayer):
 
         """Assert the input tnput tensor have 2 dimensions."""
 
-        assert isinstance(self.x_input, tf.Tensor)
-        assert len(self.x_input.shape) == 2
+        assert isinstance(self.x, tf.Tensor)
+        assert len(self.x.shape) == 2
 
     def _operator(self):
 
         """ The operator use tf.nn.top_k to sort all raw independently from each other then split the tensor into
             2 tensor x_min and x_max and concatenate them to build the final output."""
 
-        input_dim = self.x_input.shape[1].value
+        input_dim = self.x.shape[1].value
 
-        if input_dim is  None:
-            x_max = tf.nn.top_k(self.x_input, k=self.n_entries)[0]
-            x_min = -tf.nn.top_k(-self.x_input, k=self.n_entries)[0]
+        if input_dim is None:
+            x_max = tf.nn.top_k(self.x, k=self.n_entries)[0]
+            x_min = -tf.nn.top_k(-self.x, k=self.n_entries)[0]
         else:
-            self.x_output = tf.nn.top_k(self.x_input, k=input_dim)[0]
+            self.x_out = tf.nn.top_k(self.x, k=input_dim)[0]
             x_max, _, x_min = tf.split(
-                self.x_output, [self.n_entries, input_dim - 2 * self.n_entries, self.n_entries], axis=1)
+                self.x_out, [self.n_entries, input_dim - 2 * self.n_entries, self.n_entries], axis=1)
 
-        self.x_output = tf.concat([x_min, x_max], axis=1)
+        self.x_out = tf.concat([x_min, x_max], axis=1)
 
-    def build(self, x_input : tf.Tensor) -> tf.Tensor:
+    def build(self, x: tf.Tensor) -> tf.Tensor:
 
         """
         Build the layer
         """
 
-        return super().build(x_input)
+        return super().build(x)
 
     def restore(self):
 
         """Restore only the input nd output tensor using the aprents restore method."""
 
         super().restore()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

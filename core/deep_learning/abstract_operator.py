@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Tuple
+
 import tensorflow as tf
 
-from core.deep_learning.tf_utils import get_tf_tensor, get_act_funct
 import core.deep_learning.env as env
+from core.deep_learning.tf_utils import get_tf_tensor, get_act_funct
 
 
 class AbstractOperator(ABC):
-
     """Abstract class implementing the build or restore operator.
 
     The main objective of the framework is to build state of the art deep learning operator where the code
@@ -50,7 +50,7 @@ class AbstractOperator(ABC):
 
     """
 
-    def __init__(self, name : str):
+    def __init__(self, name: str):
 
         self.name = name
 
@@ -77,7 +77,6 @@ class AbstractOperator(ABC):
 
 
 class AbstractLayer(AbstractOperator, ABC):
-
     """This class allow to generalize the development of a layer.
 
     An abstract layer represent an abstract shema for any kind of deep learning layers. It takes advantage of all
@@ -107,7 +106,7 @@ class AbstractLayer(AbstractOperator, ABC):
         x_input : Tensor or None
             Input tensor of the operator.
 
-        x_output : Tensor or None
+        x_out : Tensor or None
             Output of the operator.
 
     Usage:
@@ -127,23 +126,23 @@ class AbstractLayer(AbstractOperator, ABC):
     """
 
     def __init__(self,
-                 act_funct : str = None,
-                 keep_proba : (tf.Tensor, float, None) = None,
-                 law_name : str = "uniform",
-                 law_param : float = 0.1,
-                 name : str = None):
+                 act_funct: str = None,
+                 keep_proba: (tf.Tensor, float, None) = None,
+                 law_name: str = "uniform",
+                 law_param: float = 0.1,
+                 name: str = None):
 
         super().__init__(name)
 
-        self.x_input : tf.Tensor  = None
-        self.x_output : tf.Tensor = None
+        self.x: tf.Tensor = None
+        self.x_out: tf.Tensor = None
 
         self.act_funct = act_funct
         self.keep_proba = keep_proba
         self.law_param = law_param
         self.law_name = law_name
 
-    def _build(self, x_input : tf.Tensor, *init_args):
+    def _build(self, x: tf.Tensor, *init_args):
 
         """
         Regarding parameters set by the child class, the build methods executes step by step the following methods:
@@ -158,7 +157,7 @@ class AbstractLayer(AbstractOperator, ABC):
 
         Attributes:
 
-            x_input : Tensor
+            x : Tensor
                 Input tensor for the layer.
 
             init_args: args
@@ -166,7 +165,7 @@ class AbstractLayer(AbstractOperator, ABC):
 
         """
 
-        self.x_input = tf.identity(x_input, name=f"{self.name}/input")
+        self.x = tf.identity(x, name=f"{self.name}/x")
 
         self._check_input()
 
@@ -180,7 +179,7 @@ class AbstractLayer(AbstractOperator, ABC):
         if (self.keep_proba != 1.) & (self.keep_proba is not None):
             self._apply_dropout()
 
-        self.x_output = tf.identity(self.x_output, name=f"{self.name}/output")
+        self.x_out = tf.identity(self.x_out, name=f"{self.name}/x_out")
 
     @abstractmethod
     def build(self, *args):
@@ -190,7 +189,7 @@ class AbstractLayer(AbstractOperator, ABC):
 
         super().build(*args)
 
-        return self.x_output
+        return self.x_out
 
     def _check_input(self):
 
@@ -218,25 +217,24 @@ class AbstractLayer(AbstractOperator, ABC):
         """Method which restore all class tensor given the operator name and the current graph. The parent class can be
         call to restore standard input and output tensor avoiding code repetition."""
 
-        self.x_input = get_tf_tensor(name=f"{self.name}/input:0")
-        self.x_output = get_tf_tensor(name=f"{self.name}/output:0")
+        self.x = get_tf_tensor(name=f"{self.name}/x:0")
+        self.x_out = get_tf_tensor(name=f"{self.name}/x_out:0")
 
     def _apply_dropout(self):
 
         """Apply the dropout operator on the output attribute."""
 
-        self.x_output = tf.nn.dropout(self.x_output, keep_prob=self.keep_proba)
+        self.x_out = tf.nn.dropout(self.x_out, keep_prob=self.keep_proba)
 
     def _apply_act_funct(self):
 
         """Use an activation function on the output class attribute."""
 
         act_funct = get_act_funct(self.act_funct)
-        self.x_output = act_funct(self.x_output)
+        self.x_out = act_funct(self.x_out)
 
 
 class AbstractLoss(AbstractOperator, ABC):
-
     """Class defining often used attribute and loss when dealing with loss function.
 
     The class takes advantage of the AbstractOperator class to use the restore or build loss function. The loss can be
@@ -259,10 +257,10 @@ class AbstractLoss(AbstractOperator, ABC):
         y : Tensor
             Placeholder containing all target variable to learn.
 
-        output_network :  Tensor
+        x_out :  Tensor
             Output of the network.
 
-        y_predict :  Tensor
+        y_pred :  Tensor
             Final prediction return by the network.
 
         loss : Tensor
@@ -292,17 +290,16 @@ class AbstractLoss(AbstractOperator, ABC):
 
     """
 
-    def __init__(self, penalization_rate: (tf.Tensor, float) = 0.5, penalization_type: str = None, name : str = "loss"):
-
+    def __init__(self, penalization_rate: (tf.Tensor, float) = 0.5, penalization_type: str = None, name: str = "loss"):
 
         super().__init__(name)
 
-        self.y : tf.Tensor = None
-        self.output_network : tf.Tensor = None
-        self.y_predict : tf.Tensor = None
-        self.loss : tf.Tensor = None
-        self.loss_opt : tf.Tensor = None
-        self.penality : (float, tf.Tensor) = 0.
+        self.y: tf.Tensor = None
+        self.x_out: tf.Tensor = None
+        self.y_pred: tf.Tensor = None
+        self.loss: tf.Tensor = None
+        self.loss_opt: tf.Tensor = None
+        self.penality: (float, tf.Tensor) = 0.
         self.penalization_rate = penalization_rate
         self.penalization_type = penalization_type
 
@@ -315,14 +312,14 @@ class AbstractLoss(AbstractOperator, ABC):
            to optimize and the loss function independent of any regularization."""
 
         super().build(*args)
-        return self.loss_opt, self.y_predict
+        return self.loss_opt, self.y_pred
 
     def check_input(self):
 
         """Check all input tensor types"""
 
         assert isinstance(self.y, tf.Tensor)
-        assert isinstance(self.output_network, tf.Tensor)
+        assert isinstance(self.x_out, tf.Tensor)
         assert all([isinstance(w, tf.Variable) for w in self.weights])
 
     @abstractmethod
@@ -335,11 +332,10 @@ class AbstractLoss(AbstractOperator, ABC):
     @abstractmethod
     def _set_predict(self):
 
-
         """Abstract methods which must set the prediction tensor"""
         raise NotImplementedError
 
-    def _build(self, y : tf.Tensor, output_network : tf.Tensor, weights : Tuple[tf.Variable] = (), *args):
+    def _build(self, y: tf.Tensor, x_out: tf.Tensor, weights: Tuple[tf.Variable] = (), *args):
 
         """ The _build method executes the following steps:
 
@@ -355,7 +351,7 @@ class AbstractLoss(AbstractOperator, ABC):
             y : tf.Tensor
                 tensor which contains all objective variable the algorithm learn
 
-            output_network : tf.Tensor
+            x_out : tf.Tensor
                 output of the network which must be transform to obtain the final prediction
 
             weights : Tuple[Tensor]
@@ -363,7 +359,7 @@ class AbstractLoss(AbstractOperator, ABC):
         """
 
         self.y = tf.identity(y, name=f"{self.name}/y")
-        self.output_network = tf.identity(output_network, name=f"{self.name}/output_network")
+        self.x_out = tf.identity(x_out, name=f"{self.name}/x_out")
 
         self.weights = weights
 
@@ -382,7 +378,7 @@ class AbstractLoss(AbstractOperator, ABC):
 
         self.loss = tf.identity(self.loss, name=f"{self.name}/loss")
         self.loss_opt = tf.identity(self.loss_opt, name=f"{self.name}/loss_opt")
-        self.y_predict = tf.identity(self.y_predict, name=f"{self.name}/y_predict")
+        self.y_pred = tf.identity(self.y_pred, name=f"{self.name}/y_pred")
 
     @abstractmethod
     def restore(self):
@@ -391,10 +387,9 @@ class AbstractLoss(AbstractOperator, ABC):
 
         self.loss = get_tf_tensor(name=f"{self.name}/loss:0")
         self.loss_opt = get_tf_tensor(name=f"{self.name}/loss_opt:0")
-        self.y_predict = get_tf_tensor(name=f"{self.name}/y_predict:0")
+        self.y_pred = get_tf_tensor(name=f"{self.name}/y_pred:0")
         self.y = get_tf_tensor(name=f"{self.name}/y:0")
-        self.output_network = get_tf_tensor(name=f"{self.name}/output_network:0")
-
+        self.x_out = get_tf_tensor(name=f"{self.name}/x_out:0")
 
     def _compute_penalization(self):
 
@@ -406,12 +401,3 @@ class AbstractLoss(AbstractOperator, ABC):
             list_penalization_type = ['L2']
             raise TypeError(
                 f"{self.penalization_type} is not a valid method. Method must be in {list_penalization_type}")
-
-
-
-
-
-
-
-
-

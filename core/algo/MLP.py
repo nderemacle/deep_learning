@@ -1,7 +1,8 @@
-from typing import Tuple, List
-import tensorflow as tf
-import numpy as np
 from abc import ABC, abstractmethod
+from typing import Tuple, List
+
+import numpy as np
+import tensorflow as tf
 
 from core.deep_learning.abstract_architecture import AbstractArchitecture
 from core.deep_learning.abstract_operator import AbstractLoss
@@ -10,7 +11,6 @@ from core.deep_learning.loss import CrossEntropy
 
 
 class AbstractMlp(AbstractArchitecture, ABC):
-
     """
     This class set the major cortex to build a Multi Layer Perceptron neural networK. . The neural architecture
     takes as input a linear vector of input data put in a succession of layer of neurons. In the end a
@@ -49,19 +49,19 @@ class AbstractMlp(AbstractArchitecture, ABC):
             elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
             using a N(0, law_parameters).
 
-        x_input : Tensor
+        x : Tensor
             Input tensor of the network.
 
-        y_target : Tensor
+        y : Tensor
             Tensor containing all True target variable to predict.
 
-        x_output : Tensor
+        x_out : Tensor
             Output of the network
 
         loss : Tensor
             loss function optimized to train the mlp.
 
-        y_predict : Tensor
+        y_pred : Tensor
             Prediction tensor.
 
         l_fc : List[FcLayer]
@@ -74,34 +74,33 @@ class AbstractMlp(AbstractArchitecture, ABC):
             Loss layer object.
     """
 
-    def __init__(self, name : str = 'AbstractMlp', use_gpu : bool = False):
+    def __init__(self, name: str = 'AbstractMlp', use_gpu: bool = False):
 
         super().__init__(name, use_gpu)
 
-        self.layer_size : Tuple = ()
-        self.input_dim : int = None
-        self.output_dim : int = None
-        self.act_funct : str = 'relu'
-        self.keep_proba : float = 1.
-        self.penalization_rate : float = 0.
-        self.law_name : str = "uniform"
-        self.law_param : float = 0.1
+        self.layer_size: Tuple = ()
+        self.input_dim: int = None
+        self.output_dim: int = None
+        self.act_funct: str = 'relu'
+        self.keep_proba: float = 1.
+        self.penalization_rate: float = 0.
+        self.law_name: str = "uniform"
+        self.law_param: float = 0.1
 
-        self.x_input : tf.placeholder = None
-        self.y_target : tf.placeholder = None
-        self.x_output : tf.Tensor = None
-        self.y_predict : tf.Tensor = None
-        self.loss : tf.Tensor = None
-        self.optimizer : tf.Tensor = None
+        self.x: tf.placeholder = None
+        self.y: tf.placeholder = None
+        self.x_out: tf.Tensor = None
+        self.y_pred: tf.Tensor = None
+        self.loss: tf.Tensor = None
+        self.optimizer: tf.Tensor = None
 
+        self.l_fc: List[FcLayer] = None
+        self.l_output: FcLayer = None
+        self.l_loss: AbstractLoss = None
 
-        self. l_fc : List[FcLayer] = None
-        self.l_output : FcLayer = None
-        self.l_loss : AbstractLoss = None
-
-    def build(self, layer_size : Tuple, input_dim : int, output_dim : int, act_funct : str = "relu",
-              keep_proba : float = 1.,  law_name  : str = "uniform", law_param : float = 0.1,
-              penalization_rate : float = 0., optimizer_name : str = "Adam"):
+    def build(self, layer_size: Tuple, input_dim: int, output_dim: int, act_funct: str = "relu",
+              keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1,
+              penalization_rate: float = 0., optimizer_name: str = "Adam"):
 
         super().build(layer_size=layer_size,
                       input_dim=input_dim,
@@ -119,41 +118,41 @@ class AbstractMlp(AbstractArchitecture, ABC):
         super()._build()
 
         # Define input and target tensor
-        self.x_input = self._placeholder(tf.float32, (None, self.input_dim), name=f"{self.name}/x_input")
-        self.y_target = self._placeholder(tf.float32, (None, self.output_dim), name=f"{self.name}/y_target")
+        self.x = self._placeholder(tf.float32, (None, self.input_dim), name=f"{self.name}/x")
+        self.y = self._placeholder(tf.float32, (None, self.output_dim), name=f"{self.name}/y")
 
         # Define all fully connected layer
         self.l_fc = []
         weights = []
         i = 0
-        self.x_output = self.x_input
+        self.x_out = self.x
         for s in self.layer_size:
             self.l_fc.append(
-                FcLayer(size=s, act_funct = self.act_funct,
-                        keep_proba  = self.keep_proba_tensor,
-                        name  = f"{self.name}/FcLayer{i}",
-                        law_name  = self.law_name,
-                        law_param = self.law_param))
+                FcLayer(size=s, act_funct=self.act_funct,
+                        keep_proba=self.keep_proba_tensor,
+                        name=f"{self.name}/FcLayer{i}",
+                        law_name=self.law_name,
+                        law_param=self.law_param))
 
-            self.x_output = self.l_fc[-1].build(self.x_output)
+            self.x_out = self.l_fc[-1].build(self.x_out)
             weights.append(self.l_fc[-1].w)
             i += 1
 
         # Define the final output layer
         self.l_output = FcLayer(size=self.output_dim,
-                                act_funct = None,
-                                keep_proba  = 1.,
-                                name  = f"{self.name}/OutputLayer",
-                                law_name  = self.law_name,
-                                law_param = self.law_param)
+                                act_funct=None,
+                                keep_proba=1.,
+                                name=f"{self.name}/OutputLayer",
+                                law_name=self.law_name,
+                                law_param=self.law_param)
 
-        self.x_output = self.l_output.build(self.x_output)
+        self.x_out = self.l_output.build(self.x_out)
 
         # Set the loss function and the optimizer
         self._set_loss(weights)
 
     @abstractmethod
-    def _set_loss(self, weights : List[tf.Variable]):
+    def _set_loss(self, weights: List[tf.Variable]):
 
         """This abstract method must set the loss function, the predition tensor and the optimizer tensor.
 
@@ -165,9 +164,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
          """
         raise NotImplementedError
 
-
-    def fit(self, x : np.ndarray, y : np.ndarray, n_epoch : int = 1, batch_size : int = 10,
-            learning_rate : float = 0.001, verbose : bool = True):
+    def fit(self, x: np.ndarray, y: np.ndarray, n_epoch: int = 1, batch_size: int = 10,
+            learning_rate: float = 0.001, verbose: bool = True):
 
         """ Given an input and a target array, fit the mlp during n_epoch.
 
@@ -206,10 +204,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
             for epoch in range(n_epoch):
                 np.random.shuffle(sample_index)
                 for batch_index in np.array_split(sample_index, n_split):
-
                     _, loss = self.sess.run([self.optimizer, self.loss],
-                                            feed_dict={self.x_input: x[batch_index, :],
-                                                       self.y_target: y[batch_index, :],
+                                            feed_dict={self.x: x[batch_index, :],
+                                                       self.y: y[batch_index, :],
                                                        self.learning_rate: learning_rate,
                                                        self.keep_proba_tensor: self.keep_proba})
                     m_loss *= n
@@ -222,8 +219,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
                 if verbose:
                     print(f'Epoch {epoch}: {m_loss}')
 
-
-    def predict(self, x : np.ndarray, batch_size : int = None) -> np.ndarray:
+    def predict(self, x: np.ndarray, batch_size: int = None) -> np.ndarray:
 
         """Predict a label given an array of input x
 
@@ -246,11 +242,10 @@ class AbstractMlp(AbstractArchitecture, ABC):
         with self.graph.as_default():
             y_predict = []
             for x_batch in [x] if batch_size is None else np.array_split(x, n_split, axis=0):
-                y_predict.append(self.sess.run(self.y_predict,
-                                               feed_dict={self.x_input: x_batch, self.keep_proba_tensor: 1.}))
+                y_predict.append(self.sess.run(self.y_pred,
+                                               feed_dict={self.x: x_batch, self.keep_proba_tensor: 1.}))
 
             return np.concatenate(y_predict, 0)
-
 
     @abstractmethod
     def get_params(self):
@@ -273,7 +268,6 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
 
 class MlpClassifier(AbstractMlp):
-
     """
     This class allows to train a MLP for classification task. The target array must be a One Hot Vector Encoding
     with dimension equal to the number of label to predict. In addition the class provide an additional methods to
@@ -281,28 +275,25 @@ class MlpClassifier(AbstractMlp):
 
     """
 
-    def __init__(self, name : str = 'MlpClassifier', use_gpu : bool = False):
-
+    def __init__(self, name: str = 'MlpClassifier', use_gpu: bool = False):
         super().__init__(name, use_gpu)
 
-    def _set_loss(self, weights : List[tf.Variable]):
-
+    def _set_loss(self, weights: List[tf.Variable]):
         """Use the cross entropy class to define the network loss function."""
 
         self.l_loss = CrossEntropy(penalization_rate=self.penalization_rate,
                                    penalization_type="L2",
                                    name=f"{self.name}/cross_entropy")
 
-        self.loss_opt, self.y_predict = self.l_loss.build(y=self.y_target,
-                                                          output_network=self.x_output,
-                                                          weights=weights)
+        self.loss_opt, self.y_pred = self.l_loss.build(y=self.y,
+                                                       x_out=self.x_out,
+                                                       weights=weights)
 
         self.loss = self.l_loss.loss
 
         self.optimizer = self._minimize(self.loss_opt, name=f"{self.name}/optimizer")
 
     def predict_proba(self, x: np.ndarray, batch_size: int = None) -> np.ndarray:
-
         """
         Predict a vector of probability for each label.
 
@@ -323,16 +314,14 @@ class MlpClassifier(AbstractMlp):
         n_split = 1 if batch_size is None else len(x) // batch_size
 
         with self.graph.as_default():
-            output_predict = []
+            y_pred = []
             for x_batch in [x] if batch_size is None else np.array_split(x, n_split, axis=0):
-                output_predict.append(self.sess.run(self.x_output,
-                                               feed_dict={self.x_input: x_batch, self.keep_proba_tensor: 1.}))
+                y_pred.append(self.sess.run(self.x_out,
+                                                    feed_dict={self.x: x_batch, self.keep_proba_tensor: 1.}))
 
-            output_predict = np.exp(np.concatenate(output_predict, 0))
+            y_pred = np.exp(np.concatenate(y_pred, 0))
 
-            return output_predict / output_predict.sum(1).reshape(-1, 1)
+            return y_pred / y_pred.sum(1).reshape(-1, 1)
 
     def get_params(self):
-
         return super().get_params()
-

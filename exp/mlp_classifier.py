@@ -1,11 +1,12 @@
 import sys
-import tensorflow as tf
+
 import numpy as np
-from sklearn.preprocessing import OneHotEncoder
+import tensorflow as tf
+
 from core.algo.MLP import MlpClassifier
 
-def one_hot_encoding(x : np.ndarray):
 
+def one_hot_encoding(x: np.ndarray):
     assert isinstance(x, np.ndarray)
     assert len(x.shape) == 1
     assert x.min() == 0
@@ -15,10 +16,9 @@ def one_hot_encoding(x : np.ndarray):
 
 
 def main():
-
     # Load and prepare data
     mnist = tf.keras.datasets.mnist
-    (x_train, y_train),(x_test, y_test) = mnist.load_data()
+    (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train, x_test = x_train.reshape(-1, 784) / 255.0, x_test.reshape(-1, 784) / 255.0
 
     # Build and train a first time the network
@@ -67,13 +67,6 @@ def main():
 
     sys.exit(0)
 
+
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
