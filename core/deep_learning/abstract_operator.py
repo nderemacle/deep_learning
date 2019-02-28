@@ -143,6 +143,7 @@ class AbstractLayer(AbstractOperator, ABC):
 
         self.act_funct = act_funct
         self.keep_proba = keep_proba
+        self.batch_norm = False
         self.law_param = law_param
         self.law_name = law_name
 
@@ -176,6 +177,9 @@ class AbstractLayer(AbstractOperator, ABC):
         self._init_variable(*init_args)
 
         self._operator()
+
+        if self.batch_norm:
+            self._apply_batch_norm()
 
         if self.act_funct is not None:
             self._apply_act_funct()
@@ -229,6 +233,19 @@ class AbstractLayer(AbstractOperator, ABC):
         """Apply the dropout operator on the output attribute."""
 
         self.x_out = tf.nn.dropout(self.x_out, keep_prob=self.keep_proba)
+
+    def _apply_batch_norm(self):
+        """Apply batch normalization before the activation function in order to scale the layer avoiding vanishing
+        gradient problems.
+        """
+
+        self.x_out = tf.keras.layers.BatchNormalization(
+            axis=-1, momentum=0.99, epsilon=0.001, center=True, scale=True, beta_initializer='zeros',
+            gamma_initializer='ones', moving_mean_initializer='zeros', moving_variance_initializer='ones',
+            beta_regularizer=None, gamma_regularizer=None, beta_constraint=None, gamma_constraint=None,
+            renorm=False, renorm_clipping=None, renorm_momentum=0.99, fused=None, trainable=True,
+            virtual_batch_size=None, adjustment=None, name=None)(self.x_out)
+
 
     def _apply_act_funct(self):
 

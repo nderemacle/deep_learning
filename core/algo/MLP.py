@@ -13,7 +13,7 @@ from core.utils.validation import check_array
 
 class AbstractMlp(AbstractArchitecture, ABC):
     """
-    This class set the major cortex to build a Multi Layer Perceptron neural networK. . The neural architecture
+    This class set the major cortex of a Multi Layer Perceptron neural network. . The neural architecture
     takes as input a linear vector of input data put in a succession of layer of neurons. In the end a
     last layer reduce the dimensionality of the network to match with the number of target variables to predict.
 

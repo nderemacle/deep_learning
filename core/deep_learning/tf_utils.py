@@ -16,7 +16,7 @@ def random_law(shape: Tuple, law_name: str, law_param: float, dtype: tf.DType = 
             Dimension of the tensor generate
 
         law_name : str
-            Law of the ransom law to used. Must be "normal" for normal law or "uniform" for uniform law.
+            Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
 
         law_params : float
             Law parameters which is dependent to the initialised law choose. If uniform, all tensor
@@ -84,13 +84,13 @@ def variable(shape: Tuple, initial_value: np.ndarray = None, law_name: str = "un
     return tf.Variable(initial_value, name=name)
 
 
-def get_act_funct(act_funct_type: str = 'relu'):
+def get_act_funct(name: str = 'relu'):
     """
-    Return a tensorflow activation method
+    Return a Tensorflow activation method.
 
     Attributes:
 
-        act_funct_type : str
+        name : str
             name of the activation function
 
     Output:
@@ -98,16 +98,26 @@ def get_act_funct(act_funct_type: str = 'relu'):
         activation function object
     """
 
-    if act_funct_type == 'relu':
+    if name == 'relu':
         return tf.nn.relu
-    elif act_funct_type == 'sigmoid':
+    elif name == 'sigmoid':
         return tf.nn.sigmoid
-    elif act_funct_type == 'tanh':
+    elif name == 'tanh':
         return tf.nn.tanh
+    elif name == 'relu6':
+        return tf.nn.relu6
+    elif name == 'crelu':
+        return tf.nn.crelu
+    elif name == 'elu':
+        return tf.nn.elu
+    elif name == 'softplus':
+        return tf.nn.softplus
+    elif name == 'softsign':
+        return tf.nn.softsign
     else:
-        list_act_funct = ['relu', 'sigmoid', 'tanh']
+        list_act_funct = ['relu', 'sigmoid', 'tanh', 'relu6', 'crelu', 'elu', 'softplus', 'softsign']
         raise TypeError(
-            f"{act_funct_type} isn't a valide activation function. Methods must be in {list_act_funct}")
+            f"{name} isn't a valide activation function. Methods must be in {list_act_funct}")
 
 
 def get_tf_tensor(name: str, graph: tf.Graph = None):
