@@ -98,11 +98,24 @@ class AbstractLayer(AbstractOperator, ABC):
             When a prediction is done we must set this probability to 1. to get a valid prediction. Set a tensor
             allow then to switch from training to prediction. If no dropout is espected set the proba to 1. or None.
 
+        batch_norm: bool
+            If True apply the batch normalization after the _operator methods.
+
+        is_training : Tensor
+            Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
+
         law_name : str (see tf_utils)
             Name of the law to use to initialized Variable.
 
         law_param : float (see tf_utils)
-            Parameter of the law used to initialized weight. This paramter is law_name dependent.
+            Parameter of the law used to initialized weight. This parameter is law_name dependent.
+
+        decay: float
+            Decay used to update the moving average of the batch norm. The moving average is used to learn the
+            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.)
+
+        epsilon: float
+            Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
 
         name : str
             Name of the operator to flag it in the tensorflow graph.
@@ -132,8 +145,12 @@ class AbstractLayer(AbstractOperator, ABC):
     def __init__(self,
                  act_funct: str = None,
                  keep_proba: (tf.Tensor, float, None) = None,
+                 batch_norm: bool = False,
+                 is_training: (tf.Tensor, None) = None,
                  law_name: str = "uniform",
                  law_param: float = 0.1,
+                 decay: float = 0.999,
+                 epsilon: float = 0.001,
                  name: str = None):
 
         super().__init__(name)
@@ -143,9 +160,12 @@ class AbstractLayer(AbstractOperator, ABC):
 
         self.act_funct = act_funct
         self.keep_proba = keep_proba
-        self.batch_norm = False
+        self.is_training = is_training
+        self.batch_norm = batch_norm
         self.law_param = law_param
         self.law_name = law_name
+        self.decay = decay
+        self.epsilon = epsilon
 
     def _build(self, x: tf.Tensor, *init_args):
 
@@ -239,13 +259,15 @@ class AbstractLayer(AbstractOperator, ABC):
         gradient problems.
         """
 
-        self.x_out = tf.keras.layers.BatchNormalization(
-            axis=-1, momentum=0.99, epsilon=0.001, center=True, scale=True, beta_initializer='zeros',
-            gamma_initializer='ones', moving_mean_initializer='zeros', moving_variance_initializer='ones',
-            beta_regularizer=None, gamma_regularizer=None, beta_constraint=None, gamma_constraint=None,
-            renorm=False, renorm_clipping=None, renorm_momentum=0.99, fused=None, trainable=True,
-            virtual_batch_size=None, adjustment=None, name=None)(self.x_out)
-
+        self.x_out = tf.contrib.layers.batch_norm(
+            inputs=self.x_out,
+            decay=self.decay,
+            epsilon=self.epsilon,
+            updates_collections=tf.GraphKeys.UPDATE_OPS,
+            is_training=self.is_training,
+            data_format='NHWC',
+            renorm=False,
+            renorm_decay=self.decay)
 
     def _apply_act_funct(self):
 

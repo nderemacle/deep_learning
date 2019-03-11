@@ -12,9 +12,13 @@ class FcLayer(AbstractLayer):
                  size: int,
                  act_funct: (str, None) = "relu",
                  keep_proba: (tf.Tensor, float) = 1.,
+                 batch_norm: bool = False,
+                 is_training: (tf.Tensor, None) = None,
                  name: str = "fc",
                  law_name: str = "uniform",
-                 law_param: float = 0.1):
+                 law_param: float = 0.1,
+                 decay: float = 0.99,
+                 epsilon: float = 0.001):
         """
         Deployed a fully connected layer having a size equal to it number of neurons. It inherit to all trainning
         methods implement in the AbstractLayer class and can used it.
@@ -29,6 +33,12 @@ class FcLayer(AbstractLayer):
             keep_proba : float
                 probability to keep a neuron activate during trainning if we want to apply the dropout method.
 
+            batch_norm: bool
+                If True apply the batch normalization after the _operator method.
+
+            is_training : Tensor
+                Tensor indicating if data are used for training or for prediction. Useful for batch normalization.
+
             name : str
                 name of the layer
 
@@ -38,6 +48,14 @@ class FcLayer(AbstractLayer):
             law_param : float
                 parameter of the initialization law
 
+            decay: float
+                Decay used to update the moving average of the batch norm. The moving average is used to learn the
+                empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.)
+
+            epsilon: float
+                 Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+
+
             w : Variable with size (input_dim, size)
                 Weights of the layer. Must be learnt.
 
@@ -45,7 +63,7 @@ class FcLayer(AbstractLayer):
                 Biases of the layer. Must be learnt.
         """
 
-        super().__init__(act_funct, keep_proba, law_name, law_param, name)
+        super().__init__(act_funct, keep_proba, batch_norm, is_training, law_name, law_param, decay, epsilon, name)
 
         self.size = size
         self.w: tf.Variable = None
@@ -107,9 +125,13 @@ class Conv1dLayer(AbstractLayer):
                  padding: str = "VALID",
                  act_funct: (str, None) = "relu",
                  keep_proba: (tf.Tensor, float) = 1.,
+                 batch_norm: bool = False,
+                 is_training: (tf.Tensor, None) = None,
                  name: str = "conv",
                  law_name: str = "uniform",
-                 law_param: float = 0.1):
+                 law_param: float = 0.1,
+                 decay: float = 0.99,
+                 epsilon: float = 0.001):
         """
         Build a 1d convolution layer. The filter take as input an array with shape (batch_size, Width, Channel),
         compute a convolution using one or many filter and return a tensor with size (batch_size, new_Width, n_filters).
@@ -136,6 +158,12 @@ class Conv1dLayer(AbstractLayer):
             keep_proba : float
                 probability to keep a neuron activate during trainning if we want to apply the dropout method.
 
+            batch_norm: bool
+                If True apply the batch normalization after the _operator methods.
+
+            is_training : Tensor
+                Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
+
             name : str
                 name of the layer
 
@@ -145,6 +173,13 @@ class Conv1dLayer(AbstractLayer):
             law_param : float
                 parameter of the initialization law
 
+            decay: float
+                Decay used to update the moving average of the batch norm. The moving average is used to learn the
+                empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.)
+
+            epsilon: float
+                 Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+
             w : Variable with size (width, n_channel, n_filter)
                 weight of the filter
 
@@ -153,7 +188,7 @@ class Conv1dLayer(AbstractLayer):
 
         """
 
-        super().__init__(act_funct, keep_proba, law_name, law_param, name)
+        super().__init__(act_funct, keep_proba, batch_norm, is_training, law_name, law_param, decay, epsilon, name)
 
         assert padding in ["SAME", "VALID"]
 

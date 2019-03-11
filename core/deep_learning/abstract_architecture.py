@@ -43,6 +43,9 @@ class AbstractArchitecture(ABC):
 
         keep_proba_tensor : Tensor
             Tensor for dropout methods
+
+        is_training : Tensor
+            Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
     """
 
     def __init__(self, name: str, use_gpu: bool = False):
@@ -53,8 +56,9 @@ class AbstractArchitecture(ABC):
         self.sess = self._set_session()
         self.optimizer_name = "Adam"
         self.learning_curve = []
-        self.learning_rate = None
-        self.keep_proba_tensor = None
+        self.learning_rate: tf.placeholder = None
+        self.keep_proba_tensor: tf.placeholder = None
+        self.is_training: tf.placeholder = None
 
     def _set_session(self) -> tf.Session:
         """ configure tensorflow graph and session """
@@ -73,6 +77,7 @@ class AbstractArchitecture(ABC):
 
         self.learning_rate = self._placeholder(tf.float32, None, name="learning_rate")
         self.keep_proba_tensor = self._placeholder(tf.float32, None, name="keep_proba_tensor")
+        self.is_training = self._placeholder(tf.bool, None, name="is_training")
 
     def build(self, **args):
 
@@ -193,7 +198,8 @@ class AbstractArchitecture(ABC):
     def _minimize(self, f: tf.Tensor, name: str = "optimizer"):
 
         """
-        Return an optimizer which minimize a tensor f.
+        Return an optimizer which minimize a tensor f. Add all paramters store in the UPDATE_OPS such that all moving
+        mean and variance parameters of a batch normalization.
 
         Attributes:
 
@@ -210,7 +216,9 @@ class AbstractArchitecture(ABC):
         if env.RESTORE:
             return get_tf_operation(name, self.graph)
         else:
-            return self._get_optimizer().minimize(f, name=name)
+            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            with tf.control_dependencies(update_ops):
+                return self._get_optimizer().minimize(f, name=name)
 
     def _placeholder(self, dtype: tf.DType, shape: (Tuple, None), name: str):
 

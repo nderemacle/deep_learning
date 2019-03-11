@@ -39,6 +39,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
         keep_proba : float:
             Probability to keep a neuron activate during training.
 
+        batch_norm: bool
+            If True apply the batch normalization after the _operator method.
+
         penalization_rate : float
             Penalization rate if regularization is used.
 
@@ -49,6 +52,13 @@ class AbstractMlp(AbstractArchitecture, ABC):
             Law parameters which is dependent to the initialised law choose. If uniform, all tensor
             elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
             using a N(0, law_parameters).
+
+        decay: float
+            Decay used to update the moving average of the batch norm. The moving average is used to learn the
+            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.)
+
+        epsilon: float
+            Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
 
         x : Tensor
             Input tensor of the network.
@@ -84,9 +94,12 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.output_dim: int = None
         self.act_funct: str = 'relu'
         self.keep_proba: float = 1.
+        self.batch_norm = False
         self.penalization_rate: float = 0.
         self.law_name: str = "uniform"
         self.law_param: float = 0.1
+        self.decay = 0.99
+        self.epsilon = 0.001
 
         self.x: tf.placeholder = None
         self.y: tf.placeholder = None
@@ -100,8 +113,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.l_loss: AbstractLoss = None
 
     def build(self, layer_size: Tuple, input_dim: int, output_dim: int, act_funct: str = "relu",
-              keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1,
-              penalization_rate: float = 0., optimizer_name: str = "Adam"):
+              keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1, batch_norm: bool = False,
+              decay: float = 0.999, epsilon: float = 0.001, penalization_rate: float = 0.,
+              optimizer_name: str = "Adam"):
 
         super().build(layer_size=layer_size,
                       input_dim=input_dim,
@@ -110,6 +124,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
                       keep_proba=keep_proba,
                       law_name=law_name,
                       law_param=law_param,
+                      batch_norm=batch_norm,
+                      decay=decay,
+                      epsilon=epsilon,
                       penalization_rate=penalization_rate,
                       optimizer_name=optimizer_name)
 
@@ -119,8 +136,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
         super()._build()
 
         # Define input and target tensor
-        self.x = self._placeholder(tf.float32, (None, self.input_dim), name=f"x")
-        self.y = self._placeholder(tf.float32, (None, self.output_dim), name=f"y")
+        self.x = self._placeholder(tf.float32, (None, self.input_dim), name="x")
+        self.y = self._placeholder(tf.float32, (None, self.output_dim), name="y")
 
         # Define all fully connected layer
         self.l_fc = []
@@ -131,9 +148,13 @@ class AbstractMlp(AbstractArchitecture, ABC):
             self.l_fc.append(
                 FcLayer(size=s, act_funct=self.act_funct,
                         keep_proba=self.keep_proba_tensor,
+                        batch_norm=self.batch_norm,
+                        is_training=self.is_training,
                         name=f"FcLayer{i}",
                         law_name=self.law_name,
-                        law_param=self.law_param))
+                        law_param=self.law_param,
+                        decay=self.decay,
+                        epsilon=self.epsilon))
 
             self.x_out = self.l_fc[-1].build(self.x_out)
             weights.append(self.l_fc[-1].w)
@@ -143,6 +164,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.l_output = FcLayer(size=self.output_dim,
                                 act_funct=None,
                                 keep_proba=1.,
+                                batch_norm=False,
                                 name=f"OutputLayer",
                                 law_name=self.law_name,
                                 law_param=self.law_param)
@@ -209,7 +231,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
                                             feed_dict={self.x: x[batch_index, :],
                                                        self.y: y[batch_index, :],
                                                        self.learning_rate: learning_rate,
-                                                       self.keep_proba_tensor: self.keep_proba})
+                                                       self.keep_proba_tensor: self.keep_proba,
+                                                       self.is_training: True})
                     m_loss *= n
                     m_loss += loss
                     n += 1
@@ -244,7 +267,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
             y_predict = []
             for x_batch in [x] if batch_size is None else np.array_split(x, n_split, axis=0):
                 y_predict.append(self.sess.run(self.y_pred,
-                                               feed_dict={self.x: x_batch, self.keep_proba_tensor: 1.}))
+                                               feed_dict={self.x: x_batch,
+                                                          self.keep_proba_tensor: 1.,
+                                                          self.is_training: False}))
 
             return np.concatenate(y_predict, 0)
 
@@ -259,9 +284,12 @@ class AbstractMlp(AbstractArchitecture, ABC):
             'output_dim': self.output_dim,
             'act_funct': self.act_funct,
             'keep_proba': self.keep_proba,
+            'batch_norm': self.batch_norm,
             'law_name': self.law_name,
             'law_param': self.law_param,
-            'penalization_rate': self.penalization_rate}
+            'penalization_rate': self.penalization_rate,
+            'decay': self.decay,
+            'epsilon': self.epsilon}
 
         params.update(super().get_params())
 
@@ -292,7 +320,7 @@ class MlpClassifier(AbstractMlp):
 
         self.loss = self.l_loss.loss
 
-        self.optimizer = self._minimize(self.loss_opt, name=f"optimizer")
+        self.optimizer = self._minimize(self.loss_opt, name="optimizer")
 
     def predict_proba(self, x: np.ndarray, batch_size: int = None) -> np.ndarray:
         """
@@ -318,7 +346,9 @@ class MlpClassifier(AbstractMlp):
             y_pred = []
             for x_batch in [x] if batch_size is None else np.array_split(x, n_split, axis=0):
                 y_pred.append(self.sess.run(self.x_out,
-                                            feed_dict={self.x: x_batch, self.keep_proba_tensor: 1.}))
+                                            feed_dict={self.x: x_batch,
+                                                       self.keep_proba_tensor: 1.,
+                                                       self.is_training: False}))
 
             y_pred = np.exp(np.concatenate(y_pred, 0))
 

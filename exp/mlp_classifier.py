@@ -29,10 +29,13 @@ def main():
               output_dim=10,
               act_funct='relu',
               keep_proba=0.8,
+              batch_norm=True,
               law_name='uniform',
               law_param=1e-2,
               penalization_rate=0.01,
-              optimizer_name="Adam")
+              optimizer_name="Adam",
+              decay=0.99,
+              epsilon=0.001)
 
     print("First training begin:")
     clf.fit(x=x_train, y=one_hot_encoding(y_train), n_epoch=1, batch_size=32, learning_rate=1e-3, verbose=True)
