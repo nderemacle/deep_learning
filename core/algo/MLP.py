@@ -97,13 +97,13 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.output_dim: int = None
         self.act_funct: str = 'relu'
         self.keep_proba: float = 1.
-        self.batch_norm = False
+        self.batch_norm: bool = False
         self.penalization_rate: float = 0.
         self.penalization_type: (str, None) = None
         self.law_name: str = "uniform"
         self.law_param: float = 0.1
-        self.decay = 0.99
-        self.epsilon = 0.001
+        self.decay: float = 0.99
+        self.epsilon: float = 0.001
 
         self.x: tf.placeholder = None
         self.y: tf.placeholder = None
