@@ -33,6 +33,7 @@ def main():
               law_name='uniform',
               law_param=1e-2,
               penalization_rate=0.01,
+              penalization_type='L2',
               optimizer_name="Adam",
               decay=0.99,
               epsilon=0.001)
@@ -47,12 +48,12 @@ def main():
     print("Score test:  {}".format((y_test == y_test_predict).mean()))
 
     # Save the network and free the memory
-    clf.save(path_folder="output/MlpCLassifier/")
+    clf.save(path_folder="output/MlpClassifier/")
     del clf
 
     # Restore the mlp
     clf = MlpClassifier(use_gpu=False)
-    clf.restore(path_folder="output/MlpCLassifier/")
+    clf.restore(path_folder="output/MlpClassifier/")
 
     # Continue the training
     print("Second training begin:")

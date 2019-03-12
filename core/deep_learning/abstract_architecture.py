@@ -81,12 +81,14 @@ class AbstractArchitecture(ABC):
 
     def build(self, **args):
 
-        """ Methods to build the Neural Network cortex. Te child methods can call the parent method to initialize
-            all Variable."""
+        """ Methods to build the Neural Network cortex. In a first time all network arguments are update into the
+         dict class then the graph is build and all variable initialized. The name scope is used to ensure a correct
+         tensor naming: network_name/operator_name/tensor. The '/' allows to insure tensorflow used a valid network
+         name when the build is recalled."""
 
         self.__dict__.update(args)
         with self.graph.as_default():
-            with tf.name_scope(self.name):
+            with tf.name_scope(self.name + "/"):
                 self._build()
                 self.sess.run(tf.initializers.global_variables())
 

@@ -57,9 +57,11 @@ class AbstractOperator(ABC):
 
     def build(self, *args):
 
-        """Build or restore and existing operator using the valid scope name."""
+        """
+        Build or restore and existing operator using the valid scope name. The '/' allows to insure tensorflow used
+        a valid network operator name when the build is recalled."""
 
-        with tf.name_scope(self.name):
+        with tf.name_scope(self.name + "/"):
             if env.RESTORE:
                 self.restore()
             else:
@@ -149,7 +151,7 @@ class AbstractLayer(AbstractOperator, ABC):
                  is_training: (tf.Tensor, None) = None,
                  law_name: str = "uniform",
                  law_param: float = 0.1,
-                 decay: float = 0.999,
+                 decay: float = 0.99,
                  epsilon: float = 0.001,
                  name: str = None):
 
@@ -255,8 +257,15 @@ class AbstractLayer(AbstractOperator, ABC):
         self.x_out = tf.nn.dropout(self.x_out, keep_prob=self.keep_proba)
 
     def _apply_batch_norm(self):
-        """Apply batch normalization before the activation function in order to scale the layer avoiding vanishing
+        """
+        Apply batch normalization before the activation function in order to scale the layer avoiding vanishing
         gradient problems.
+
+        During training the batch normalization center and scale the output layer using the mean and the variance
+        of the layer over the population. These momentum are learn online during training using a moving average with
+        the decay parameter: mu_t = decay * mu_t + (1 - decay) * mu_t-1
+        The parameter epsilon is set to avoid in problems when dividing by the layer standard deviation.
+
         """
 
         self.x_out = tf.contrib.layers.batch_norm(
@@ -440,7 +449,9 @@ class AbstractLoss(AbstractOperator, ABC):
 
         if self.penalization_type == 'L2':
             self.penality = tf.add_n([tf.nn.l2_loss(v) for v in self.weights])
+        elif self.penalization_type == 'L1':
+            self.penality = tf.reduce_sum([tf.reduce_sum(tf.abs(v)) for v in self.weights])
         else:
-            list_penalization_type = ['L2']
+            list_penalization_type = ['L2', 'L1']
             raise TypeError(
                 f"{self.penalization_type} is not a valid method. Method must be in {list_penalization_type}")

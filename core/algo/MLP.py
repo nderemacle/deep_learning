@@ -45,6 +45,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
         penalization_rate : float
             Penalization rate if regularization is used.
 
+        penalization_type: None or str
+            Indicates the type of penalization to use if not None (Ex: L1 or L2)
+
          law_name : str
             Law of the ransom law to used. Must be "normal" for normal law or "uniform" for uniform law.
 
@@ -96,6 +99,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.keep_proba: float = 1.
         self.batch_norm = False
         self.penalization_rate: float = 0.
+        self.penalization_type: (str, None) = None
         self.law_name: str = "uniform"
         self.law_param: float = 0.1
         self.decay = 0.99
@@ -115,7 +119,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
     def build(self, layer_size: Tuple, input_dim: int, output_dim: int, act_funct: str = "relu",
               keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1, batch_norm: bool = False,
               decay: float = 0.999, epsilon: float = 0.001, penalization_rate: float = 0.,
-              optimizer_name: str = "Adam"):
+              penalization_type: (str, None) = None, optimizer_name: str = "Adam"):
 
         super().build(layer_size=layer_size,
                       input_dim=input_dim,
@@ -128,6 +132,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
                       decay=decay,
                       epsilon=epsilon,
                       penalization_rate=penalization_rate,
+                      penalization_type=penalization_type,
                       optimizer_name=optimizer_name)
 
     def _build(self):
@@ -311,7 +316,7 @@ class MlpClassifier(AbstractMlp):
         """Use the cross entropy class to define the network loss function."""
 
         self.l_loss = CrossEntropy(penalization_rate=self.penalization_rate,
-                                   penalization_type="L2",
+                                   penalization_type=self.penalization_type,
                                    name=f"cross_entropy")
 
         self.loss_opt, self.y_pred = self.l_loss.build(y=self.y,

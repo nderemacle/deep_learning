@@ -76,6 +76,18 @@ class TesAbstractLoss(tf.test.TestCase):
             expected = (3 * (1 ** 2) + 2 * (2 ** 2)) / 2
             self.assertEqual(loss.penality.eval(), expected)
 
+    def testL1Penalization(self):
+        W0 = np.array([1., 1., -1.])
+        W1 = np.array([-2., -2.])
+        list_weight = [W0, W1]
+
+        loss = CrossEntropy(penalization_type="L1")
+        loss.weights = list_weight
+        loss._compute_penalization()
+        with self.test_session():
+            expected = (1 + 1 + 1) + (2 + 2)
+            self.assertEqual(loss.penality.eval(), expected)
+
 
 class TestCrossEntropy(tf.test.TestCase):
 
