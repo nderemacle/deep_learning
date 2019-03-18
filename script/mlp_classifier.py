@@ -30,16 +30,26 @@ def main():
               act_funct='relu',
               keep_proba=0.8,
               batch_norm=True,
+              batch_renorm=True,
               law_name='uniform',
               law_param=1e-2,
               penalization_rate=0.01,
               penalization_type='L2',
               optimizer_name="Adam",
               decay=0.99,
+              decay_renorm=0.99,
               epsilon=0.001)
 
     print("First training begin:")
-    clf.fit(x=x_train, y=one_hot_encoding(y_train), n_epoch=1, batch_size=32, learning_rate=1e-3, verbose=True)
+    clf.fit(x=x_train,
+            y=one_hot_encoding(y_train),
+            n_epoch=2,
+            batch_size=32,
+            learning_rate=1e-3,
+            rmin=1,
+            rmax=1,
+            dmax=0,
+            verbose=True)
 
     # Make prediction
     y_train_predict = clf.predict(x=x_train, batch_size=32)
@@ -57,8 +67,15 @@ def main():
 
     # Continue the training
     print("Second training begin:")
-    clf.fit(x=x_train, y=one_hot_encoding(y_train), n_epoch=1, batch_size=32, learning_rate=1e-3, verbose=True)
-
+    clf.fit(x=x_train,
+            y=one_hot_encoding(y_train),
+            n_epoch=2,
+            batch_size=32,
+            learning_rate=1e-3,
+            rmin=1 / 3,
+            rmax=3,
+            dmax=5,
+            verbose=True)
     # Make prediction
     y_train_predict = clf.predict(x=x_train, batch_size=32)
     y_test_predict = clf.predict(x=x_test, batch_size=32)

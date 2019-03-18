@@ -1,3 +1,5 @@
+from typing import Union
+
 import numpy as np
 import tensorflow as tf
 
@@ -10,20 +12,27 @@ class FcLayer(AbstractLayer):
 
     def __init__(self,
                  size: int,
-                 act_funct: (str, None) = "relu",
-                 keep_proba: (tf.Tensor, float) = 1.,
+                 act_funct: Union[str, None] = "relu",
+                 keep_proba: Union[tf.Tensor, float] = 1.,
                  batch_norm: bool = False,
-                 is_training: (tf.Tensor, None) = None,
+                 batch_renorm: bool = False,
+                 is_training: Union[tf.Tensor, None] = None,
                  name: str = "fc",
                  law_name: str = "uniform",
                  law_param: float = 0.1,
                  decay: float = 0.99,
-                 epsilon: float = 0.001):
+                 epsilon: float = 0.001,
+                 decay_renorm: float = 0.001,
+                 rmin: Union[tf.Tensor, float] = 0.33,
+                 rmax: Union[tf.Tensor, float] = 3,
+                 dmax: Union[tf.Tensor, float] = 5):
         """
         Deployed a fully connected layer having a size equal to it number of neurons. It inherit to all trainning
         methods implement in the AbstractLayer class and can used it.
 
-        Attributes:
+        Args
+        ----
+
             size : int,
                 number of neurons to output
 
@@ -35,6 +44,9 @@ class FcLayer(AbstractLayer):
 
             batch_norm: bool
                 If True apply the batch normalization after the _operator method.
+
+            batch_renorm: bool
+                Whether to used batch renormalization or not.
 
             is_training : Tensor
                 Tensor indicating if data are used for training or for prediction. Useful for batch normalization.
@@ -55,6 +67,20 @@ class FcLayer(AbstractLayer):
             epsilon: float
                  Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
 
+            decay_renorm: float
+                Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
+
+            rmin: Tensor or float
+                Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.
+
+            rmax: Tensor or float
+                Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.
+
+            dmax: Tensor or float
+                When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax)
+
+    Attributes
+    ----------
 
             w : Variable with size (input_dim, size)
                 Weights of the layer. Must be learnt.
@@ -63,18 +89,19 @@ class FcLayer(AbstractLayer):
                 Biases of the layer. Must be learnt.
         """
 
-        super().__init__(act_funct, keep_proba, batch_norm, is_training, law_name, law_param, decay, epsilon, name)
+        super().__init__(act_funct, keep_proba, batch_norm, batch_renorm, is_training, law_name, law_param, decay,
+                         epsilon, decay_renorm, rmin, rmax, dmax, name)
 
         self.size = size
         self.w: tf.Variable = None
         self.b: tf.Variable = None
 
-    def _check_input(self):
+    def _check_input(self) -> None:
         """Assert the input tensor have shape 2"""
 
         check_tensor(self.x, shape_dim=2)
 
-    def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None):
+    def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None) -> None:
         """Initialize the weight and biase. If init matrix are input variable are initialize using them.
 
         Attributes:
@@ -93,7 +120,7 @@ class FcLayer(AbstractLayer):
         self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
         self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
 
-    def _operator(self):
+    def _operator(self) -> None:
         """compute the linear operator b + X * W"""
 
         self.x_out = tf.add(self.b, tf.matmul(self.x, self.w))
@@ -108,7 +135,7 @@ class FcLayer(AbstractLayer):
 
         return super().build(x, w_init, b_init)
 
-    def restore(self):
+    def restore(self) -> None:
         """Restore the input, output tensor and all variables."""
 
         super().restore()
@@ -123,21 +150,27 @@ class Conv1dLayer(AbstractLayer):
                  n_filters: int,
                  stride: int = 1,
                  padding: str = "VALID",
-                 act_funct: (str, None) = "relu",
-                 keep_proba: (tf.Tensor, float) = 1.,
+                 act_funct: Union[str, None] = "relu",
+                 keep_proba: Union[tf.Tensor, float] = 1.,
                  batch_norm: bool = False,
-                 is_training: (tf.Tensor, None) = None,
+                 batch_renorm: bool = False,
+                 is_training: Union[tf.Tensor, None] = None,
                  name: str = "conv",
                  law_name: str = "uniform",
                  law_param: float = 0.1,
                  decay: float = 0.99,
-                 epsilon: float = 0.001):
+                 epsilon: float = 0.001,
+                 decay_renorm: float = 0.001,
+                 rmin: Union[tf.Tensor, float] = 0.33,
+                 rmax: Union[tf.Tensor, float] = 3,
+                 dmax: Union[tf.Tensor, float] = 5):
         """
         Build a 1d convolution layer. The filter take as input an array with shape (batch_size, Width, Channel),
         compute a convolution using one or many filter and return a tensor with size (batch_size, new_Width, n_filters).
         The Width can change regarding the filter_width, the stride and the padding selected.
 
-        Attributes:
+        Args
+        ----
 
             filter_width : int
                 Width of the filter apply on the matrix.
@@ -161,6 +194,9 @@ class Conv1dLayer(AbstractLayer):
             batch_norm: bool
                 If True apply the batch normalization after the _operator methods.
 
+            batch_renorm: bool
+                Whether to used batch renormalization or not.
+
             is_training : Tensor
                 Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
 
@@ -180,6 +216,21 @@ class Conv1dLayer(AbstractLayer):
             epsilon: float
                  Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
 
+            decay_renorm: float
+                Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
+
+            rmin: Tensor or float
+                Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.
+
+            rmax: Tensor or float
+                Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.
+
+            dmax: Tensor or float
+                When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax)
+
+        Attributes
+        ----------
+
             w : Variable with size (width, n_channel, n_filter)
                 weight of the filter
 
@@ -188,7 +239,8 @@ class Conv1dLayer(AbstractLayer):
 
         """
 
-        super().__init__(act_funct, keep_proba, batch_norm, is_training, law_name, law_param, decay, epsilon, name)
+        super().__init__(act_funct, keep_proba, batch_norm, batch_renorm, is_training, law_name, law_param, decay,
+                         epsilon, decay_renorm, rmin, rmax, dmax, name)
 
         assert padding in ["SAME", "VALID"]
 
@@ -200,12 +252,12 @@ class Conv1dLayer(AbstractLayer):
         self.w: tf.Variable = None
         self.b: tf.Variable = None
 
-    def _check_input(self):
+    def _check_input(self) -> None:
         """Assert the input tensor have size 3."""
 
         check_tensor(self.x, shape_dim=3)
 
-    def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None):
+    def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None) -> None:
         """Set all filter variable. Filter can be initialize using outside array.
 
         Attributes:
@@ -224,7 +276,7 @@ class Conv1dLayer(AbstractLayer):
         self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
         self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
 
-    def _operator(self):
+    def _operator(self) -> None:
         """For simplicity we use the tf.nn.conv1d. According to the tensorflow documentation, this method is just a
           wrapper to tf.nn.conv2d and use a reshape step after and before the conv2d call. Can be improve
           in future version """
@@ -242,7 +294,7 @@ class Conv1dLayer(AbstractLayer):
 
         return super().build(x, w_init, b_init)
 
-    def restore(self):
+    def restore(self) -> None:
         """Restore all filter variabe an input/output tensor"""
 
         self.w = get_tf_tensor(name="w")
@@ -271,13 +323,13 @@ class MinMaxLayer(AbstractLayer):
 
         self.n_entries = n_entries
 
-    def _check_input(self):
+    def _check_input(self) -> None:
 
         """Assert the input tnput tensor have 2 dimensions."""
 
         check_tensor(self.x, shape_dim=2)
 
-    def _operator(self):
+    def _operator(self) -> None:
 
         """ The operator use tf.nn.top_k to sort all raw independently from each other then split the tensor into
             2 tensor x_min and x_max and concatenate them to build the final output."""
@@ -302,8 +354,8 @@ class MinMaxLayer(AbstractLayer):
 
         return super().build(x)
 
-    def restore(self):
+    def restore(self) -> None:
 
-        """Restore only the input nd output tensor using the aprents restore method."""
+        """Restore only the input nd output tensor using the parents restore method."""
 
         super().restore()

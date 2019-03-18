@@ -17,7 +17,8 @@ class AbstractArchitecture(ABC):
     Tensorflow session and to launch the build or restore process. In addition it give access to functional methods
     such that optimizer setting.
 
-    Attributes:
+    Args
+    ----
 
         name : str
             name of the network
@@ -25,6 +26,9 @@ class AbstractArchitecture(ABC):
         use_gpu: bool
             If true train the network on a single GPU otherwise used all cpu. Parallelism settign can be improve with
             future version
+
+    Attributes
+    ----------
 
         graph : tf.Graph
             graph of the network useful to well define new tensor and restore them.
@@ -46,6 +50,15 @@ class AbstractArchitecture(ABC):
 
         is_training : Tensor
             Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
+
+        dmax: Tensor
+            Tensor used to clip the batch renormalization scale parameter.
+
+        rmin: Tensor
+            Lower bound used to clip the batch renormalization shift parameter.
+
+        rmax: Tensor
+            Upper bound used to clip the batch renormalization shift parameter.
     """
 
     def __init__(self, name: str, use_gpu: bool = False):
@@ -59,6 +72,9 @@ class AbstractArchitecture(ABC):
         self.learning_rate: tf.placeholder = None
         self.keep_proba_tensor: tf.placeholder = None
         self.is_training: tf.placeholder = None
+        self.rmax: tf.placeholder = None
+        self.rmin: tf.placeholder = None
+        self.dmax: tf.placeholder = None
 
     def _set_session(self) -> tf.Session:
         """ configure tensorflow graph and session """
@@ -78,6 +94,9 @@ class AbstractArchitecture(ABC):
         self.learning_rate = self._placeholder(tf.float32, None, name="learning_rate")
         self.keep_proba_tensor = self._placeholder(tf.float32, None, name="keep_proba_tensor")
         self.is_training = self._placeholder(tf.bool, None, name="is_training")
+        self.rmax = self._placeholder(tf.float32, None, name="rmax")
+        self.rmin = self._placeholder(tf.float32, None, name="rmin")
+        self.dmax = self._placeholder(tf.float32, None, name="dmax")
 
     def build(self, **args):
 

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 import numpy as np
 import tensorflow as tf
@@ -22,7 +22,18 @@ class AbstractMlp(AbstractArchitecture, ABC):
     to define the get_param methods in order to avoid missing additional parameters which could be problematics when
     the network restoration process is run.
 
-    Attributes:
+    Args
+    ----
+
+        name : str
+            name of the network
+
+        use_gpu: bool
+            If true train the network on a single GPU otherwise used all cpu. Parallelism settign can be improve with
+            future version
+
+    Attributes
+    ----------
 
         layer_size : Tuple
             Number of neurons for each fully connected step.
@@ -42,13 +53,16 @@ class AbstractMlp(AbstractArchitecture, ABC):
         batch_norm: bool
             If True apply the batch normalization after the _operator method.
 
+        batch_renorm: bool
+            Whether to used batch renormalization or not.
+
         penalization_rate : float
             Penalization rate if regularization is used.
 
         penalization_type: None or str
             Indicates the type of penalization to use if not None (Ex: L1 or L2)
 
-         law_name : str
+        law_name : str
             Law of the ransom law to used. Must be "normal" for normal law or "uniform" for uniform law.
 
         law_params : float
@@ -62,6 +76,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
         epsilon: float
             Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+
+        decay_renorm: float
+            Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
         x : Tensor
             Input tensor of the network.
@@ -98,12 +115,14 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.act_funct: str = 'relu'
         self.keep_proba: float = 1.
         self.batch_norm: bool = False
+        self.batch_renorm: bool = False
         self.penalization_rate: float = 0.
-        self.penalization_type: (str, None) = None
+        self.penalization_type: Union[str, None] = None
         self.law_name: str = "uniform"
         self.law_param: float = 0.1
         self.decay: float = 0.99
         self.epsilon: float = 0.001
+        self.decay_renorm: float = 0.001
 
         self.x: tf.placeholder = None
         self.y: tf.placeholder = None
@@ -118,8 +137,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
     def build(self, layer_size: Tuple, input_dim: int, output_dim: int, act_funct: str = "relu",
               keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1, batch_norm: bool = False,
-              decay: float = 0.999, epsilon: float = 0.001, penalization_rate: float = 0.,
-              penalization_type: (str, None) = None, optimizer_name: str = "Adam"):
+              batch_renorm: bool = False, decay: float = 0.999, decay_renorm: float = False, epsilon: float = 0.001,
+              penalization_rate: float = 0., penalization_type: Union[str, None] = None, optimizer_name: str = "Adam"):
 
         super().build(layer_size=layer_size,
                       input_dim=input_dim,
@@ -129,7 +148,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
                       law_name=law_name,
                       law_param=law_param,
                       batch_norm=batch_norm,
+                      batch_renorm=batch_renorm,
                       decay=decay,
+                      decay_renorm=decay_renorm,
                       epsilon=epsilon,
                       penalization_rate=penalization_rate,
                       penalization_type=penalization_type,
@@ -154,11 +175,13 @@ class AbstractMlp(AbstractArchitecture, ABC):
                 FcLayer(size=s, act_funct=self.act_funct,
                         keep_proba=self.keep_proba_tensor,
                         batch_norm=self.batch_norm,
+                        batch_renorm=self.batch_renorm,
                         is_training=self.is_training,
                         name=f"FcLayer{i}",
                         law_name=self.law_name,
                         law_param=self.law_param,
                         decay=self.decay,
+                        decay_renorm=self.decay_renorm,
                         epsilon=self.epsilon))
 
             self.x_out = self.l_fc[-1].build(self.x_out)
@@ -169,7 +192,6 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.l_output = FcLayer(size=self.output_dim,
                                 act_funct=None,
                                 keep_proba=1.,
-                                batch_norm=False,
                                 name=f"OutputLayer",
                                 law_name=self.law_name,
                                 law_param=self.law_param)
@@ -193,11 +215,12 @@ class AbstractMlp(AbstractArchitecture, ABC):
         raise NotImplementedError
 
     def fit(self, x: np.ndarray, y: np.ndarray, n_epoch: int = 1, batch_size: int = 10,
-            learning_rate: float = 0.001, verbose: bool = True):
+            learning_rate: float = 0.001, rmax: float = 3., rmin: float = 0.33, dmax: float = 5, verbose: bool = True):
 
         """ Given an input and a target array, fit the mlp during n_epoch.
 
-        Attributes:
+        Args
+        ----
 
             x : Array with shpe (n_observation, input_dim)
                 Array of input which must have a dimension equal to input_dim.
@@ -213,6 +236,16 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
             learning_rate : float
                 Learning_rate to apply for training.
+
+            rmin: float
+                 Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.
+
+            rmax: float
+                Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.
+
+            dmax: float
+                When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax)
+
 
             verbose : bool
                 If True print the value of the loss function after each epoch.
@@ -237,6 +270,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
                                                        self.y: y[batch_index, :],
                                                        self.learning_rate: learning_rate,
                                                        self.keep_proba_tensor: self.keep_proba,
+                                                       self.rmin: rmin,
+                                                       self.rmax: rmax,
+                                                       self.dmax: dmax,
                                                        self.is_training: True})
                     m_loss *= n
                     m_loss += loss
@@ -252,7 +288,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
         """Predict a label given an array of input x
 
-         Attributes:
+         Args
+         ----
 
             x : Array with shape (n_observation, input_dim)
                 Array of input which must have a dimension equal to input_dim.
@@ -260,7 +297,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
             batch_size : int
                 Number of observation to used for each prediction step. If None predict all label using a single step.
 
-         Output:
+         Returns
+         -------
+
             Array of predictions
          """
 
@@ -290,10 +329,12 @@ class AbstractMlp(AbstractArchitecture, ABC):
             'act_funct': self.act_funct,
             'keep_proba': self.keep_proba,
             'batch_norm': self.batch_norm,
+            'batch_renorm': self.batch_renorm,
             'law_name': self.law_name,
             'law_param': self.law_param,
             'penalization_rate': self.penalization_rate,
             'decay': self.decay,
+            'decay_renorm': self.decay_renorm,
             'epsilon': self.epsilon}
 
         params.update(super().get_params())
