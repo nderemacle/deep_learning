@@ -7,7 +7,7 @@ import tensorflow as tf
 from core.deep_learning.abstract_architecture import AbstractArchitecture
 from core.deep_learning.abstract_operator import AbstractLoss
 from core.deep_learning.layer import FcLayer
-from core.deep_learning.loss import CrossEntropy
+from core.deep_learning.loss import CrossEntropy, MeanSquareError
 from core.utils.validation import check_array
 
 
@@ -399,6 +399,35 @@ class MlpClassifier(AbstractMlp):
             y_pred = np.exp(np.concatenate(y_pred, 0))
 
             return y_pred / y_pred.sum(1).reshape(-1, 1)
+
+    def get_params(self):
+        return super().get_params()
+
+
+class MlpRegressor(AbstractMlp):
+    """
+    This class allows to train a MLP for regression task. The target array must be a square matrix having one or more
+    objective variable to learn.
+
+    """
+
+    def __init__(self, name: str = 'MlpRegressor', use_gpu: bool = False):
+        super().__init__(name, use_gpu)
+
+    def _set_loss(self, weights: List[tf.Variable]):
+        """Use the cross entropy class to define the network loss function."""
+
+        self.l_loss = MeanSquareError(penalization_rate=self.penalization_rate,
+                                      penalization_type=self.penalization_type,
+                                      name=f"mean_square_error")
+
+        self.loss_opt, self.y_pred = self.l_loss.build(y=self.y,
+                                                       x_out=self.x_out,
+                                                       weights=weights)
+
+        self.loss = self.l_loss.loss
+
+        self.optimizer = self._minimize(self.loss_opt, name="optimizer")
 
     def get_params(self):
         return super().get_params()

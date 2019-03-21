@@ -5,7 +5,7 @@ import tensorflow as tf
 
 import core.deep_learning.env as env
 from core.deep_learning.abstract_operator import AbstractLoss
-from core.deep_learning.loss import CrossEntropy
+from core.deep_learning.loss import CrossEntropy, MeanSquareError
 
 
 def test_predict(self: tf.test.TestCase, sess: tf.Session, loss: AbstractLoss, x_out: np.ndarray,
@@ -121,4 +121,36 @@ class TestCrossEntropy(tf.test.TestCase):
 
     def testRestore(self):
         loss = CrossEntropy()
+        test_restore(self, loss, [100, 10], [100, 10], tensors=["loss", "loss_opt", "y", "x_out", "y_pred"])
+
+
+class TestMeanSquareError(tf.test.TestCase):
+
+    def testComputePredict(self):
+        x_out = np.array([[1., 0.5],
+                          [2., 0.],
+                          [3.4, 10.]]).astype(np.float32)
+        loss = MeanSquareError()
+
+        with self.test_session() as sess:
+            expected_output = x_out
+            test_predict(self, sess, loss, x_out, expected_output)
+
+    def testComputeLoss(self):
+        x_out = np.array([[1., 0.5],
+                          [2., 0.],
+                          [3.4, 10.]])
+
+        y = np.array([[1, 0],
+                      [0, 1],
+                      [1, 0]])
+
+        loss = MeanSquareError()
+        expected_loss = np.mean(np.sum(np.power(np.subtract(x_out, y), 2), 1))
+
+        with self.test_session() as sess:
+            test_loss(self, sess, loss, x_out, expected_loss, y, rtol=1e-6)
+
+    def testRestore(self):
+        loss = MeanSquareError()
         test_restore(self, loss, [100, 10], [100, 10], tensors=["loss", "loss_opt", "y", "x_out", "y_pred"])
