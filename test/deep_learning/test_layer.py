@@ -79,13 +79,19 @@ class TestConv1dLayer(tf.test.TestCase):
 
     def test_operator(self):
         with self.test_session() as sess:
-            layer = Conv1dLayer(filter_width=1, n_filters=2, stride=1, padding="VALID")
-            layer.w = [
+
+            w = [
                 [[1., -1.],
                  [1., -1.],
                  [1., -1.]]]
 
-            layer.b = [1., -1.]
+            b = [1., -1.]
+
+
+            # With bias
+            layer = Conv1dLayer(filter_width=1, n_filters=2, stride=1, padding="VALID", add_bias=True)
+            layer.w = w
+            layer.b = b
 
             expected_output = np.array([
                 [[3., -3.],
@@ -96,9 +102,27 @@ class TestConv1dLayer(tf.test.TestCase):
 
             test_operator(self, sess, layer, X_3d, expected_output)
 
+            # Without bias
+            layer = Conv1dLayer(filter_width=1, n_filters=2, stride=1, padding="VALID", add_bias=False)
+            layer.w = w
+            layer.b = b
+
+            expected_output = np.array([
+                [[2., -2.],
+                 [0., 0.]],
+
+                [[0., 0.],
+                 [0., 0.]]])
+
+            test_operator(self, sess, layer, X_3d, expected_output)
+
     def test_restore(self):
-        layer = Conv1dLayer(filter_width=1, n_filters=2, stride=1, padding="VALID")
+        # With bias
+        layer = Conv1dLayer(filter_width=1, n_filters=2, stride=1, padding="VALID", add_bias=True, name="with_bias")
         test_restore(self, layer, [100, 1, 3], ["w", "b", "x", "x_out"])
+        # Without bias
+        layer = Conv1dLayer(filter_width=1, n_filters=2, stride=1, padding="VALID", add_bias=False, name="without_bias")
+        test_restore(self, layer, [100, 1, 3], ["w", "x", "x_out"])
 
 
 class TestMinMaxLayer(tf.test.TestCase):

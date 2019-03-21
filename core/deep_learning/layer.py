@@ -150,6 +150,7 @@ class Conv1dLayer(AbstractLayer):
                  n_filters: int,
                  stride: int = 1,
                  padding: str = "VALID",
+                 add_bias: bool = True,
                  act_funct: Union[str, None] = "relu",
                  keep_proba: Union[tf.Tensor, float] = 1.,
                  batch_norm: bool = False,
@@ -184,6 +185,9 @@ class Conv1dLayer(AbstractLayer):
             padding : int
                 padding can be SAME or VALID. If PADDING is SAME the convolution output a matrix having the same size
                 as the input tensor. VALID keep the dimension reduction.
+
+            add_bias: bool
+                Whether to add the biase or not.
 
             act_funct : str, None
                 name of the activation function to use. If None no activation function are used.
@@ -248,6 +252,7 @@ class Conv1dLayer(AbstractLayer):
         self.n_filters = n_filters
         self.stride = stride
         self.padding = padding
+        self.add_bias = add_bias
 
         self.w: tf.Variable = None
         self.b: tf.Variable = None
@@ -272,9 +277,11 @@ class Conv1dLayer(AbstractLayer):
         width, n_channel = self.x.shape[1].value, self.x.shape[2].value
 
         w_shape = (self.filter_width, n_channel, self.n_filters)
-        b_shape = (self.n_filters,)
         self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
-        self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
+
+        if self.add_bias:
+            b_shape = (self.n_filters,)
+            self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
 
     def _operator(self) -> None:
         """For simplicity we use the tf.nn.conv1d. According to the tensorflow documentation, this method is just a
@@ -282,7 +289,8 @@ class Conv1dLayer(AbstractLayer):
           in future version """
 
         self.x_out = tf.nn.conv1d(self.x, self.w, self.stride, self.padding, data_format="NWC")
-        self.x_out = tf.add(self.b, self.x_out)
+        if self.add_bias:
+            self.x_out = tf.add(self.b, self.x_out)
 
     def build(self,
               x: tf.Tensor,
@@ -298,7 +306,8 @@ class Conv1dLayer(AbstractLayer):
         """Restore all filter variabe an input/output tensor"""
 
         self.w = get_tf_tensor(name="w")
-        self.b = get_tf_tensor(name="b")
+        if self.add_bias:
+            self.b = get_tf_tensor(name="b")
         super().restore()
 
 

@@ -38,7 +38,7 @@ def get_all_tensor_name(graph: tf.Graph = None):
 
     _graph = tf.get_default_graph() if graph is None else graph
 
-    return [t.name for t in _graph.get_operations()]
+    return [t.name for t in _graph.get_operations() + tf.global_variables()]
 
 
 def is_in_graph(name: str, graph: tf.Graph = None):
@@ -77,7 +77,7 @@ def is_not_in_graph(name: str, graph: tf.Graph = None):
 
     _graph = tf.get_default_graph() if graph is None else graph
 
-    if name in get_all_tensor_name(graph=_graph):
+    if name + ":0" in get_all_tensor_name(graph=_graph):
         raise NameError(f"{name} already exist.")
 
 
