@@ -13,8 +13,8 @@ from core.utils.validation import check_array
 
 class AbstractMlp(AbstractArchitecture, ABC):
     """
-    This class set the major cortex of a Multi Layer Perceptron neural network. . The neural architecture
-    takes as input a linear vector of input data put in a succession of layer of neurons. In the end a
+    This class set the major core of a Multi Layer Perceptron neural network. The neural network architecture
+    takes as input a linear vector of input data put in a succession of fully connected layers. In the end a
     last layer reduce the dimensionality of the network to match with the number of target variables to predict.
 
     The abstract schema assume the child class must define the methods to set the loss function. In ths way it is simple
@@ -29,50 +29,50 @@ class AbstractMlp(AbstractArchitecture, ABC):
             name of the network
 
         use_gpu: bool
-            If true train the network on a single GPU otherwise used all cpu. Parallelism settign can be improve with
+            If true train the network on a single GPU otherwise used all cpu. Parallelism setting can be improve with
             future version
 
     Attributes
     ----------
 
-        layer_size : Tuple
+        layer_size: Tuple
             Number of neurons for each fully connected step.
 
-        input_dim : int
+        input_dim: int
             Number of input data.
 
         output_dim: int
-            Number of target variable to predict
+            Number of target variable to predict.
 
-        act_funct : str
+        act_funct: str
             Name of the activation function.
 
-        keep_proba : float:
+        keep_proba: float
             Probability to keep a neuron activate during training.
 
         batch_norm: bool
-            If True apply the batch normalization after the _operator method.
+            If True apply the batch normalization method.
 
         batch_renorm: bool
-            Whether to used batch renormalization or not.
+            If True apply the batch renormalization method.
 
         penalization_rate : float
             Penalization rate if regularization is used.
 
-        penalization_type: None or str
-            Indicates the type of penalization to use if not None (Ex: L1 or L2)
+        penalization_type: None, str
+            Indicates the type of penalization to use if not None. (Ex: L1 or L2)
 
-        law_name : str
-            Law of the ransom law to used. Must be "normal" for normal law or "uniform" for uniform law.
+        law_name: str
+            Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
 
-        law_params : float
-            Law parameters which is dependent to the initialised law choose. If uniform, all tensor
+        law_params: float
+            Law parameters dependent to the initialised law choose. If uniform, all tensor
             elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
             using a N(0, law_parameters).
 
         decay: float
             Decay used to update the moving average of the batch norm. The moving average is used to learn the
-            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.)
+            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
 
         epsilon: float
             Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
@@ -80,28 +80,28 @@ class AbstractMlp(AbstractArchitecture, ABC):
         decay_renorm: float
             Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
-        x : Tensor
+        x: Tensor
             Input tensor of the network.
 
-        y : Tensor
+        y: Tensor
             Tensor containing all True target variable to predict.
 
-        x_out : Tensor
+        x_out: Tensor
             Output of the network
 
-        loss : Tensor
-            loss function optimized to train the mlp.
+        loss: Tensor
+            Loss function optimized to train the MLP.
 
-        y_pred : Tensor
+        y_pred: Tensor
             Prediction tensor.
 
-        l_fc : List[FcLayer]
-            List containing all fully connected layer object.
+        l_fc: List[FcLayer]
+            List containing all fully connected layer objects.
 
-        l_output : FcLayer
+        l_output: FcLayer
             Final layer for network output reduction.
 
-        l_loss : AbstractLoss
+        l_loss: AbstractLoss
             Loss layer object.
     """
 
@@ -139,6 +139,59 @@ class AbstractMlp(AbstractArchitecture, ABC):
               keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1, batch_norm: bool = False,
               batch_renorm: bool = False, decay: float = 0.999, decay_renorm: float = False, epsilon: float = 0.001,
               penalization_rate: float = 0., penalization_type: Union[str, None] = None, optimizer_name: str = "Adam"):
+
+        """
+        Build the network architecture.
+
+        Args
+        ----
+
+            layer_size: Tuple
+                        Number of neurons for each fully connected step.
+
+            input_dim: int
+                Number of input data.
+
+            output_dim: int
+                Number of target variable to predict.
+
+            act_funct: str
+                Name of the activation function.
+
+            keep_proba: float
+                Probability to keep a neuron activate during training.
+
+            batch_norm: bool
+                If True apply the batch normalization method.
+
+            batch_renorm: bool
+                If True apply the batch renormalization method.
+
+            penalization_rate : float
+                Penalization rate if regularization is used.
+
+            penalization_type: None, str
+                Indicates the type of penalization to use if not None. (Ex: L1 or L2)
+
+            law_name: str
+                Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
+
+            law_params: float
+                Law parameters dependent to the initialised law choose. If uniform, all tensor
+                elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
+                using a N(0, law_parameters).
+
+            decay: float
+                Decay used to update the moving average of the batch norm. The moving average is used to learn the
+                empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
+
+            epsilon: float
+                Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+
+            decay_renorm: float
+                Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
+
+        """
 
         super().build(layer_size=layer_size,
                       input_dim=input_dim,
@@ -222,30 +275,29 @@ class AbstractMlp(AbstractArchitecture, ABC):
         Args
         ----
 
-            x : Array with shpe (n_observation, input_dim)
+            x: array with shape (n_observation, input_dim)
                 Array of input which must have a dimension equal to input_dim.
 
-            y : array with shape (n_observation, output_dim)
+            y: array with shape (n_observation, output_dim)
                 Array of target which must have a dimension equal to output_dim.
 
-            n_epoch : int
-                Number of epoch to train the neural network.
+            n_epoch: int
+                Number of epochs to train the neural network.
 
-            batch_size : int
-                Number of observation to used for each backpropagation step.
+            batch_size: int
+                Number of observations to used for each backpropagation step.
 
             learning_rate : float
-                Learning_rate to apply for training.
+                Learning rate to apply for training.
 
             rmin: float
-                 Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.
+                Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.
 
             rmax: float
                 Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.
 
             dmax: float
-                When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax)
-
+                When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).
 
             verbose : bool
                 If True print the value of the loss function after each epoch.
@@ -291,16 +343,17 @@ class AbstractMlp(AbstractArchitecture, ABC):
          Args
          ----
 
-            x : Array with shape (n_observation, input_dim)
+            x : array with shape (n_observation, input_dim)
                 Array of input which must have a dimension equal to input_dim.
 
             batch_size : int
-                Number of observation to used for each prediction step. If None predict all label using a single step.
+                Number of observations to used for each prediction step. If None predict all label using a single step.
 
          Returns
          -------
 
-            Array of predictions
+            array with shape (n_observation,)
+                Array of predictions
          """
 
         check_array(x, shape=(-1, self.input_dim))
@@ -372,15 +425,17 @@ class MlpClassifier(AbstractMlp):
         """
         Predict a vector of probability for each label.
 
-        Attributes:
+        Args
+        ----
 
-            x : Array with shape (n_observation, input_dim)
+            x: array with shape (n_observations, n_inputs)
                 Array of input which must have a dimension equal to input_dim.
 
-            batch_size : int
+            batch_size: int
                 Number of observation to used for each prediction step. If None predict all label using a single step.
 
-         Output:
+         Outputs
+         ------
             Array of estimated probability
         """
 
