@@ -1,0 +1,11 @@
+# Use the docker image tensorflow using a python3 kernel
+FROM python:3.6.8-slim
+
+# Set the container working directory
+WORKDIR /app
+
+# Put the docker repo
+COPY dock dock
+
+# Install library all dependencies
+RUN pip install --trusted-host pypi.python.org -r dock/requirements.txt

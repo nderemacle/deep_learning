@@ -1,0 +1,17 @@
+# Used the already build docker_base container
+FROM docker_base:latest
+
+# Set the container working directory
+WORKDIR /app
+
+# Put core program in the container
+COPY core core
+
+# Put core program in the container
+COPY script script
+
+# Set pythonpath
+ENV PYTHONPATH="$PYTHONPATH:/app"
+
+# Launch script
+CMD python script/mlp_classifier.py
