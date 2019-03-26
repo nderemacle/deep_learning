@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Dict, Any
 
 import numpy as np
 import tensorflow as tf
@@ -18,19 +18,17 @@ class AbstractMlp(AbstractArchitecture, ABC):
     last layer reduce the dimensionality of the network to match with the number of target variables to predict.
 
     The abstract schema assume the child class must define the methods to set the loss function. In ths way it is simple
-    to enlarge this architecture to any type of problems. In addition this abstract class forced the child class
-    to define the get_param methods in order to avoid missing additional parameters which could be problematics when
-    the network restoration process is run.
+    to enlarge this architecture to any type of problems.
 
     Args
     ----
 
         name : str
-            name of the network
+            Name of the network.
 
         use_gpu: bool
             If true train the network on a single GPU otherwise used all cpu. Parallelism setting can be improve with
-            future version
+            future version.
 
     Attributes
     ----------
@@ -87,7 +85,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
             Tensor containing all True target variable to predict.
 
         x_out: Tensor
-            Output of the network
+            Output of the network.
 
         loss: Tensor
             Loss function optimized to train the MLP.
@@ -138,7 +136,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
     def build(self, layer_size: Tuple, input_dim: int, output_dim: int, act_funct: str = "relu",
               keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1, batch_norm: bool = False,
               batch_renorm: bool = False, decay: float = 0.999, decay_renorm: float = False, epsilon: float = 0.001,
-              penalization_rate: float = 0., penalization_type: Union[str, None] = None, optimizer_name: str = "Adam"):
+              penalization_rate: float = 0., penalization_type: Union[str, None] = None,
+              optimizer_name: str = "Adam") -> None:
 
         """
         Build the network architecture.
@@ -209,7 +208,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
                       penalization_type=penalization_type,
                       optimizer_name=optimizer_name)
 
-    def _build(self):
+    def _build(self) -> None:
 
         # Define learning rate and drop_out tensor
         super()._build()
@@ -255,9 +254,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self._set_loss(weights)
 
     @abstractmethod
-    def _set_loss(self, weights: List[tf.Variable]):
+    def _set_loss(self, weights: List[tf.Variable]) -> None:
 
-        """This abstract method must set the loss function, the predition tensor and the optimizer tensor.
+        """This abstract method must set the loss function, the prediction tensor and the optimizer tensor.
 
          Attributes:
 
@@ -268,9 +267,10 @@ class AbstractMlp(AbstractArchitecture, ABC):
         raise NotImplementedError
 
     def fit(self, x: np.ndarray, y: np.ndarray, n_epoch: int = 1, batch_size: int = 10,
-            learning_rate: float = 0.001, rmax: float = 3., rmin: float = 0.33, dmax: float = 5, verbose: bool = True):
+            learning_rate: float = 0.001, rmax: float = 3., rmin: float = 0.33, dmax: float = 5,
+            verbose: bool = True) -> None:
 
-        """ Given an input and a target array, fit the mlp during n_epoch.
+        """ Fit the MLP `n_epoch` using the `x` and `y` array of observations.
 
         Args
         ----
@@ -287,8 +287,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
             batch_size: int
                 Number of observations to used for each backpropagation step.
 
-            learning_rate : float
-                Learning rate to apply for training.
+            learning_rate: float
+                Learning rate use for gradient descent methodologies.
 
             rmin: float
                 Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.
@@ -299,7 +299,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
             dmax: float
                 When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).
 
-            verbose : bool
+            verbose: bool
                 If True print the value of the loss function after each epoch.
 
         """
@@ -336,22 +336,22 @@ class AbstractMlp(AbstractArchitecture, ABC):
                 if verbose:
                     print(f'Epoch {epoch}: {m_loss}')
 
-    def predict(self, x: np.ndarray, batch_size: int = None) -> np.ndarray:
+    def predict(self, x: np.ndarray, batch_size: Union[int, None] = None) -> np.ndarray:
 
-        """Predict a label given an array of input x
+        """
+        Make predictions using the `x` array. If `batch_size` is not None predictions are proceed by mini-batch.
 
-         Args
-         ----
+        Args
+        ----
 
             x : array with shape (n_observation, input_dim)
                 Array of input which must have a dimension equal to input_dim.
 
-            batch_size : int
+            batch_size : int, None
                 Number of observations to used for each prediction step. If None predict all label using a single step.
 
-         Returns
-         -------
-
+        Returns
+        -------
             array with shape (n_observation,)
                 Array of predictions
          """
@@ -370,10 +370,17 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
             return np.concatenate(y_predict, 0)
 
-    @abstractmethod
-    def get_params(self):
+    def get_params(self) -> Dict[str, Any]:
 
-        """Get a dictionary containing all network parameters"""
+        """Get a dictionary containing all network parameters.
+
+
+        Returns
+        -------
+            Dict[str, Any]
+                Dictionary getting all network parameters.
+
+        """
 
         params = {
             'layer_size': self.layer_size,
@@ -401,12 +408,94 @@ class MlpClassifier(AbstractMlp):
     with dimension equal to the number of label to predict. In addition the class provide an additional methods to
     predict directly the probability for each label.
 
+    Args
+    ----
+
+        name : str
+            Name of the network.
+
+        use_gpu: bool
+            If true train the network on a single GPU otherwise used all cpu. Parallelism setting can be improve with
+            future version.
+
+    Attributes
+    ----------
+
+        layer_size: Tuple
+            Number of neurons for each fully connected step.
+
+        input_dim: int
+            Number of input data.
+
+        output_dim: int
+            Number of target variable to predict.
+
+        act_funct: str
+            Name of the activation function.
+
+        keep_proba: float
+            Probability to keep a neuron activate during training.
+
+        batch_norm: bool
+            If True apply the batch normalization method.
+
+        batch_renorm: bool
+            If True apply the batch renormalization method.
+
+        penalization_rate : float
+            Penalization rate if regularization is used.
+
+        penalization_type: None, str
+            Indicates the type of penalization to use if not None. (Ex: L1 or L2)
+
+        law_name: str
+            Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
+
+        law_params: float
+            Law parameters dependent to the initialised law choose. If uniform, all tensor
+            elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
+            using a N(0, law_parameters).
+
+        decay: float
+            Decay used to update the moving average of the batch norm. The moving average is used to learn the
+            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
+
+        epsilon: float
+            Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+
+        decay_renorm: float
+            Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
+
+        x: Tensor
+            Input tensor of the network.
+
+        y: Tensor
+            Tensor containing all True target variable to predict.
+
+        x_out: Tensor
+            Output of the network.
+
+        loss: Tensor
+            Loss function optimized to train the MLP.
+
+        y_pred: Tensor
+            Prediction tensor.
+
+        l_fc: List[FcLayer]
+            List containing all fully connected layer objects.
+
+        l_output: FcLayer
+            Final layer for network output reduction.
+
+        l_loss: AbstractLoss
+            Loss layer object.
+
     """
 
     def __init__(self, name: str = 'MlpClassifier', use_gpu: bool = False):
         super().__init__(name, use_gpu)
 
-    def _set_loss(self, weights: List[tf.Variable]):
+    def _set_loss(self, weights: List[tf.Variable]) -> None:
         """Use the cross entropy class to define the network loss function."""
 
         self.l_loss = CrossEntropy(penalization_rate=self.penalization_rate,
@@ -434,9 +523,11 @@ class MlpClassifier(AbstractMlp):
             batch_size: int
                 Number of observation to used for each prediction step. If None predict all label using a single step.
 
-         Outputs
-         ------
-            Array of estimated probability
+        Returns
+        -------
+
+            array with shape (n_observation, n_labels)
+                Array of predict probabilities.
         """
 
         check_array(x, shape=(-1, self.input_dim))
@@ -455,22 +546,101 @@ class MlpClassifier(AbstractMlp):
 
             return y_pred / y_pred.sum(1).reshape(-1, 1)
 
-    def get_params(self):
-        return super().get_params()
-
 
 class MlpRegressor(AbstractMlp):
     """
     This class allows to train a MLP for regression task. The target array must be a square matrix having one or more
     objective variable to learn.
 
+    Args
+    ----
+
+        name : str
+            Name of the network.
+
+        use_gpu: bool
+            If true train the network on a single GPU otherwise used all cpu. Parallelism setting can be improve with
+            future version.
+
+    Attributes
+    ----------
+
+        layer_size: Tuple
+            Number of neurons for each fully connected step.
+
+        input_dim: int
+            Number of input data.
+
+        output_dim: int
+            Number of target variable to predict.
+
+        act_funct: str
+            Name of the activation function.
+
+        keep_proba: float
+            Probability to keep a neuron activate during training.
+
+        batch_norm: bool
+            If True apply the batch normalization method.
+
+        batch_renorm: bool
+            If True apply the batch renormalization method.
+
+        penalization_rate : float
+            Penalization rate if regularization is used.
+
+        penalization_type: None, str
+            Indicates the type of penalization to use if not None. (Ex: L1 or L2)
+
+        law_name: str
+            Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
+
+        law_params: float
+            Law parameters dependent to the initialised law choose. If uniform, all tensor
+            elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
+            using a N(0, law_parameters).
+
+        decay: float
+            Decay used to update the moving average of the batch norm. The moving average is used to learn the
+            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
+
+        epsilon: float
+            Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+
+        decay_renorm: float
+            Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
+
+        x: Tensor
+            Input tensor of the network.
+
+        y: Tensor
+            Tensor containing all True target variable to predict.
+
+        x_out: Tensor
+            Output of the network.
+
+        loss: Tensor
+            Loss function optimized to train the MLP.
+
+        y_pred: Tensor
+            Prediction tensor.
+
+        l_fc: List[FcLayer]
+            List containing all fully connected layer objects.
+
+        l_output: FcLayer
+            Final layer for network output reduction.
+
+        l_loss: AbstractLoss
+            Loss layer object.
+
     """
 
     def __init__(self, name: str = 'MlpRegressor', use_gpu: bool = False):
         super().__init__(name, use_gpu)
 
-    def _set_loss(self, weights: List[tf.Variable]):
-        """Use the cross entropy class to define the network loss function."""
+    def _set_loss(self, weights: List[tf.Variable]) -> None:
+        """Use the MeanSquareError class to define the network loss function."""
 
         self.l_loss = MeanSquareError(penalization_rate=self.penalization_rate,
                                       penalization_type=self.penalization_type,
@@ -483,6 +653,3 @@ class MlpRegressor(AbstractMlp):
         self.loss = self.l_loss.loss
 
         self.optimizer = self._minimize(self.loss_opt, name="optimizer")
-
-    def get_params(self):
-        return super().get_params()

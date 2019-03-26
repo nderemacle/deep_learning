@@ -123,10 +123,18 @@ class AbstractArchitecture(ABC):
         """ The predict method to make prediction"""
         raise NotImplementedError
 
-    def save(self, path_folder: str):
+    def save(self, path_folder: str) -> None:
 
-        """This methods allow to save all the tensorflow graph in a folder. The methods use the tensorflow saver method
-            and save all network parameters in a pickle."""
+        """
+        Allows to save all the Tensorflow graph and all network parameters in a folder. The methods use the
+        Tensorflow saver method and save all network parameters in a pickle file.
+
+        Args
+        ----
+
+            path_folder : str
+                Path of the folder where the network is saved.
+        """
 
         assert path_folder.endswith("/")
 
@@ -172,7 +180,7 @@ class AbstractArchitecture(ABC):
             saver = tf.train.import_meta_graph(path, clear_devices=True)
             saver.restore(self.sess, tf.train.latest_checkpoint(path_folder))
 
-    def restore(self, path_folder: str):
+    def restore(self, path_folder: str) -> None:
 
         """
         Restore the graph by activating all restoration process. The RESTORE environment is first set to True
@@ -181,10 +189,11 @@ class AbstractArchitecture(ABC):
 
         Use the scope name to use the algorithm name for all tensor and operation of the network.
 
-        Attributes:
+       Args
+       ----
 
             path_folder : str
-                path of the folder where all network parameters are saved
+                Path of the folder where the network is saved.
         """
 
         tf.reset_default_graph()

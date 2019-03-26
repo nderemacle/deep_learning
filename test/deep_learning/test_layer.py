@@ -79,14 +79,12 @@ class TestConv1dLayer(tf.test.TestCase):
 
     def test_operator(self):
         with self.test_session() as sess:
-
             w = [
                 [[1., -1.],
                  [1., -1.],
                  [1., -1.]]]
 
             b = [1., -1.]
-
 
             # With bias
             layer = Conv1dLayer(filter_width=1, n_filters=2, stride=1, padding="VALID", add_bias=True)
