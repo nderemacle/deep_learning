@@ -13,13 +13,25 @@ Welcome to DeepLearning's documentation!
 Algo
 ====
 
-MLP algorithm
+MLP Algorithm
 -------------
 
 .. automodule:: core.algo.MLP
    :members:
    :inherited-members:
    :show-inheritance:
+
+Deep Learning
+=============
+
+Abstract Architecture
+---------------------
+
+.. automodule:: core.deep_learning.abstract_architecture
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
 
 Indices and tables
 ==================

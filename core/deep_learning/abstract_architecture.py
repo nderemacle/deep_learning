@@ -1,8 +1,9 @@
 import os
 import traceback
 from abc import ABC, abstractmethod
-from typing import Tuple
+from typing import Tuple, Any, Dict
 
+import numpy as np
 import tensorflow as tf
 
 import core.deep_learning.env as env
@@ -13,42 +14,43 @@ from core.utils.validation import is_not_in_graph
 
 class AbstractArchitecture(ABC):
     """
-    This abstract class defines the cortex for a deep learning architecture. It allows to well configure the
-    Tensorflow session and to launch the build or restore process. In addition it give access to functional methods
-    such that optimizer setting.
+    Cortex for any deep learning architecture. The class initialization step allows to configure the Tensorflow
+    interface to use GPU computation for example. In addition this abstract level implement general usage such the
+    saving and the restoration methods. It provide also some always use methods such the minimizer or placeholder
+    setting. (TODO: move these functions into tf_utils.py)
 
     Args
     ----
 
-        name : str
-            name of the network
+        name: str
+            Name of the network.
 
         use_gpu: bool
-            If true train the network on a single GPU otherwise used all cpu. Parallelism settign can be improve with
-            future version
+            If true train the network on a single GPU otherwise used all cpu. Parallelism setting will be improve with
+            future version.
 
     Attributes
     ----------
 
-        graph : tf.Graph
-            graph of the network useful to well define new tensor and restore them.
+        graph: tf.Graph
+            Graph of the network useful to isolate network environment if many architecture object are used.
 
-        sess : tf.Session
-            tensorflow session useful for all interaction
+        sess: tf.Session
+            Tensorflow session mostly used to make Tensor computations.
 
         optimizer_name: str
-            Name of the optimizer to use. Could become child attribute in futur versions
+            Name of the optimizer to use. Could become child attribute in future versions
 
-        learning_curve : list
-            a list containing the value of the loss after each training step.
+        learning_curve: list
+            A list containing the value of the loss after each training step.
 
-        learning_rate : Tensor
+        learning_rate: Tensor
             Learnig rate tensor for optimization.
 
-        keep_proba_tensor : Tensor
-            Tensor for dropout methods
+        keep_proba_tensor: Tensor
+            Tensor for dropout methods.
 
-        is_training : Tensor
+        is_training: Tensor
             Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
 
         dmax: Tensor
@@ -77,7 +79,7 @@ class AbstractArchitecture(ABC):
         self.dmax: tf.placeholder = None
 
     def _set_session(self) -> tf.Session:
-        """ configure tensorflow graph and session """
+        """ Set the tensorflow Session."""
         if self.use_gpu:
             conf = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True,
                                   gpu_options=tf.GPUOptions(allow_growth=True))
@@ -87,9 +89,9 @@ class AbstractArchitecture(ABC):
         return tf.Session(graph=self.graph, config=conf)
 
     @abstractmethod
-    def _build(self):
+    def _build(self) -> None:
 
-        """Can be called to instance often used deep learning tensor"""
+        """Can be called to instance often used deep learning tensor."""
 
         self.learning_rate = self._placeholder(tf.float32, None, name="learning_rate")
         self.keep_proba_tensor = self._placeholder(tf.float32, None, name="keep_proba_tensor")
@@ -98,42 +100,71 @@ class AbstractArchitecture(ABC):
         self.rmin = self._placeholder(tf.float32, None, name="rmin")
         self.dmax = self._placeholder(tf.float32, None, name="dmax")
 
-    def build(self, **args):
+    def build(self, **kwargs: Any) -> None:
 
-        """ Methods to build the Neural Network cortex. In a first time all network arguments are update into the
-         dict class then the graph is build and all variable initialized. The name scope is used to ensure a correct
-         tensor naming: network_name/operator_name/tensor. The '/' allows to insure tensorflow used a valid network
-         name when the build is recalled."""
+        """
+         Methods to build the Neural Network cortex. In a first time all network arguments are update into the
+         dict class then the graph is build and all variable initialized. The name scope is used to ensure a valid
+         tensor naming: network_name/operator_name/tensor. The '/' allows to insure tensorflow used a good network
+         name when the build is recalled.
 
-        self.__dict__.update(args)
+
+         Args
+         ----
+            kwargs: Any
+                Neural network parameters.
+         """
+
+        self.__dict__.update(kwargs)
         with self.graph.as_default():
             with tf.name_scope(self.name + "/"):
                 self._build()
                 self.sess.run(tf.initializers.global_variables())
 
     @abstractmethod
-    def fit(self, *args):
+    def fit(self, **kwargs) -> None:
 
-        """The fit methods to train the neural network"""
+        """
+        The fit methods to train the neural network.
+
+        Args
+        ----
+            kwargs: Any
+                Input array and fit parameters.
+        """
         raise NotImplementedError
 
     @abstractmethod
-    def predict(self, *args):
+    def predict(self, *kwargs) -> np.ndarray:
 
-        """ The predict method to make prediction"""
+        """
+        Make a prediction using input arrays with shape (n_observations, ...).
+
+        Args
+        ----
+            kwargs: Any
+                Input array and predict parameters.
+
+        Returns
+        -------
+
+            array with shape (n_observations, ...)
+                Array of prediction.
+
+        """
         raise NotImplementedError
 
     def save(self, path_folder: str) -> None:
 
         """
-        Allows to save all the Tensorflow graph and all network parameters in a folder. The methods use the
-        Tensorflow saver method and save all network parameters in a pickle file.
+        Save all Tensorflow graph and all network parameters in a folder. The methods use the Tensorflow saver method
+        and save all network parameters inside a pickle file.
 
         Args
         ----
 
             path_folder : str
-                Path of the folder where the network is saved.
+                Path of the folder where the network is saved. It must endded by a '/'.
         """
 
         assert path_folder.endswith("/")
@@ -148,16 +179,26 @@ class AbstractArchitecture(ABC):
         write_pickle(self.get_params(), path_folder + "param.pkl")
 
     @abstractmethod
-    def get_params(self) -> dict:
+    def get_params(self) -> Dict[str, Any]:
 
-        """Return all network parameters."""
+        """
+        Return all network parameters. The child class can call the parents get_params methods to get all global
+        network parameters.
+
+        Returns
+        -------
+
+            Dict[str, Any]
+                Dictionary having all network parameters.
+
+        """
 
         return {
             "optimizer_name": self.optimizer_name,
             "learning_curve": self.learning_curve,
             'name': self.name}
 
-    def _check_and_restore(self, path_folder):
+    def _check_and_restore(self, path_folder: str) -> None:
 
         """Check if all folder and file exist and restore the graph and all class attributes then."""
 
@@ -231,7 +272,8 @@ class AbstractArchitecture(ABC):
         Return an optimizer which minimize a tensor f. Add all paramters store in the UPDATE_OPS such that all moving
         mean and variance parameters of a batch normalization.
 
-        Attributes:
+        Args
+        ----
 
             f : Tensor
                 function to minimize
@@ -239,7 +281,9 @@ class AbstractArchitecture(ABC):
             name : str
                 name of the tensor optimizer.
 
-        Output
+        Returns
+        -------
+
             Tensorflow optimizer
         """
 
@@ -255,16 +299,17 @@ class AbstractArchitecture(ABC):
         """
         Set or restore a placeholder.
 
-        Attributes:
+        Args
+        ----
 
-        dtype : Tensorflow type
-            Type of the placeholder
+            dtype : Tensorflow type
+                Type of the placeholder
 
-        shape : Tuple
-            Size of the placeholder
+            shape : Tuple
+                Size of the placeholder
 
-        name : str
-            name of the placeholder
+            name : str
+                name of the placeholder
 
         """
 
