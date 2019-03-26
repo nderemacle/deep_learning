@@ -224,7 +224,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.x_out = self.x
         for s in self.layer_size:
             self.l_fc.append(
-                FcLayer(size=s, act_funct=self.act_funct,
+                FcLayer(size=s,
+                        act_funct=self.act_funct,
                         keep_proba=self.keep_proba_tensor,
                         batch_norm=self.batch_norm,
                         batch_renorm=self.batch_renorm,
