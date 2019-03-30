@@ -31,6 +31,16 @@ Abstract Architecture
    :members:
    :inherited-members:
    :show-inheritance:
+   :private-members:
+
+Abstract Operator
+-----------------
+
+.. automodule:: core.deep_learning.abstract_operator
+   :members:
+   :inherited-members:
+   :show-inheritance:
+   :private-members:
 
 
 Indices and tables

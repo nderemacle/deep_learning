@@ -1,7 +1,7 @@
 import os
 import traceback
 from abc import ABC, abstractmethod
-from typing import Tuple, Any, Dict
+from typing import Tuple, Any, Dict, Union
 
 import numpy as np
 import tensorflow as tf
@@ -69,17 +69,26 @@ class AbstractArchitecture(ABC):
         self.use_gpu = use_gpu
         self.graph = tf.Graph()
         self.sess = self._set_session()
+
         self.optimizer_name = "Adam"
         self.learning_curve = []
-        self.learning_rate: tf.placeholder = None
-        self.keep_proba_tensor: tf.placeholder = None
-        self.is_training: tf.placeholder = None
-        self.rmax: tf.placeholder = None
-        self.rmin: tf.placeholder = None
-        self.dmax: tf.placeholder = None
+
+        self.learning_rate: Union[tf.placeholder, None] = None
+        self.keep_proba_tensor: Union[tf.placeholder, None] = None
+        self.is_training: Union[tf.placeholder, None] = None
+        self.rmax: Union[tf.placeholder, None] = None
+        self.rmin: Union[tf.placeholder, None] = None
+        self.dmax: Union[tf.placeholder, None] = None
 
     def _set_session(self) -> tf.Session:
-        """ Set the tensorflow Session."""
+        """
+        Set the tensorflow Session and return the session object.
+
+        Returns
+        -------
+            tf.Session
+                Tensorflow session object.
+        """
         if self.use_gpu:
             conf = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True,
                                   gpu_options=tf.GPUOptions(allow_growth=True))
@@ -164,7 +173,7 @@ class AbstractArchitecture(ABC):
         ----
 
             path_folder : str
-                Path of the folder where the network is saved. It must endded by a '/'.
+                Path of the folder where the network is saved. It must ended by a '/'.
         """
 
         assert path_folder.endswith("/")
@@ -200,7 +209,15 @@ class AbstractArchitecture(ABC):
 
     def _check_and_restore(self, path_folder: str) -> None:
 
-        """Check if all folder and file exist and restore the graph and all class attributes then."""
+        """
+        Check if all folder and file exist and restore the graph and all class attributes then.
+
+        Args
+        ----
+
+            path_folder: str
+                Path of the folder where the network is saved. It must ended by '/'.
+        """
 
         assert path_folder.endswith("/")
 
@@ -230,11 +247,11 @@ class AbstractArchitecture(ABC):
 
         Use the scope name to use the algorithm name for all tensor and operation of the network.
 
-       Args
-       ----
+        Args
+        ----
 
             path_folder : str
-                Path of the folder where the network is saved.
+                Path of the folder where the network is saved. It must ended by '/'.
         """
 
         tf.reset_default_graph()
@@ -269,14 +286,14 @@ class AbstractArchitecture(ABC):
     def _minimize(self, f: tf.Tensor, name: str = "optimizer"):
 
         """
-        Return an optimizer which minimize a tensor f. Add all paramters store in the UPDATE_OPS such that all moving
+        Return an optimizer which minimize a tensor f. Add all parameters store in the UPDATE_OPS such that all moving
         mean and variance parameters of a batch normalization.
 
         Args
         ----
 
             f : Tensor
-                function to minimize
+                function to minimize.
 
             name : str
                 name of the tensor optimizer.
@@ -294,7 +311,7 @@ class AbstractArchitecture(ABC):
             with tf.control_dependencies(update_ops):
                 return self._get_optimizer().minimize(f, name=name)
 
-    def _placeholder(self, dtype: tf.DType, shape: (Tuple, None), name: str):
+    def _placeholder(self, dtype: tf.DType, shape: Union[Tuple, None], name: str) -> tf.placeholder:
 
         """
         Set or restore a placeholder.
@@ -303,13 +320,13 @@ class AbstractArchitecture(ABC):
         ----
 
             dtype : Tensorflow type
-                Type of the placeholder
+                Type of the placeholder.
 
             shape : Tuple
-                Size of the placeholder
+                Size of the placeholder.
 
             name : str
-                name of the placeholder
+                name of the placeholder.
 
         """
 

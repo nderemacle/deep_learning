@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Tuple
-from typing import Union
+from typing import Union, Any
 
 import tensorflow as tf
 
@@ -10,58 +10,73 @@ from core.utils.validation import check_tensor, check_variable
 
 
 class AbstractOperator(ABC):
-    """Abstract class implementing the build or restore operator.
+    """Abstract class implementing the build or restore operator concept.
 
     The main objective of the framework is to build state of the art deep learning operator where the code
     used to deploy Tensorflow operators is exactly the same than the code used to restore them. Today the framework
     allows to restore a complete graph using a code different to the code used to initialized it. To tackle this problem
     the AbstractOperator define an abstract level which used the build methods like a way to build a first time
     a part of the graph and also a way to restore it. If the build methods is call when the RESTORE environment variable
-    is True, all operators of a given graph used to build an algorithm activate their restore methods allowing
-    to correctly restore the Tensorflow operator. However, if the RESTORE variable is False then the build methods
-    call a _build methods which should deploy the part of the graph.
+    is True then all operators of a given graph used to build an algorithm run their restore methods when their build
+    methods is called in order to correctly restore the Tensorflow operator. However, if the RESTORE variable
+    is False then the build methods called a _build methods which must deploy the part of the graph.
 
-    The main goal is to be more focus on the computation optimization allowing to develop faster more efficient and
+    The main goal is to become more focus about the operator optimization allowing to develop faster more efficient and
     robust algorithms.
 
-    In addition the methods used the graph scope level to properly assign the name path of all tensor created.
+    In addition the class used the graph scope level to assign a clean name for all tensor created.
 
-    Attributes:
+    Args
+    ----
         name : str
-            Name of the operator. Useful to flag all operator attribute on the tensorflow graph.
+            Name of the operator. Useful to flag all operator attribute in the Tensorflow graph.
 
-    Usage:
-
-    class Sqrt(AbstractOperator):
-       def __init__(self, name : str):
-            super().__init__(name)
-            self.x_output : tf.Tensor = None
-            self.x_input : tf.Tensor = None
-
-        def build(self, x_input : tf.Tensor):
-            super().build(x_input)
-
-        def _build(self, x_input : tf.Tensor):
-            self.x_input = tf.identity(x_input, name="x_input")
-            self.x_output = tf.identity(self.x_input ** (0.5), name="x_output")
-
-        def restore(self):
-            with tf.get_default_graph() as graph:
-                self.x_input = graph.get_tensor_by_name("x_input")
-                self.x_output = graph.get_tensor_by_name("x_output")
-
+    Examples
+    --------
+        >>> from typing import Union
+        >>>
+        >>> import tensorflow as tf
+        >>>
+        >>> from core.deep_learning.abstract_operator import AbstractOperator
+        >>> from core.deep_learning.tf_utils import get_tf_tensor
+        >>>
+        >>> class Sqrt(AbstractOperator):
+        ...     def __init__(self, name: str):
+        ...         super().__init__(name)
+        ...         self.x_out : Union[tf.Tensor, None] = None
+        ...         self.x : Union[tf.Tensor, None] = None
+        ...
+        ...     def build(self, x: tf.Tensor) -> None:
+        ...         super().build(x)
+        ...
+        ...     def _build(self, x : tf.Tensor) -> None:
+        ...         self.x = tf.identity(x, name="x")
+        ...         self.x_out = tf.sqrt(self.x, name="x_out")
+        ...
+        ...     def restore(self) -> None:
+        ...         self.x = get_tf_tensor("x")
+        ...         self.x_out = get_tf_tensor("x_out")
+        ...
     """
 
     def __init__(self, name: str):
 
         self.name = name
 
-    def build(self, *args):
+    def build(self, *args: Any) -> None:
 
         """
-        Build or restore and existing operator using the valid scope name. The '/' allows to insure tensorflow used
-        a valid network operator name when the build is recalled."""
+        Build or restore an existing operator using the valid scope name. If the environment variable is set to True the
+        `restore` class method is called whereas if False the `_build private` class method is called.
 
+        Args:
+
+            args: Any
+                Build arguments defined by the child class.
+
+        """
+
+        # Add '/' allows to insure tensorflow used a valid network operator name when the build is recalled.
         with tf.name_scope(self.name + "/"):
             if env.RESTORE:
                 self.restore()
@@ -69,57 +84,73 @@ class AbstractOperator(ABC):
                 self._build(*args)
 
     @abstractmethod
-    def _build(self, *args):
+    def _build(self, *args: Any) -> None:
 
-        """This method must contains the main code of the operator."""
+        """
+        Private method which must contains the main code to build the operator.
+
+        Args
+        ----
+
+            args: Any
+                Build argument which must be define by the child class.
+
+        """
 
         raise NotImplementedError
 
     @abstractmethod
-    def restore(self, *args):
+    def restore(self, *args: Any) -> None:
 
-        """The restore method must restore properly all class tensorflow tensor."""
+        """
+        Restore properly all class attribute. Use `core.deep_learning.tf_utils.get_tf_tensor` to safely restore a
+        tensor.
+
+        Args
+        ----
+
+            args: Any
+                Restore argument which must be define by the child class.
+        """
 
         raise NotImplementedError
 
 
 class AbstractLayer(AbstractOperator, ABC):
-    """This class allow to generalize the development of a layer.
+    """This class set a cortex for the implementation of a layer.
 
-    An abstract layer represent an abstract shema for any kind of deep learning layers. It takes advantage of all
-    AbstractOperator implementation and allows layers to have automatically access to often used application such that
-    the activation_function, the batch normalization or the dropout methods.
+    An abstract layer is a cortex for any kind of deep learning layers. It inherit of all AbstractOperator properties
+    and allows layers to access to often used deep learning methods such that the activation_function, batch
+    normalization or dropout.
 
     Args
     ----
 
-        act_funct : str or None (see tf_utils)
+        act_funct : str, None
             Name for the activation function to use.
             If None, no function is applied.
 
-        keep_proba : tf.Tensor, float or None
-            Probability between 0. and 1. to keep activate a neurons during trainning when using the dropout method.
-            When a prediction is done we must set this probability to 1. to get a valid prediction. Set a tensor
-            allow then to switch from training to prediction. If no dropout is espected set the proba to 1. or None.
+        keep_proba : tf.Tensor, float, None
+            Probability to keep a neuron activate during training.
 
         batch_norm: bool
             If True apply the batch normalization after the _operator methods.
 
         batch_renorm: bool
-            Whether to used batch renormalization or not.
+            If True used the batch renormalization after the _operator methods.
 
-        is_training : Tensor
+        is_training : Tensor, None
             Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
 
-        law_name : str (see tf_utils)
+        law_name : str
             Name of the law to use to initialized Variable.
 
-        law_param : float (see tf_utils)
+        law_param : float
             Parameter of the law used to initialized weight. This parameter is law_name dependent.
 
         decay: float
             Decay used to update the moving average of the batch norm. The moving average is used to learn the
-            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.)
+            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
 
         epsilon: float
             Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
@@ -134,36 +165,40 @@ class AbstractLayer(AbstractOperator, ABC):
             Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.
 
         dmax: Tensor or float
-            When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax)
+            When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).
 
-        name : str
-            Name of the operator to flag it in the tensorflow graph.
+        name : str, None
+            Name of the operator to flag it in the Tensorflow graph.
 
     Attributes
     ----------
 
-        x_input : Tensor or None
+        x : Tensor, None
             Input tensor of the operator.
 
-        x_out : Tensor or None
+        x_out : Tensor, None
             Output of the operator.
 
-    Example
-    -------
+    Examples
+    --------
 
-    >>> class Sqrt(AbstractLayer):
-    ...     def __init__(self, name : str):
-    ...        super().__init__(name=name)
-    ...
-    ...     def build(self, x_input : tf.Tensor) -> tf.Tensor:
-    ...        return super().build(x_input)
-    ...
-    ...     def _operator(self):
-    ...        self.x_output = tf.sqrt(self.x_input)
-    ...
-    ...     def restore(self):
-    ...       super().restore()
-    ...
+        >>> import tensorflow as tf
+        >>>
+        >>> from core.deep_learning.abstract_operator import AbstractLayer
+        >>>
+        >>> class Sqrt(AbstractLayer):
+        ...     def __init__(self, name: str):
+        ...        super().__init__(name=name)
+        ...
+        ...     def build(self, x: tf.Tensor) -> tf.Tensor:
+        ...        return super().build(x)
+        ...
+        ...     def _operator(self) -> None:
+        ...         self.x_out = tf.sqrt(self.x)
+        ...
+        ...     def restore(self) -> None:
+        ...         super().restore()
+        ...
     """
 
     def __init__(self,
@@ -180,12 +215,9 @@ class AbstractLayer(AbstractOperator, ABC):
                  rmin: Union[tf.Tensor, float] = 0.33,
                  rmax: Union[tf.Tensor, float] = 3,
                  dmax: Union[tf.Tensor, float] = 5,
-                 name: str = None):
+                 name: Union[str, None] = None):
 
         super().__init__(name)
-
-        self.x: tf.Tensor = None
-        self.x_out: tf.Tensor = None
 
         self.act_funct = act_funct
         self.keep_proba = keep_proba
@@ -201,35 +233,37 @@ class AbstractLayer(AbstractOperator, ABC):
         self.rmax = rmax
         self.dmax = dmax
 
-    def _build(self, x: tf.Tensor, *init_args):
+        self.x: Union[tf.Tensor, None] = None
+        self.x_out: Union[tf.Tensor, None] = None
+
+    def _build(self, x: tf.Tensor, *init_args: Any):
 
         """
         Regarding parameters set by the child class, the build methods executes step by step the following methods:
 
             * store and identify the operator input
-            * verify if the input tensor satisfy all class requirement
+            * check if the input tensor satisfy all class requirement
             * initialize variable tensor if needed
-            * execute the _operator methods which must take as input self.x_input and output self.x_output
+            * execute the _operator methods which must set self.x_out using self.x
+            * apply batch_norm or batch_renorm
             * use an activation function in needed
             * apply dropout if needed
             * identify the output
 
-        Attributes:
+        Args
+        ----
 
             x : Tensor
                 Input tensor for the layer.
 
-            init_args: args
+            init_args: Any
                 Argument for the weight initialization. Could be an array to initialize Variable values.
 
         """
 
         self.x = identity(x, name="x")
-
         self._check_input()
-
         self._init_variable(*init_args)
-
         self._operator()
 
         if self.batch_norm | self.batch_renorm:
@@ -244,69 +278,90 @@ class AbstractLayer(AbstractOperator, ABC):
         self.x_out = identity(self.x_out, name="x_out")
 
     @abstractmethod
-    def build(self, *args):
+    def build(self, *args: Any) -> tf.Tensor:
 
-        """ Call the build methods of the parent class. The output of the operator is return allowing to chain
-         operators."""
+        """
+        Call the build methods of the parent class which run the build or restore process. The output of the operator
+        is return allowing to chain operators. This method is an abstract method to oblige the implementation of all
+        arguments specification.
+
+        Args
+        ----
+
+            args: Any
+                Argument for the _build methods which must contain at least the input operator.
+
+        Returns
+        -------
+
+            Tensor
+                Output operator Tensor.
+        """
 
         super().build(*args)
 
         return self.x_out
 
-    def _check_input(self):
+    def _check_input(self) -> None:
 
-        """Allows to define a way to assert the input format"""
+        """Apply test on the layer input."""
 
         pass
 
-    def _init_variable(self, *init_args):
+    def _init_variable(self, *init_args) -> None:
 
-        """Allows to initialized all useful Variable tensor."""
+        """Allows to initialized all layer Variable tensor."""
 
         pass
 
     @abstractmethod
-    def _operator(self):
+    def _operator(self) -> None:
 
-        """The main implementation of the operator must be set here. This methods assume the operator takes as input
-        the class attribute self.x_input and write it output on the attribute sel.x_output."""
+        """
+        The main implementation of the operator must be set here. This methods assume the operator takes as input
+        the class attribute self.x and write it output on the attribute self.x_out.
+        """
 
         raise NotImplementedError
 
     @abstractmethod
-    def restore(self):
+    def restore(self) -> None:
 
-        """Method which restore all class tensor given the operator name and the current graph. The parent class can be
-        call to restore standard input and output tensor avoiding code repetition."""
+        """
+        Method which restore all class tensor given the operator name and the current graph. The parent class can be
+        call to restore standard input and output tensor avoiding code repetition.
+        Use `core.deep_learning.tf_utils.get_tf_tensor` to safely restore a tensor.
+        """
 
         self.x = get_tf_tensor(name="x")
         self.x_out = get_tf_tensor(name="x_out")
 
-    def _apply_dropout(self):
+    def _apply_dropout(self) -> None:
 
         """Apply the dropout operator on the output attribute."""
 
         self.x_out = tf.nn.dropout(self.x_out, keep_prob=self.keep_proba)
 
-    def _apply_batch_norm(self):
+    def _apply_batch_norm(self) -> None:
         """
-        Apply batch normalization before the activation function in order to scale the layer avoiding vanishing
-        gradient problems.
+        Apply batch normalization on the output class attribute before the activation function in order to scale the
+        layer avoiding vanishing gradient problems. For a mini-batch with size `B` the normalization is:
+            * :math:`\\mu = \\frac{1}{B} \\sum_{i=1}^{B} y_{i}`
+            * :math:`\\sigma = \\frac{1}{B} \\sum_{i=1}^{B} (y_{i} - \\mu)^2`
+            * :math:`\\hat{y} = \\frac{y - \\mu}{\\sqrt{\\sigma + tol}} \\times \\gamma + \\beta`
 
-        During training the batch normalization center and scale the output layer using the mean and the variance
-        of the layer over the population. These momentum are learnt online during training using a moving average with
-        the decay parameter:
-            - mu_t = mu_t-1 + decay * (mut-1 - mu_t) &
-            - sigma_t = sigma_t-1 + decay * (sigma_t-1 - sigma_t)
+        With :math:`\\gamma` and :math:`\\beta` to parameters learn during training to avoid the network to rebuild the
+        initial value. The parameter epsilon is set to avoid infinity problem when dividing by the layer standard
+        deviation. For inference, the two momentum are learnt online during training using a moving average depending
+        to the decay parameter:
+            * :math:`\\mu_{t} = \\mu_{t-1} \\times decay + (1 - decay) \\times \\mu`
+            * :math:`\\sigma_{t} = \\sigma_{t-1}  \\times decay +  (1 - decay) \\times \\sigma`
 
-        The parameter epsilon is set to avoid infinity problem when dividing by the layer standard deviation.
-
-        In addition this method allow to apply the batch renormalization which allowed to decrease the biase when
-        the layer normalization is applied during inference. During training a new parameter mu and sigma are trained
-        by moving average and used to compute a parameters r=sigma_batch / sigma and d=(mu - mu_batch)/sigma. These two
-        parameters are used to renormalized the batchnorm:  (x - mu_batch)/sigma_batch * r + d. To stabilize the
-        normalization during training r is clipped between [rmin,rmax] whereas d is clip between [-dmax, dmax].
-
+        In addition this method allow to apply the batch renormalization which allowed to decrease the distribution
+        bias between training and inference sample. For a mini-batch with size `B` the renormaization is:
+            * :math:`r = Clip_{(rmin, rmax)} (\\frac{\\sigma}{\\sigma_{t}})`
+            * :math:`d = Clip_{(-dmax, dmax)} (\\frac{\\mu - \\mu_{t}}{\\sigma_{t}})`
+            * :math:`\\hat{y} = (\\frac{y - \\mu}{\\sqrt{\\sigma + tol}} \\times r + d)  \\times \\gamma + \\beta`
         """
 
         self.x_out = tf.contrib.layers.batch_norm(
@@ -320,7 +375,7 @@ class AbstractLayer(AbstractOperator, ABC):
             renorm_clipping={'rmin': self.rmin, 'rmax': self.rmax, 'dmax': self.dmax},
             renorm_decay=self.decay_renorm)
 
-    def _apply_act_funct(self):
+    def _apply_act_funct(self) -> None:
 
         """Use an activation function on the output class attribute."""
 
@@ -329,52 +384,57 @@ class AbstractLayer(AbstractOperator, ABC):
 
 
 class AbstractLoss(AbstractOperator, ABC):
-    """Class defining often used attribute and loss when dealing with loss function.
+    """This class set a cortex for the implementation of a loss.
 
-    The class takes advantage of the AbstractOperator class to use the restore or build loss function. The loss can be
-    view as a graph operator taking as input a target tensor y and and a network prediction tensor output_network.
-    It can use a last transformation or return directly the algorithm prediction y_predict. The output is a loss tensor
-    representing the final function to minimize to train the algorithm. In addition regularization can be applied on a
-    list of weight transforming the final function to an optimize.
+    The class takes inherite all property of the AbstractOperator class to use the restore or build operator process.
+    The loss can be view as a graph operator taking as input a target tensor y and and a network prediction tensor
+    x_out. It can use a last transformation or return directly the algorithm prediction y_pred. The output is a loss
+    tensor representing the final function to minimize to train the algorithm. In addition regularization function can
+     be applied on a list of weight transforming the final function to optimize.
 
     Args
     ----
 
-        penalization_rate : Tensor, float
+        penalization_rate: Tensor, float
             Penalization rate for the weight regularization.
 
-        penalization_type : str
+        penalization_type: str
             Specify the type of regularization to applied on weight.
 
-        name : str
+        name: str
             Name of the loss operator
 
     Attributes
     ----------
 
-        y : Tensor
+        y: Tensor
             Placeholder containing all target variable to learn.
 
-        x_out :  Tensor
+        x_out: Tensor
             Output of the network.
 
-        y_pred :  Tensor
+        y_pred: Tensor
             Final prediction return by the network.
 
-        loss : Tensor
+        loss: Tensor
             loss function of the network
 
         loss_opt: Tensor
             Final loss function to optimize representing the sum of the loss with all regularization parts.
 
-    Example
-    -------
-
+    Examples
+    --------
+        >>> from typing import Union, Sequence
+        >>>
+        >>> import tensorflow as tf
+        >>>
+        >>> from core.deep_learning.abstract_operator import AbstractLoss
+        >>>
         >>> class MAE(AbstractLoss):
-        ...     def __init__(self, penalization_rate: (tf.Tensor, float) = 0.5, penalization_type: str = None):
+        ...     def __init__(self, penalization_rate: Union[tf.Tensor, float] = 0.5, penalization_type: str = None):
         ...         super().__init__(penalization_rate, penalization_type, "mae")
         ...
-        ...     def build(self, x_out : tf.Tensor, y : tf.Tensor, list_weight : Tuple[tf.Variable]=())->tf.Tensor:
+        ...     def build(self, x_out : tf.Tensor, y : tf.Tensor, list_weight : Sequence[tf.Variable]=())-> tf.Tensor:
         ...        return super().build(y, x_out, list_weight)
         ...
         ...     def _set_predict(self):
@@ -389,31 +449,50 @@ class AbstractLoss(AbstractOperator, ABC):
 
     """
 
-    def __init__(self, penalization_rate: (tf.Tensor, float) = 0.5, penalization_type: str = None, name: str = "loss"):
+    def __init__(self, penalization_rate: Union[tf.Tensor, float] = 0.5, penalization_type: str = None,
+                 name: str = "loss"):
 
         super().__init__(name)
 
-        self.y: tf.Tensor = None
-        self.x_out: tf.Tensor = None
-        self.y_pred: tf.Tensor = None
-        self.loss: tf.Tensor = None
-        self.loss_opt: tf.Tensor = None
-        self.penality: (float, tf.Tensor) = 0.
+        self.y: Union[tf.Tensor, None] = None
+        self.x_out: Union[tf.Tensor, None] = None
+        self.y_pred: Union[tf.Tensor, None] = None
+        self.loss: Union[tf.Tensor, None] = None
+        self.loss_opt: Union[tf.Tensor, None] = None
+        self.penality: Union[float, tf.Tensor] = 0.
         self.penalization_rate = penalization_rate
         self.penalization_type = penalization_type
 
         self.weights = []
 
     @abstractmethod
-    def build(self, *args) -> (tf.Tensor, tf.Tensor):
+    def build(self, *args: Any) -> Tuple[tf.Tensor, tf.Tensor]:
 
-        """Use the parents build methods to use the restore or _build process. The build output the loss
-           to optimize and the loss function independent of any regularization."""
+        """
+        Use the parents build methods to use the restore or _build process. The build output the loss to optimize and
+        the loss function independent of any regularization.
+
+        Args
+        ----
+
+            kwargs: Any
+                Key arguments for the _build methods which must be define by the child class.
+
+        Returns
+        -------
+
+            Tensor
+                Loss tensor to optimize.
+
+            Tensor
+                Loss tensor without any regularization terms.
+        """
 
         super().build(*args)
+
         return self.loss_opt, self.y_pred
 
-    def check_input(self):
+    def check_input(self) -> None:
 
         """Check all input tensor types"""
 
@@ -422,42 +501,49 @@ class AbstractLoss(AbstractOperator, ABC):
         [check_variable(w) for w in self.weights]
 
     @abstractmethod
-    def _set_loss(self):
+    def _set_loss(self) -> None:
 
-        """Abstract methods which must set the loss tensor using the y_predict and y tensor."""
+        """Abstract methods which set the loss tensor using the y_pred and y tensor."""
 
         raise NotImplementedError()
 
     @abstractmethod
-    def _set_predict(self):
+    def _set_predict(self) -> None:
 
-        """Abstract methods which must set the prediction tensor"""
+        """Methods which must set the prediction tensor y_pred use to compute prediction."""
+
         raise NotImplementedError
 
-    def _build(self, y: tf.Tensor, x_out: tf.Tensor, weights: Tuple[tf.Variable] = (), *args):
+    def _build(self, y: tf.Tensor, x_out: tf.Tensor, weights: Tuple[tf.Variable] = (), **kwargs: Any) -> None:
 
-        """ The _build method executes the following steps:
+        """
+        The _build method executes the following steps:
 
-        * set all attribute
-        * check the format of all tensor input
-        * set the loss function
-        * set the predict tensor
-        * if a list of weight was put in entry add a regularization part to the loss function
-        * identify all output tensor
+            * set all attribute
+            * check the format of all tensor input
+            * set the loss function
+            * set the predict tensor
+            * if a list of weight was put in entry add a regularization part to the loss function
+            * identify all output tensor
 
-        Attributes:
+        Args
+        ----
 
             y : tf.Tensor
-                tensor which contains all objective variable the algorithm learn
+                Tensor which contains all objective variable the algorithm learn.
 
             x_out : tf.Tensor
-                output of the network which must be transform to obtain the final prediction
+                Output of the network which must be transform to obtain the final prediction.
 
             weights : Tuple[Tensor]
-                a series of weighs tensor which must be subject to a regularization function.
+                A series of weighs tensor which must be subject to a regularization function.
+
+            kwargs: Any
+                Additional parameters which can be define by the child class.
         """
 
         self.y = identity(y, name="y")
+
         self.x_out = identity(x_out, name="x_out")
 
         self.weights = weights
@@ -480,9 +566,9 @@ class AbstractLoss(AbstractOperator, ABC):
         self.y_pred = identity(self.y_pred, name="y_pred")
 
     @abstractmethod
-    def restore(self):
+    def restore(self) -> None:
 
-        """Restore all loss tensor attribute"""
+        """Restore all loss tensor attributes."""
 
         self.loss = get_tf_tensor(name="loss")
         self.loss_opt = get_tf_tensor(name="loss_opt")
@@ -490,9 +576,9 @@ class AbstractLoss(AbstractOperator, ABC):
         self.y = get_tf_tensor(name="y")
         self.x_out = get_tf_tensor(name="x_out")
 
-    def _compute_penalization(self):
+    def _compute_penalization(self) -> None:
 
-        """ Compute the penalty to apply to a list of weight tensor."""
+        """ Compute the penalty to apply to a list of weight tensor. TODO: Move this function into tf_utils."""
 
         if self.penalization_type == 'L2':
             self.penality = tf.add_n([tf.nn.l2_loss(v) for v in self.weights])

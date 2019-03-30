@@ -44,7 +44,7 @@ extensions = [
     'rinoh.frontend.sphinx',
     'sphinx.ext.napoleon',
     'sphinx_autodoc_typehints',
-    'sphinx.ext.mathjax',
+    'sphinx.ext.imgmath'
 ]
 
 # Napoleon Conf
