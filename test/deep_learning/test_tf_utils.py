@@ -1,3 +1,5 @@
+import unittest
+
 import tensorflow as tf
 
 from core.deep_learning.tf_utils import get_act_funct
@@ -38,3 +40,7 @@ class TestActivationFunction(tf.test.TestCase):
 
     def testError(self):
         self.assertRaises(TypeError, get_act_funct, X, 'unknow_name')
+
+
+if __name__ == '__main__':
+    unittest.main()

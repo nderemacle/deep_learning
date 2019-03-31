@@ -1,4 +1,4 @@
-from typing import List
+from typing import Sequence
 
 import tensorflow as tf
 
@@ -28,7 +28,7 @@ class CrossEntropy(AbstractLoss):
     def _set_predict(self):
         self.y_pred = tf.argmax(self.x_out, 1)
 
-    def build(self, y: tf.Tensor, x_out: tf.Tensor, weights: List[tf.Variable]):
+    def build(self, y: tf.Tensor, x_out: tf.Tensor, weights: Sequence[tf.Variable]):
         return super().build(y, x_out, weights)
 
     def restore(self):
@@ -61,7 +61,7 @@ class MeanSquareError(AbstractLoss):
     def _set_predict(self):
         self.y_pred = self.x_out
 
-    def build(self, y: tf.Tensor, x_out: tf.Tensor, weights: List[tf.Variable]):
+    def build(self, y: tf.Tensor, x_out: tf.Tensor, weights: Sequence[tf.Variable]):
         return super().build(y, x_out, weights)
 
     def restore(self):

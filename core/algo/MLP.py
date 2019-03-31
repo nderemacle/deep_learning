@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, List, Union, Dict, Any
+from typing import Tuple, List, Union, Dict, Any, Sequence
 
 import numpy as np
 import tensorflow as tf
@@ -58,7 +58,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
             Penalization rate if regularization is used.
 
         penalization_type: str, None
-            Indicates the type of penalization to use if not None. (Ex: L1 or L2)
+            Indicates the type of penalization to use if not None.
 
         law_name: str
             Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
@@ -78,19 +78,19 @@ class AbstractMlp(AbstractArchitecture, ABC):
         decay_renorm: float
             Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
-        x: Tensor, None
+        x: tf.Tensor, None
             Input tensor of the network.
 
-        y: Tensor, None
+        y: tf.Tensor, None
             Tensor containing all True target variable to predict.
 
-        x_out: Tensor, None
+        x_out: tf.Tensor, None
             Output of the network.
 
-        loss: Tensor, None
+        loss: tf.Tensor, None
             Loss function optimized to train the MLP.
 
-        y_pred: Tensor, None
+        y_pred: tf.Tensor, None
             Prediction tensor.
 
         l_fc: List[FcLayer], None
@@ -133,7 +133,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.l_output: Union[FcLayer, None] = None
         self.l_loss: Union[AbstractLoss, None] = None
 
-    def build(self, layer_size: Tuple, input_dim: int, output_dim: int, act_funct: str = "relu",
+    def build(self, layer_size: Sequence[int], input_dim: int, output_dim: int, act_funct: str = "relu",
               keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1, batch_norm: bool = False,
               batch_renorm: bool = False, decay: float = 0.999, decay_renorm: float = False, epsilon: float = 0.001,
               penalization_rate: float = 0., penalization_type: Union[str, None] = None,
@@ -145,8 +145,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
         Args
         ----
 
-            layer_size: Tuple
-                        Number of neurons for each fully connected step.
+            layer_size: Sequence[int]
+                Number of neurons for each fully connected step.
 
             input_dim: int
                 Number of input data.
@@ -170,7 +170,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
                 Penalization rate if regularization is used.
 
             penalization_type: None, str
-                Indicates the type of penalization to use if not None. (Ex: L1 or L2)
+                Indicates the type of penalization to use if not None.
 
             law_name: str
                 Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
@@ -259,13 +259,13 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self._set_loss(weights)
 
     @abstractmethod
-    def _set_loss(self, weights: List[tf.Variable]) -> None:
+    def _set_loss(self, weights: Sequence[tf.Variable]) -> None:
 
         """This abstract method must set the loss function, the prediction tensor and the optimizer tensor.
 
         Args
 
-            weights : List[tf.Variable]
+            weights : Sequence[tf.Variable]
                 List of weight to apply regularization.
 
          """
@@ -426,7 +426,7 @@ class MlpClassifier(AbstractMlp):
     Attributes
     ----------
 
-        layer_size: Tuple
+        layer_size: Sequence[int]
             Number of neurons for each fully connected step.
 
         input_dim: int, None
@@ -451,7 +451,7 @@ class MlpClassifier(AbstractMlp):
             Penalization rate if regularization is used.
 
         penalization_type: str, None
-            Indicates the type of penalization to use if not None (Ex: L1 or L2).
+            Indicates the type of penalization to use if not None.
 
         law_name: str
             Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
@@ -471,19 +471,19 @@ class MlpClassifier(AbstractMlp):
         decay_renorm: float
             Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
-        x: Tensor, None
+        x: tf.Tensor, None
             Input tensor of the network.
 
-        y: Tensor, None
+        y: tf.Tensor, None
             Tensor containing all True target variable to predict.
 
-        x_out: Tensor, None
+        x_out: tf.Tensor, None
             Output of the network.
 
-        loss: Tensor, None
+        loss: tf.Tensor, None
             Loss function optimized to train the MLP.
 
-        y_pred: Tensor, None
+        y_pred: tf.Tensor, None
             Prediction tensor.
 
         l_fc: List[FcLayer], None
@@ -499,14 +499,14 @@ class MlpClassifier(AbstractMlp):
     def __init__(self, name: str = 'MlpClassifier', use_gpu: bool = False):
         super().__init__(name, use_gpu)
 
-    def _set_loss(self, weights: List[tf.Variable]) -> None:
+    def _set_loss(self, weights: Sequence[tf.Variable]) -> None:
         """
         Use the cross entropy class to define the network loss function.
 
         Args
         ----
 
-            weights : List[tf.Variable]
+            weights : Sequence[tf.Variable]
                 List of weight to apply regularization.
         """
 
@@ -539,7 +539,7 @@ class MlpClassifier(AbstractMlp):
         -------
 
             array with shape (n_observation, n_labels)
-                Array of predict probabilities.
+                Array of predicted probabilities.
         """
 
         check_array(x, shape=(-1, self.input_dim))
@@ -577,7 +577,7 @@ class MlpRegressor(AbstractMlp):
     Attributes
     ----------
 
-        layer_size: Tuple
+        layer_size: Sequence[int]
             Number of neurons for each fully connected step.
 
         input_dim: int, None
@@ -602,7 +602,7 @@ class MlpRegressor(AbstractMlp):
             Penalization rate if regularization is used.
 
         penalization_type: str, None
-            Indicates the type of penalization to use if not None. (Ex: L1 or L2)
+            Indicates the type of penalization to use if not None.
 
         law_name: str
             Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
@@ -622,19 +622,19 @@ class MlpRegressor(AbstractMlp):
         decay_renorm: float
             Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
-        x: Tensor, None
+        x: tf.Tensor, None
             Input tensor of the network.
 
-        y: Tensor, None
+        y: tf.Tensor, None
             Tensor containing all True target variable to predict.
 
-        x_out: Tensor, None
+        x_out: tf.Tensor, None
             Output of the network.
 
-        loss: Tensor, None
+        loss: tf.Tensor, None
             Loss function optimized to train the MLP.
 
-        y_pred: Tensor, None
+        y_pred: tf.Tensor, None
             Prediction tensor.
 
         l_fc: List[FcLayer], None
@@ -651,14 +651,14 @@ class MlpRegressor(AbstractMlp):
     def __init__(self, name: str = 'MlpRegressor', use_gpu: bool = False):
         super().__init__(name, use_gpu)
 
-    def _set_loss(self, weights: List[tf.Variable]) -> None:
+    def _set_loss(self, weights: Sequence[tf.Variable]) -> None:
         """
         Use the MeanSquareError class to define the network loss function.
 
         Args
         ----
 
-            weights : List[tf.Variable]
+            weights : Sequence[tf.Variable]
                 List of weight to apply regularization.
         """
 

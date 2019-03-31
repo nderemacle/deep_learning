@@ -42,7 +42,6 @@ Abstract Operator
    :show-inheritance:
    :private-members:
 
-
 Indices and tables
 ==================
 

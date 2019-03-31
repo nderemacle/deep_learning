@@ -1,3 +1,4 @@
+import unittest
 from typing import List
 
 import numpy as np
@@ -154,3 +155,7 @@ class TestMeanSquareError(tf.test.TestCase):
     def testRestore(self):
         loss = MeanSquareError()
         test_restore(self, loss, [100, 10], [100, 10], tensors=["loss", "loss_opt", "y", "x_out", "y_pred"])
+
+
+if __name__ == '__main__':
+    unittest.main()

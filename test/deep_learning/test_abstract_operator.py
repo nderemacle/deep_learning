@@ -1,3 +1,5 @@
+import unittest
+
 import tensorflow as tf
 
 import core.deep_learning.env as env
@@ -40,3 +42,7 @@ class TestAbstractOperator(tf.test.TestCase):
 
         self.assertFalse(op.has_build)
         self.assertTrue(op.has_restore)
+
+
+if __name__ == '__main__':
+    unittest.main()

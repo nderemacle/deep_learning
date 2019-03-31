@@ -1,7 +1,7 @@
 import os
 import traceback
 from abc import ABC, abstractmethod
-from typing import Tuple, Any, Dict, Union
+from typing import Any, Dict, Union, Sequence
 
 import numpy as np
 import tensorflow as tf
@@ -17,7 +17,7 @@ class AbstractArchitecture(ABC):
     Cortex for any deep learning architecture. The class initialization step allows to configure the Tensorflow
     interface to use GPU computation for example. In addition this abstract level implement general usage such the
     saving and the restoration methods. It provide also some always use methods such the minimizer or placeholder
-    setting. (TODO: move these functions into tf_utils.py)
+    setting.
 
     Args
     ----
@@ -44,22 +44,22 @@ class AbstractArchitecture(ABC):
         learning_curve: list
             A list containing the value of the loss after each training step.
 
-        learning_rate: Tensor
+        learning_rate: tf.Tensor
             Learnig rate tensor for optimization.
 
-        keep_proba_tensor: Tensor
+        keep_proba_tensor: tf.Tensor
             Tensor for dropout methods.
 
-        is_training: Tensor
+        is_training: tf.Tensor
             Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
 
-        dmax: Tensor
+        dmax: tf.Tensor
             Tensor used to clip the batch renormalization scale parameter.
 
-        rmin: Tensor
+        rmin: tf.Tensor
             Lower bound used to clip the batch renormalization shift parameter.
 
-        rmax: Tensor
+        rmax: tf.Tensor
             Upper bound used to clip the batch renormalization shift parameter.
     """
 
@@ -82,7 +82,7 @@ class AbstractArchitecture(ABC):
 
     def _set_session(self) -> tf.Session:
         """
-        Set the tensorflow Session and return the session object.
+        Set the Tensorflow Session and return the session object.
 
         Returns
         -------
@@ -144,7 +144,7 @@ class AbstractArchitecture(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def predict(self, *kwargs) -> np.ndarray:
+    def predict(self, **kwargs) -> np.ndarray:
 
         """
         Make a prediction using input arrays with shape (n_observations, ...).
@@ -263,14 +263,23 @@ class AbstractArchitecture(ABC):
             with self.graph.as_default():
                 with tf.name_scope(self.name):
                     self._build()
-        except Exception as e:
+        except Exception:
             raise TypeError(traceback.format_exc())
         finally:
             env.RESTORE = False
 
-    def _get_optimizer(self):
+    def _get_optimizer(self) -> tf.train.Optimizer:
 
-        """Return the valid optimizer."""
+        """
+        Return the valid optimizer.
+        TODO: Move into tf_utils.
+
+        Returns
+        -------
+
+            tf.train.Optimizer
+                Tensorflow optimizer object.
+        """
 
         if self.optimizer_name == "RMSProp":
             return tf.train.RMSPropOptimizer(self.learning_rate)
@@ -283,7 +292,7 @@ class AbstractArchitecture(ABC):
             raise TypeError(
                 f"{self.optimizer_name} isn't a valid optimiser. optimiser_type must be in {list_optimizer}")
 
-    def _minimize(self, f: tf.Tensor, name: str = "optimizer"):
+    def _minimize(self, f: tf.Tensor, name: str = "optimizer") -> tf.train.Optimizer:
 
         """
         Return an optimizer which minimize a tensor f. Add all parameters store in the UPDATE_OPS such that all moving
@@ -292,7 +301,7 @@ class AbstractArchitecture(ABC):
         Args
         ----
 
-            f : Tensor
+            f : tf.Tensor
                 function to minimize.
 
             name : str
@@ -301,7 +310,8 @@ class AbstractArchitecture(ABC):
         Returns
         -------
 
-            Tensorflow optimizer
+            tf.train.Optimizer
+                Tensorflow optimizer object.
         """
 
         if env.RESTORE:
@@ -311,22 +321,29 @@ class AbstractArchitecture(ABC):
             with tf.control_dependencies(update_ops):
                 return self._get_optimizer().minimize(f, name=name)
 
-    def _placeholder(self, dtype: tf.DType, shape: Union[Tuple, None], name: str) -> tf.placeholder:
+    def _placeholder(self, dtype: tf.DType, shape: Union[Sequence[int], None], name: str) -> tf.placeholder:
 
         """
         Set or restore a placeholder.
+        TODO: Move into tf_utils.
 
         Args
         ----
 
-            dtype : Tensorflow type
+            dtype : tf.DType
                 Type of the placeholder.
 
-            shape : Tuple
+            shape : Sequence[int], None
                 Size of the placeholder.
 
             name : str
                 name of the placeholder.
+
+        Returns
+        -------
+
+            tf.placeholder
+                Tensorflow placeholder object.
 
         """
 

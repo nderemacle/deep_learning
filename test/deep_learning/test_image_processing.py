@@ -13,3 +13,7 @@ class testResNet50(unittest.TestCase):
         output = resnet_50(img)
 
         self.assertEqual(output.shape, (2, 7, 7, 2048))
+
+
+if __name__ == '__main__':
+    unittest.main()

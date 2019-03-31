@@ -1,3 +1,4 @@
+import unittest
 from typing import List
 
 import numpy as np
@@ -137,3 +138,7 @@ class TestMinMaxLayer(tf.test.TestCase):
     def test_restore(self):
         layer = MinMaxLayer(1)
         test_restore(self, layer, [100, 3], ["x", "x_out"])
+
+
+if __name__ == '__main__':
+    unittest.main()

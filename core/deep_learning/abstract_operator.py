@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Tuple
-from typing import Union, Any
+from typing import Union, Any, Sequence, Tuple
 
 import tensorflow as tf
 
@@ -41,6 +40,7 @@ class AbstractOperator(ABC):
         >>> from core.deep_learning.tf_utils import get_tf_tensor
         >>>
         >>> class Sqrt(AbstractOperator):
+        ...
         ...     def __init__(self, name: str):
         ...         super().__init__(name)
         ...         self.x_out : Union[tf.Tensor, None] = None
@@ -139,7 +139,7 @@ class AbstractLayer(AbstractOperator, ABC):
         batch_renorm: bool
             If True used the batch renormalization after the _operator methods.
 
-        is_training : Tensor, None
+        is_training : tf.Tensor, None
             Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
 
         law_name : str
@@ -158,13 +158,13 @@ class AbstractLayer(AbstractOperator, ABC):
         decay_renorm: float
             Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
-        rmin: Tensor or float
+        rmin: tf.Tensor or float
             Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.
 
-        rmax: Tensor or float
+        rmax: tf.Tensor or float
             Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.
 
-        dmax: Tensor or float
+        dmax: tf.Tensor or float
             When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).
 
         name : str, None
@@ -173,10 +173,10 @@ class AbstractLayer(AbstractOperator, ABC):
     Attributes
     ----------
 
-        x : Tensor, None
+        x : tf.Tensor, None
             Input tensor of the operator.
 
-        x_out : Tensor, None
+        x_out : tf.Tensor, None
             Output of the operator.
 
     Examples
@@ -187,6 +187,7 @@ class AbstractLayer(AbstractOperator, ABC):
         >>> from core.deep_learning.abstract_operator import AbstractLayer
         >>>
         >>> class Sqrt(AbstractLayer):
+        ...
         ...     def __init__(self, name: str):
         ...        super().__init__(name=name)
         ...
@@ -241,19 +242,19 @@ class AbstractLayer(AbstractOperator, ABC):
         """
         Regarding parameters set by the child class, the build methods executes step by step the following methods:
 
-            * store and identify the operator input
-            * check if the input tensor satisfy all class requirement
-            * initialize variable tensor if needed
-            * execute the _operator methods which must set self.x_out using self.x
-            * apply batch_norm or batch_renorm
-            * use an activation function in needed
-            * apply dropout if needed
-            * identify the output
+            1. store and identify the operator input
+            2. check if the input tensor satisfy all class requirement
+            3. initialize variable tensor if needed
+            4. execute the _operator methods which must set self.x_out using self.x
+            5. apply the batch normalization or the batch renormalization
+            6. use an activation function if needed
+            7. apply dropout if needed
+            8. identify the output
 
         Args
         ----
 
-            x : Tensor
+            x : tf.Tensor
                 Input tensor for the layer.
 
             init_args: Any
@@ -294,7 +295,7 @@ class AbstractLayer(AbstractOperator, ABC):
         Returns
         -------
 
-            Tensor
+            tf.Tensor
                 Output operator Tensor.
         """
 
@@ -346,22 +347,26 @@ class AbstractLayer(AbstractOperator, ABC):
         """
         Apply batch normalization on the output class attribute before the activation function in order to scale the
         layer avoiding vanishing gradient problems. For a mini-batch with size `B` the normalization is:
+
             * :math:`\\mu = \\frac{1}{B} \\sum_{i=1}^{B} y_{i}`
             * :math:`\\sigma = \\frac{1}{B} \\sum_{i=1}^{B} (y_{i} - \\mu)^2`
-            * :math:`\\hat{y} = \\frac{y - \\mu}{\\sqrt{\\sigma + tol}} \\times \\gamma + \\beta`
+            * :math:`\\hat{y} = \\frac{y - \\mu}{\\sqrt{\\sigma + \\epsilon}} \\times \\gamma + \\beta`
 
         With :math:`\\gamma` and :math:`\\beta` to parameters learn during training to avoid the network to rebuild the
         initial value. The parameter epsilon is set to avoid infinity problem when dividing by the layer standard
         deviation. For inference, the two momentum are learnt online during training using a moving average depending
         to the decay parameter:
+
             * :math:`\\mu_{t} = \\mu_{t-1} \\times decay + (1 - decay) \\times \\mu`
             * :math:`\\sigma_{t} = \\sigma_{t-1}  \\times decay +  (1 - decay) \\times \\sigma`
 
         In addition this method allow to apply the batch renormalization which allowed to decrease the distribution
         bias between training and inference sample. For a mini-batch with size `B` the renormaization is:
+
             * :math:`r = Clip_{(rmin, rmax)} (\\frac{\\sigma}{\\sigma_{t}})`
             * :math:`d = Clip_{(-dmax, dmax)} (\\frac{\\mu - \\mu_{t}}{\\sigma_{t}})`
-            * :math:`\\hat{y} = (\\frac{y - \\mu}{\\sqrt{\\sigma + tol}} \\times r + d)  \\times \\gamma + \\beta`
+            * :math:`\\hat{y} = (\\frac{y - \\mu}{\\sqrt{\\sigma + \\epsilon}} \\times r + d)  \\times \\gamma + \\beta`
+
         """
 
         self.x_out = tf.contrib.layers.batch_norm(
@@ -390,12 +395,12 @@ class AbstractLoss(AbstractOperator, ABC):
     The loss can be view as a graph operator taking as input a target tensor y and and a network prediction tensor
     x_out. It can use a last transformation or return directly the algorithm prediction y_pred. The output is a loss
     tensor representing the final function to minimize to train the algorithm. In addition regularization function can
-     be applied on a list of weight transforming the final function to optimize.
+    be applied on a list of weight transforming the final function to optimize.
 
     Args
     ----
 
-        penalization_rate: Tensor, float
+        penalization_rate: tf.Tensor, float
             Penalization rate for the weight regularization.
 
         penalization_type: str
@@ -407,19 +412,19 @@ class AbstractLoss(AbstractOperator, ABC):
     Attributes
     ----------
 
-        y: Tensor
+        y: tf.Tensor
             Placeholder containing all target variable to learn.
 
-        x_out: Tensor
+        x_out: tf.Tensor
             Output of the network.
 
-        y_pred: Tensor
+        y_pred: tf.Tensor
             Final prediction return by the network.
 
-        loss: Tensor
+        loss: tf.Tensor
             loss function of the network
 
-        loss_opt: Tensor
+        loss_opt: tf.Tensor
             Final loss function to optimize representing the sum of the loss with all regularization parts.
 
     Examples
@@ -431,19 +436,20 @@ class AbstractLoss(AbstractOperator, ABC):
         >>> from core.deep_learning.abstract_operator import AbstractLoss
         >>>
         >>> class MAE(AbstractLoss):
+        ...
         ...     def __init__(self, penalization_rate: Union[tf.Tensor, float] = 0.5, penalization_type: str = None):
         ...         super().__init__(penalization_rate, penalization_type, "mae")
         ...
         ...     def build(self, x_out : tf.Tensor, y : tf.Tensor, list_weight : Sequence[tf.Variable]=())-> tf.Tensor:
         ...        return super().build(y, x_out, list_weight)
         ...
-        ...     def _set_predict(self):
+        ...     def _set_predict(self) -> None:
         ...         self.y_predict = self.output_network
         ...
-        ...     def _set_loss(self):
+        ...     def _set_loss(self) -> None:
         ...       self.loss= tf.reduce_mean(tf.abs(tf.sub(self.y, self.y_pred)))
         ...
-        ...    def restore(self):
+        ...    def restore(self) -> None:
         ...         super().restore()
         ...
 
@@ -481,10 +487,10 @@ class AbstractLoss(AbstractOperator, ABC):
         Returns
         -------
 
-            Tensor
+            tf.Tensor
                 Loss tensor to optimize.
 
-            Tensor
+            tf.Tensor
                 Loss tensor without any regularization terms.
         """
 
@@ -514,17 +520,17 @@ class AbstractLoss(AbstractOperator, ABC):
 
         raise NotImplementedError
 
-    def _build(self, y: tf.Tensor, x_out: tf.Tensor, weights: Tuple[tf.Variable] = (), **kwargs: Any) -> None:
+    def _build(self, y: tf.Tensor, x_out: tf.Tensor, weights: Sequence[tf.Variable] = (), **kwargs: Any) -> None:
 
         """
         The _build method executes the following steps:
 
-            * set all attribute
-            * check the format of all tensor input
-            * set the loss function
-            * set the predict tensor
-            * if a list of weight was put in entry add a regularization part to the loss function
-            * identify all output tensor
+            1. set all attributes
+            2. check the format of all tensor input
+            3. set the loss function
+            4. set the predict tensor
+            5. if the weights sequence is not empty, add a regularization term to the loss function
+            6. identify all output tensor
 
         Args
         ----
@@ -535,7 +541,7 @@ class AbstractLoss(AbstractOperator, ABC):
             x_out : tf.Tensor
                 Output of the network which must be transform to obtain the final prediction.
 
-            weights : Tuple[Tensor]
+            weights : Sequence[tf.Variable]
                 A series of weighs tensor which must be subject to a regularization function.
 
             kwargs: Any
