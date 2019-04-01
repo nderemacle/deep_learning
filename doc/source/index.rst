@@ -42,6 +42,14 @@ Abstract Operator
    :show-inheritance:
    :private-members:
 
+Layer
+-----------------
+
+.. automodule:: core.deep_learning.layer
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
 Indices and tables
 ==================
 

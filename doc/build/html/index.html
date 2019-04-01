@@ -81,6 +81,7 @@
                                 </li>
                                 <li><a class="reference internal" href="#module-core.deep_learning.abstract_operator">Abstract
                                     Operator</a></li>
+                                <li><a class="reference internal" href="#module-core.deep_learning.layer">Layer</a></li>
                             </ul>
                         </li>
                         <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
@@ -206,11 +207,13 @@
                                                             (<em>int</em><em>, </em><em>None</em>) – Number of target
                                                             variable to predict.
                                                         </li>
-                                                        <li><strong>act_funct</strong> (<em>str</em>) – Name of the
-                                                            activation function.
+                                                        <li><strong>act_funct</strong>
+                                                            (<em>str</em><em>, </em><em>None</em>) – Name of the
+                                                            activation function. If None, no activation function is
+                                                            used.
                                                         </li>
                                                         <li><strong>keep_proba</strong> (<em>float</em>) – Probability
-                                                            to keep a neuron activate during training.
+                                                            to keep a neuron activated during training.
                                                         </li>
                                                         <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply
                                                             the batch normalization method.
@@ -268,11 +271,15 @@
                                                         <li><strong>y_pred</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>)
                                                             – Prediction tensor.
                                                         </li>
-                                                        <li><strong>l_fc</strong>
-                                                            (<em>List</em><em>[</em><em>FcLayer</em><em>]</em><em>, </em><em>None</em>)
+                                                        <li><strong>l_fc</strong> (<em>List</em><em>[</em><a
+                                                                class="reference internal"
+                                                                href="#core.deep_learning.layer.FcLayer"
+                                                                title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>]</em><em>, </em><em>None</em>)
                                                             – List containing all fully connected layer objects.
                                                         </li>
-                                                        <li><strong>l_output</strong> (<em>FcLayer</em><em>, </em><em>None</em>)
+                                                        <li><strong>l_output</strong> (<a class="reference internal"
+                                                                                          href="#core.deep_learning.layer.FcLayer"
+                                                                                          title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>, </em><em>None</em>)
                                                             – Final layer for network output reduction.
                                                         </li>
                                                         <li><strong>l_loss</strong> (<a class="reference internal"
@@ -314,11 +321,13 @@
                                                                 <li><strong>output_dim</strong> (<em>int</em>) – Number
                                                                     of target variable to predict.
                                                                 </li>
-                                                                <li><strong>act_funct</strong> (<em>str</em>) – Name of
-                                                                    the activation function.
+                                                                <li><strong>act_funct</strong>
+                                                                    (<em>str</em><em>, </em><em>None</em>) – Name of the
+                                                                    activation function. If None, no activation function
+                                                                    is used.
                                                                 </li>
                                                                 <li><strong>keep_proba</strong> (<em>float</em>) –
-                                                                    Probability to keep a neuron activate during
+                                                                    Probability to keep a neuron activated during
                                                                     training.
                                                                 </li>
                                                                 <li><strong>batch_norm</strong> (<em>bool</em>) – If
@@ -649,8 +658,10 @@
                                                             (<em>int</em><em>, </em><em>None</em>) – Number of target
                                                             variable to predict.
                                                         </li>
-                                                        <li><strong>act_funct</strong> (<em>str</em>) – Name of the
-                                                            activation function.
+                                                        <li><strong>act_funct</strong>
+                                                            (<em>str</em><em>, </em><em>None</em>) – Name of the
+                                                            activation function. If None, no activation function are
+                                                            used.
                                                         </li>
                                                         <li><strong>keep_proba</strong> (<em>float</em>) – Probability
                                                             to keep a neuron activate during training.
@@ -711,11 +722,15 @@
                                                         <li><strong>y_pred</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>)
                                                             – Prediction tensor.
                                                         </li>
-                                                        <li><strong>l_fc</strong>
-                                                            (<em>List</em><em>[</em><em>FcLayer</em><em>]</em><em>, </em><em>None</em>)
+                                                        <li><strong>l_fc</strong> (<em>List</em><em>[</em><a
+                                                                class="reference internal"
+                                                                href="#core.deep_learning.layer.FcLayer"
+                                                                title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>]</em><em>, </em><em>None</em>)
                                                             – List containing all fully connected layer objects.
                                                         </li>
-                                                        <li><strong>l_output</strong> (<em>FcLayer</em><em>, </em><em>None</em>)
+                                                        <li><strong>l_output</strong> (<a class="reference internal"
+                                                                                          href="#core.deep_learning.layer.FcLayer"
+                                                                                          title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>, </em><em>None</em>)
                                                             – Final layer for network output reduction.
                                                         </li>
                                                         <li><strong>l_loss</strong> (<a class="reference internal"
@@ -803,11 +818,13 @@
                                                                 <li><strong>output_dim</strong> (<em>int</em>) – Number
                                                                     of target variable to predict.
                                                                 </li>
-                                                                <li><strong>act_funct</strong> (<em>str</em>) – Name of
-                                                                    the activation function.
+                                                                <li><strong>act_funct</strong>
+                                                                    (<em>str</em><em>, </em><em>None</em>) – Name of the
+                                                                    activation function. If None, no activation function
+                                                                    is used.
                                                                 </li>
                                                                 <li><strong>keep_proba</strong> (<em>float</em>) –
-                                                                    Probability to keep a neuron activate during
+                                                                    Probability to keep a neuron activated during
                                                                     training.
                                                                 </li>
                                                                 <li><strong>batch_norm</strong> (<em>bool</em>) – If
@@ -1136,11 +1153,13 @@
                                                             (<em>int</em><em>, </em><em>None</em>) – Number of target
                                                             variable to predict.
                                                         </li>
-                                                        <li><strong>act_funct</strong> (<em>str</em>) – Name of the
-                                                            activation function.
+                                                        <li><strong>act_funct</strong>
+                                                            (<em>str</em><em>, </em><em>None</em>) – Name of the
+                                                            activation function. If None, no activation function is
+                                                            used.
                                                         </li>
                                                         <li><strong>keep_proba</strong> (<em>float</em>) – Probability
-                                                            to keep a neuron activate during training.
+                                                            to keep a neuron activated during training.
                                                         </li>
                                                         <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply
                                                             the batch normalization method.
@@ -1198,11 +1217,15 @@
                                                         <li><strong>y_pred</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>)
                                                             – Prediction tensor.
                                                         </li>
-                                                        <li><strong>l_fc</strong>
-                                                            (<em>List</em><em>[</em><em>FcLayer</em><em>]</em><em>, </em><em>None</em>)
+                                                        <li><strong>l_fc</strong> (<em>List</em><em>[</em><a
+                                                                class="reference internal"
+                                                                href="#core.deep_learning.layer.FcLayer"
+                                                                title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>]</em><em>, </em><em>None</em>)
                                                             – List containing all fully connected layer objects.
                                                         </li>
-                                                        <li><strong>l_output</strong> (<em>FcLayer</em><em>, </em><em>None</em>)
+                                                        <li><strong>l_output</strong> (<a class="reference internal"
+                                                                                          href="#core.deep_learning.layer.FcLayer"
+                                                                                          title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>, </em><em>None</em>)
                                                             – Final layer for network output reduction.
                                                         </li>
                                                         <li><strong>l_loss</strong> (<a class="reference internal"
@@ -1244,11 +1267,13 @@
                                                                 <li><strong>output_dim</strong> (<em>int</em>) – Number
                                                                     of target variable to predict.
                                                                 </li>
-                                                                <li><strong>act_funct</strong> (<em>str</em>) – Name of
-                                                                    the activation function.
+                                                                <li><strong>act_funct</strong>
+                                                                    (<em>str</em><em>, </em><em>None</em>) – Name of the
+                                                                    activation function. If None, no activation function
+                                                                    is used.
                                                                 </li>
                                                                 <li><strong>keep_proba</strong> (<em>float</em>) –
-                                                                    Probability to keep a neuron activate during
+                                                                    Probability to keep a neuron activated during
                                                                     training.
                                                                 </li>
                                                                 <li><strong>batch_norm</strong> (<em>bool</em>) – If
@@ -2675,10 +2700,13 @@
                                                         </ul>
                                                     </div>
                                                 </blockquote>
-                                                <p>In addition this method allow to apply the batch renormalization
-                                                    which allowed to decrease the distribution
-                                                    bias between training and inference sample. For a mini-batch with
-                                                    size <cite>B</cite> the renormaization is:</p>
+                                                <p>These last parameters are used to normalize inference data. However,
+                                                    using this process the network
+                                                    normalization computation is not the same between train and
+                                                    inference sample. Batch renormalization methods
+                                                    allows to tackle this problem by adding an intermediary
+                                                    normalization step. For a mini-batch with size <cite>B</cite>
+                                                    the renormalization during training becomes:</p>
                                                 <blockquote>
                                                     <div>
                                                         <ul class="simple">
@@ -2697,6 +2725,10 @@
                                                         </ul>
                                                     </div>
                                                 </blockquote>
+                                                <div class="admonition warning">
+                                                    <p class="first admonition-title">Warning</p>
+                                                    <p class="last">Data format must be ‘NC’ or ‘NHWC’.</p>
+                                                </div>
                                                 <table class="docutils field-list" frame="void" rules="none">
                                                     <col class="field-name"/>
                                                     <col class="field-body"/>
@@ -3111,6 +3143,355 @@
                                                     title="Permalink to this definition">¶</a></dt>
                                             <dd><p>Compute the penalty to apply to a list of weight tensor. TODO: Move
                                                 this function into tf_utils.</p>
+                                                <table class="docutils field-list" frame="void" rules="none">
+                                                    <col class="field-name"/>
+                                                    <col class="field-body"/>
+                                                    <tbody valign="top">
+                                                    <tr class="field-odd field">
+                                                        <th class="field-name">Return type:</th>
+                                                        <td class="field-body"><code
+                                                                class="docutils literal notranslate"><span class="pre">None</span></code>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </dd>
+                                        </dl>
+
+                                    </dd>
+                                </dl>
+
+                            </div>
+                            <div class="section" id="module-core.deep_learning.layer">
+                                <span id="layer"></span>
+                                <h2>Layer<a class="headerlink" href="#module-core.deep_learning.layer"
+                                            title="Permalink to this headline">¶</a></h2>
+                                <dl class="class">
+                                    <dt id="core.deep_learning.layer.FcLayer">
+                                        <em class="property">class </em><code class="descclassname">core.deep_learning.layer.</code><code
+                                            class="descname">FcLayer</code><span class="sig-paren">(</span><em>size</em>,
+                                        <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>batch_norm=False</em>,
+                                        <em>batch_renorm=False</em>, <em>is_training=None</em>, <em>name='fc'</em>, <em>law_name='uniform'</em>,
+                                        <em>law_param=0.1</em>, <em>decay=0.99</em>, <em>epsilon=0.001</em>, <em>decay_renorm=0.99</em>,
+                                        <em>rmin=0.33</em>, <em>rmax=3</em>, <em>dmax=5</em><span
+                                            class="sig-paren">)</span><a class="headerlink"
+                                                                         href="#core.deep_learning.layer.FcLayer"
+                                                                         title="Permalink to this definition">¶</a></dt>
+                                    <dd><p>Bases: <a class="reference internal"
+                                                     href="#core.deep_learning.abstract_operator.AbstractLayer"
+                                                     title="core.deep_learning.abstract_operator.AbstractLayer"><code
+                                            class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLayer</span></code></a>
+                                    </p>
+                                        <p>Use a fully connected layer having a number of neurons equal to the <cite>size</cite>
+                                            parameters. A neurons is a
+                                            function making a linear transformation on a set of input and output a
+                                            single output value bounded by an
+                                            activation function: <img alt="y = \sigma(b + W \times x)"
+                                                                      class="math"
+                                                                      src="_images/math/3a1961e9d1c7c49f23c872aade3a8c75958c07be.png"/></p>
+                                        <p>To prevent overfitting the class allows the used of state of the art deep
+                                            learning regularization method: batch
+                                            normalization, batch renormalization and dropout.</p>
+                                        <table class="docutils field-list" frame="void" rules="none">
+                                            <col class="field-name"/>
+                                            <col class="field-body"/>
+                                            <tbody valign="top">
+                                            <tr class="field-odd field">
+                                                <th class="field-name">Parameters:</th>
+                                                <td class="field-body">
+                                                    <ul class="first simple">
+                                                        <li><strong>size</strong> (<em>int</em>) – Number of neurons of
+                                                            the layer.
+                                                        </li>
+                                                        <li><strong>act_funct</strong>
+                                                            (<em>str</em><em>, </em><em>None</em>) – name of the
+                                                            activation function to use. If None, no activation function
+                                                            is used.
+                                                        </li>
+                                                        <li><strong>keep_proba</strong>
+                                                            (<em>(</em><em>tf.Tensor</em><em>, </em><em>float</em><em>)</em>)
+                                                            – Probability to keep a neuron activated during training.
+                                                        </li>
+                                                        <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply
+                                                            the batch normalization method.
+                                                        </li>
+                                                        <li><strong>batch_renorm</strong> (<em>bool</em>) – If True
+                                                            apply the batch renormalization method.
+                                                        </li>
+                                                        <li><strong>is_training</strong>
+                                                            (<em>tf.Tensor</em><em>, </em><em>None</em>) – Tensor
+                                                            indicating if data are used for training or to make
+                                                            prediction. Useful for batch normalization.
+                                                        </li>
+                                                        <li><strong>name</strong> (<em>str</em>) – Name of the layer.
+                                                        </li>
+                                                        <li><strong>law_name</strong> (<em>str</em>) – Name of the law
+                                                            to use to initialized weights and biases.
+                                                        </li>
+                                                        <li><strong>law_param</strong> (<em>float</em>) – Parameter of
+                                                            the law used to initialized weight. This parameter is
+                                                            law_name dependent.
+                                                        </li>
+                                                        <li><strong>decay</strong> (<em>float</em>) – Decay used to
+                                                            update the moving average of the batch norm. The moving
+                                                            average is used to learn the
+                                                            empirical mean and variance of the output layer. It is
+                                                            recommended to set this value between (0.9, 1.).
+                                                        </li>
+                                                        <li><strong>epsilon</strong> (<em>float</em>) – Parameters used
+                                                            to avoid infinity problem when scaling the output layer
+                                                            during the batch normalization.
+                                                        </li>
+                                                        <li><strong>decay_renorm</strong> (<em>float</em>) – Decay used
+                                                            to update by moving average the mu and sigma parameters when
+                                                            batch renormalization is used.
+                                                        </li>
+                                                        <li><strong>rmin</strong> (<em>tf.Tensor</em><em> or </em><em>float</em>)
+                                                            – Minimum ratio used to clip the standard deviation ratio
+                                                            when batch renormalization is applied.
+                                                        </li>
+                                                        <li><strong>rmax</strong> (<em>tf.Tensor</em><em> or </em><em>float</em>)
+                                                            – Maximum ratio used to clip the standard deviation ratio
+                                                            when batch renormalization is applied.
+                                                        </li>
+                                                        <li><strong>dmax</strong> (<em>tf.Tensor</em><em> or </em><em>float</em>)
+                                                            – When batch renormalization is used the scaled mu
+                                                            differences is clipped between (-dmax, dmax).
+                                                        </li>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                            <tr class="field-even field">
+                                                <th class="field-name">Variables:</th>
+                                                <td class="field-body">
+                                                    <ul class="first last simple">
+                                                        <li><strong>w</strong> (<em>tf.Variable with size</em><em>
+                                                            (</em><em>input_dim</em><em>, </em><em>size</em><em>)</em>)
+                                                            – Weight of the layer. Must be learnt.
+                                                        </li>
+                                                        <li><strong>b</strong> (<em>tf.Variable with size</em><em>
+                                                            (</em><em>size</em><em>,</em><em>)</em>) – Bias of the
+                                                            layer. Must be learnt.
+                                                        </li>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                        <dl class="method">
+                                            <dt id="core.deep_learning.layer.FcLayer.build">
+                                                <code class="descname">build</code><span
+                                                    class="sig-paren">(</span><em>x</em>, <em>w_init=None</em>, <em>b_init=None</em><span
+                                                    class="sig-paren">)</span><a class="headerlink"
+                                                                                 href="#core.deep_learning.layer.FcLayer.build"
+                                                                                 title="Permalink to this definition">¶</a>
+                                            </dt>
+                                            <dd><p>Call the build parents method and return the layer output.</p>
+                                                <table class="docutils field-list" frame="void" rules="none">
+                                                    <col class="field-name"/>
+                                                    <col class="field-body"/>
+                                                    <tbody valign="top">
+                                                    <tr class="field-odd field">
+                                                        <th class="field-name">Parameters:</th>
+                                                        <td class="field-body">
+                                                            <ul class="first simple">
+                                                                <li><strong>x</strong> (<em>tf.Tensor</em>) – Input
+                                                                    array with shape (n_observation, size)
+                                                                </li>
+                                                                <li><strong>w_int</strong> (<em>np.array with shape</em><em>
+                                                                    (</em><em>input_dim</em><em>, </em><em>size</em><em>)</em><em>, </em><em>None</em>)
+                                                                    – Matrix to initialize the weight variable.
+                                                                </li>
+                                                                <li><strong>b_init</strong> (<em>np.array with
+                                                                    shape</em><em>
+                                                                    (</em><em>size</em><em>,</em><em>)</em><em>, </em><em>None</em>)
+                                                                    – Matrix of bias to initialize bias.
+                                                                </li>
+                                                            </ul>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="field-even field">
+                                                        <th class="field-name">Returns:</th>
+                                                        <td class="field-body"><p class="first">Layer output Tensor.</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="field-odd field">
+                                                        <th class="field-name">Return type:</th>
+                                                        <td class="field-body"><p class="first last">tf.Tensor</p>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </dd>
+                                        </dl>
+
+                                        <dl class="method">
+                                            <dt id="core.deep_learning.layer.FcLayer.restore">
+                                                <code class="descname">restore</code><span
+                                                    class="sig-paren">(</span><span class="sig-paren">)</span><a
+                                                    class="headerlink" href="#core.deep_learning.layer.FcLayer.restore"
+                                                    title="Permalink to this definition">¶</a></dt>
+                                            <dd><p>Restore input/output tensor and all layer variables.</p>
+                                                <table class="docutils field-list" frame="void" rules="none">
+                                                    <col class="field-name"/>
+                                                    <col class="field-body"/>
+                                                    <tbody valign="top">
+                                                    <tr class="field-odd field">
+                                                        <th class="field-name">Return type:</th>
+                                                        <td class="field-body"><code
+                                                                class="docutils literal notranslate"><span class="pre">None</span></code>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </dd>
+                                        </dl>
+
+                                    </dd>
+                                </dl>
+
+                                <dl class="class">
+                                    <dt id="core.deep_learning.layer.Conv1dLayer">
+                                        <em class="property">class </em><code class="descclassname">core.deep_learning.layer.</code><code
+                                            class="descname">Conv1dLayer</code><span class="sig-paren">(</span><em>filter_width</em>,
+                                        <em>n_filters</em>, <em>stride=1</em>, <em>padding='VALID'</em>, <em>add_bias=True</em>,
+                                        <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>batch_norm=False</em>,
+                                        <em>batch_renorm=False</em>, <em>is_training=None</em>, <em>name='conv'</em>,
+                                        <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>decay=0.99</em>, <em>epsilon=0.001</em>,
+                                        <em>decay_renorm=0.99</em>, <em>rmin=0.33</em>, <em>rmax=3</em>, <em>dmax=5</em><span
+                                            class="sig-paren">)</span><a class="headerlink"
+                                                                         href="#core.deep_learning.layer.Conv1dLayer"
+                                                                         title="Permalink to this definition">¶</a></dt>
+                                    <dd><p>Bases: <a class="reference internal"
+                                                     href="#core.deep_learning.abstract_operator.AbstractLayer"
+                                                     title="core.deep_learning.abstract_operator.AbstractLayer"><code
+                                            class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLayer</span></code></a>
+                                    </p>
+                                        <dl class="method">
+                                            <dt id="core.deep_learning.layer.Conv1dLayer.build">
+                                                <code class="descname">build</code><span
+                                                    class="sig-paren">(</span><em>x</em>, <em>w_init=None</em>, <em>b_init=None</em><span
+                                                    class="sig-paren">)</span><a class="headerlink"
+                                                                                 href="#core.deep_learning.layer.Conv1dLayer.build"
+                                                                                 title="Permalink to this definition">¶</a>
+                                            </dt>
+                                            <dd><p>Allow to build the convolution taking in entry the x_input
+                                                tensor.</p>
+                                                <table class="docutils field-list" frame="void" rules="none">
+                                                    <col class="field-name"/>
+                                                    <col class="field-body"/>
+                                                    <tbody valign="top">
+                                                    <tr class="field-odd field">
+                                                        <th class="field-name">Parameters:</th>
+                                                        <td class="field-body">
+                                                            <ul class="first simple">
+                                                                <li><strong>x</strong> (<em>tf.Tensor</em>) – Input 3
+                                                                    dimensional tensor having the format ‘NWC’.
+                                                                </li>
+                                                                <li><strong>w_int</strong> (<em>np.array with shape</em><em>
+                                                                    (</em><em>width</em><em>, </em><em>n_channel</em><em>, </em><em>n_filter</em><em>)</em><em>, </em><em>None</em>)
+                                                                    – Array to initialize the weight variable.
+                                                                </li>
+                                                                <li><strong>b_init</strong> (<em>np.array with
+                                                                    shape</em><em> (</em><em>n_filter</em><em>,</em><em>)</em><em>, </em><em>None</em>)
+                                                                    – Array to initialize bias.
+                                                                </li>
+                                                            </ul>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="field-even field">
+                                                        <th class="field-name">Returns:</th>
+                                                        <td class="field-body"><p class="first">Layer output Tensor.</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="field-odd field">
+                                                        <th class="field-name">Return type:</th>
+                                                        <td class="field-body"><p class="first last">tf.Tensor</p>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </dd>
+                                        </dl>
+
+                                        <dl class="method">
+                                            <dt id="core.deep_learning.layer.Conv1dLayer.restore">
+                                                <code class="descname">restore</code><span
+                                                    class="sig-paren">(</span><span class="sig-paren">)</span><a
+                                                    class="headerlink"
+                                                    href="#core.deep_learning.layer.Conv1dLayer.restore"
+                                                    title="Permalink to this definition">¶</a></dt>
+                                            <dd><p>Restore input/output tensor and all layer variables.</p>
+                                                <table class="docutils field-list" frame="void" rules="none">
+                                                    <col class="field-name"/>
+                                                    <col class="field-body"/>
+                                                    <tbody valign="top">
+                                                    <tr class="field-odd field">
+                                                        <th class="field-name">Return type:</th>
+                                                        <td class="field-body"><code
+                                                                class="docutils literal notranslate"><span class="pre">None</span></code>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </dd>
+                                        </dl>
+
+                                    </dd>
+                                </dl>
+
+                                <dl class="class">
+                                    <dt id="core.deep_learning.layer.MinMaxLayer">
+                                        <em class="property">class </em><code class="descclassname">core.deep_learning.layer.</code><code
+                                            class="descname">MinMaxLayer</code><span class="sig-paren">(</span><em>n_entries</em>,
+                                        <em>name='minmax'</em><span class="sig-paren">)</span><a class="headerlink"
+                                                                                                 href="#core.deep_learning.layer.MinMaxLayer"
+                                                                                                 title="Permalink to this definition">¶</a>
+                                    </dt>
+                                    <dd><p>Bases: <a class="reference internal"
+                                                     href="#core.deep_learning.abstract_operator.AbstractLayer"
+                                                     title="core.deep_learning.abstract_operator.AbstractLayer"><code
+                                            class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLayer</span></code></a>
+                                    </p>
+                                        <dl class="method">
+                                            <dt id="core.deep_learning.layer.MinMaxLayer.build">
+                                                <code class="descname">build</code><span
+                                                    class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a
+                                                    class="headerlink"
+                                                    href="#core.deep_learning.layer.MinMaxLayer.build"
+                                                    title="Permalink to this definition">¶</a></dt>
+                                            <dd><p>Build the MinMax layer using the 2 dimensional input tensor x.</p>
+                                                <table class="docutils field-list" frame="void" rules="none">
+                                                    <col class="field-name"/>
+                                                    <col class="field-body"/>
+                                                    <tbody valign="top">
+                                                    <tr class="field-odd field">
+                                                        <th class="field-name">Parameters:</th>
+                                                        <td class="field-body"><strong>x</strong> (<em>tf.Tensor</em>) –
+                                                            Input tensor filtered by the layer.
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="field-even field">
+                                                        <th class="field-name">Returns:</th>
+                                                        <td class="field-body">Layer output Tensor.</td>
+                                                    </tr>
+                                                    <tr class="field-odd field">
+                                                        <th class="field-name">Return type:</th>
+                                                        <td class="field-body">tf.Tensor</td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </dd>
+                                        </dl>
+
+                                        <dl class="method">
+                                            <dt id="core.deep_learning.layer.MinMaxLayer.restore">
+                                                <code class="descname">restore</code><span
+                                                    class="sig-paren">(</span><span class="sig-paren">)</span><a
+                                                    class="headerlink"
+                                                    href="#core.deep_learning.layer.MinMaxLayer.restore"
+                                                    title="Permalink to this definition">¶</a></dt>
+                                            <dd><p>Restore input/output tensor.</p>
                                                 <table class="docutils field-list" frame="void" rules="none">
                                                     <col class="field-name"/>
                                                     <col class="field-body"/>

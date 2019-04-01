@@ -360,12 +360,19 @@ class AbstractLayer(AbstractOperator, ABC):
             * :math:`\\mu_{t} = \\mu_{t-1} \\times decay + (1 - decay) \\times \\mu`
             * :math:`\\sigma_{t} = \\sigma_{t-1}  \\times decay +  (1 - decay) \\times \\sigma`
 
-        In addition this method allow to apply the batch renormalization which allowed to decrease the distribution
-        bias between training and inference sample. For a mini-batch with size `B` the renormaization is:
+        These last parameters are used to normalize inference data. However, using this process the network
+        normalization computation is not the same between train and inference sample. Batch renormalization methods
+        allows to tackle this problem by adding an intermediary normalization step. For a mini-batch with size `B`
+        the renormalization during training becomes:
 
             * :math:`r = Clip_{(rmin, rmax)} (\\frac{\\sigma}{\\sigma_{t}})`
             * :math:`d = Clip_{(-dmax, dmax)} (\\frac{\\mu - \\mu_{t}}{\\sigma_{t}})`
             * :math:`\\hat{y} = (\\frac{y - \\mu}{\\sqrt{\\sigma + \\epsilon}} \\times r + d)  \\times \\gamma + \\beta`
+
+        Warnings
+        --------
+
+            Data format must be 'NC' or 'NHWC'.
 
         """
 

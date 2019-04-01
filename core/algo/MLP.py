@@ -42,11 +42,11 @@ class AbstractMlp(AbstractArchitecture, ABC):
         output_dim: int, None
             Number of target variable to predict.
 
-        act_funct: str
-            Name of the activation function.
+        act_funct: str, None
+            Name of the activation function. If None, no activation function is used.
 
         keep_proba: float
-            Probability to keep a neuron activate during training.
+            Probability to keep a neuron activated during training.
 
         batch_norm: bool
             If True apply the batch normalization method.
@@ -133,7 +133,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.l_output: Union[FcLayer, None] = None
         self.l_loss: Union[AbstractLoss, None] = None
 
-    def build(self, layer_size: Sequence[int], input_dim: int, output_dim: int, act_funct: str = "relu",
+    def build(self, layer_size: Sequence[int], input_dim: int, output_dim: int, act_funct: Union[str, None] = "relu",
               keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1, batch_norm: bool = False,
               batch_renorm: bool = False, decay: float = 0.999, decay_renorm: float = False, epsilon: float = 0.001,
               penalization_rate: float = 0., penalization_type: Union[str, None] = None,
@@ -154,11 +154,11 @@ class AbstractMlp(AbstractArchitecture, ABC):
             output_dim: int
                 Number of target variable to predict.
 
-            act_funct: str
-                Name of the activation function.
+            act_funct: str, None
+                Name of the activation function. If None, no activation function is used.
 
             keep_proba: float
-                Probability to keep a neuron activate during training.
+                Probability to keep a neuron activated during training.
 
             batch_norm: bool
                 If True apply the batch normalization method.
@@ -435,8 +435,8 @@ class MlpClassifier(AbstractMlp):
         output_dim: int, None
             Number of target variable to predict.
 
-        act_funct: str
-            Name of the activation function.
+        act_funct: str, None
+            Name of the activation function. If None, no activation function are used.
 
         keep_proba: float
             Probability to keep a neuron activate during training.
@@ -586,11 +586,11 @@ class MlpRegressor(AbstractMlp):
         output_dim: int, None
             Number of target variable to predict.
 
-        act_funct: str
-            Name of the activation function.
+        act_funct: str, None
+            Name of the activation function. If None, no activation function is used.
 
         keep_proba: float
-            Probability to keep a neuron activate during training.
+            Probability to keep a neuron activated during training.
 
         batch_norm: bool
             If True apply the batch normalization method.
