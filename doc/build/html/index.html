@@ -225,7 +225,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 </table>
 <dl class="method">
 <dt id="core.algo.MLP.AbstractMlp.build">
-<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=False</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.AbstractMlp.build" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.AbstractMlp.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the network architecture.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -441,7 +441,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 
 <dl class="method">
 <dt id="core.algo.MLP.MlpClassifier.build">
-<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=False</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpClassifier.build" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpClassifier.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the network architecture.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -632,7 +632,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 </table>
 <dl class="method">
 <dt id="core.algo.MLP.MlpRegressor.build">
-<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=False</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpRegressor.build" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpRegressor.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the network architecture.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

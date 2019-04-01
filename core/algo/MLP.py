@@ -120,7 +120,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.law_param: float = 0.1
         self.decay: float = 0.99
         self.epsilon: float = 0.001
-        self.decay_renorm: float = 0.001
+        self.decay_renorm: float = 0.99
 
         self.x: Union[tf.placeholder, None] = None
         self.y: Union[tf.placeholder, None] = None
@@ -135,7 +135,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
     def build(self, layer_size: Sequence[int], input_dim: int, output_dim: int, act_funct: Union[str, None] = "relu",
               keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1, batch_norm: bool = False,
-              batch_renorm: bool = False, decay: float = 0.999, decay_renorm: float = False, epsilon: float = 0.001,
+              batch_renorm: bool = False, decay: float = 0.999, decay_renorm: float = 0.99, epsilon: float = 0.001,
               penalization_rate: float = 0., penalization_type: Union[str, None] = None,
               optimizer_name: str = "Adam") -> None:
 
