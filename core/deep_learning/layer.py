@@ -92,6 +92,7 @@ class FcLayer(AbstractLayer):
                  rmin: Union[tf.Tensor, float] = 0.33,
                  rmax: Union[tf.Tensor, float] = 3,
                  dmax: Union[tf.Tensor, float] = 5):
+
         super().__init__(act_funct, keep_proba, batch_norm, batch_renorm, is_training, law_name, law_param, decay,
                          epsilon, decay_renorm, rmin, rmax, dmax, name)
 
@@ -110,7 +111,7 @@ class FcLayer(AbstractLayer):
         Args
         ----
 
-            w_int : np.array with shape (input_dim, size), None
+            w_init : np.array with shape (input_dim, size), None
                 Matrix to initialize the weight variable.
 
             b_init : np.array with shape (size,), None
@@ -129,7 +130,10 @@ class FcLayer(AbstractLayer):
 
         self.x_out = tf.add(self.b, tf.matmul(self.x, self.w))
 
-    def build(self, x: tf.Tensor, w_init: np.ndarray = None, b_init: np.ndarray = None) -> tf.Tensor:
+    def build(self,
+              x: tf.Tensor,
+              w_init: np.ndarray = None,
+              b_init: np.ndarray = None) -> tf.Tensor:
         """
         Call the build parents method and return the layer output.
 
@@ -139,7 +143,7 @@ class FcLayer(AbstractLayer):
             x: tf.Tensor
                 Input array with shape (n_observation, size)
 
-            w_int : np.array with shape (input_dim, size), None
+            w_init : np.array with shape (input_dim, size), None
                 Matrix to initialize the weight variable.
 
             b_init : np.array with shape (size,), None
@@ -165,6 +169,83 @@ class FcLayer(AbstractLayer):
 
 
 class Conv1dLayer(AbstractLayer):
+    """
+    Build a 1d convolution layer. The filter take as input an array with shape (batch_size, Width, Channel),
+    compute a convolution using one or many filter and return a tensor with size (batch_size, new_Width, n_filters).
+    The Width can change regarding the filter_width, the stride and the padding selected.
+
+    Args
+    ----
+
+        filter_width : int
+            Width of the filter apply on the matrix.
+
+        n_filter : int
+            Number of filter of the convolution.
+
+        stride : int
+            Stride for the filter moving.
+
+        padding : str
+            Padding can be SAME or VALID. If PADDING is SAME the convolution output a matrix having the same size
+            as the input tensor. VALID keep the dimension reduction.
+
+        add_bias: bool
+            Whether to add the biase or not.
+
+        act_funct : str, None
+            Name of the activation function to use. If None no activation function are used.
+
+        keep_proba : float, tf.Tensor
+            Probability to keep a neuron activate during training if we want to apply the dropout method.
+
+        batch_norm: bool
+            If True apply the batch normalization after the _operator methods.
+
+        batch_renorm: bool
+            Whether to used batch renormalization or not.
+
+        is_training : tf.Tensor, None
+            Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
+
+        name : str
+            Name of the layer.
+
+        law_name : str
+            Name of the lax to use for weights and biases initialization.
+
+        law_param : float
+            Parameter of the initialization law.
+
+        decay: tf.Tensor, float
+            Decay used to update the moving average of the batch norm. The moving average is used to learn the
+            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
+
+        epsilon: float
+             Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+
+        decay_renorm: tf.Tensor, float
+            Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
+
+        rmin: tf.Tensor, float
+            Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.
+
+        rmax: tf.Tensor, float
+            Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.
+
+        dmax: tf.Tensor, float
+            When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).
+
+    Attributes
+    ----------
+
+        w : Variable with size (width, n_channel, n_filter)
+            Weight of the filter.
+
+        b : Variable with size (n_filter,)
+            Bias of the convolution.
+
+    """
 
     def __init__(self,
                  filter_width: int,
@@ -186,83 +267,6 @@ class Conv1dLayer(AbstractLayer):
                  rmin: Union[tf.Tensor, float] = 0.33,
                  rmax: Union[tf.Tensor, float] = 3,
                  dmax: Union[tf.Tensor, float] = 5):
-        """
-        Build a 1d convolution layer. The filter take as input an array with shape (batch_size, Width, Channel),
-        compute a convolution using one or many filter and return a tensor with size (batch_size, new_Width, n_filters).
-        The Width can change regarding the filter_width, the stride and the padding selected.
-
-        Args
-        ----
-
-            filter_width : int
-                Width of the filter apply on the matrix.
-
-            n_filter : int
-                Number of filter of the convolution.
-
-            stride : int
-                Stride for the filter moving.
-
-            padding : int
-                Padding can be SAME or VALID. If PADDING is SAME the convolution output a matrix having the same size
-                as the input tensor. VALID keep the dimension reduction.
-
-            add_bias: bool
-                Whether to add the biase or not.
-
-            act_funct : str, None
-                Name of the activation function to use. If None no activation function are used.
-
-            keep_proba : float, tf.Tensor
-                Probability to keep a neuron activate during training if we want to apply the dropout method.
-
-            batch_norm: bool
-                If True apply the batch normalization after the _operator methods.
-
-            batch_renorm: bool
-                Whether to used batch renormalization or not.
-
-            is_training : tf.Tensor, None
-                Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
-
-            name : str
-                Name of the layer.
-
-            law_name : str
-                Name of the lax to use for weights and biases initialization.
-
-            law_param : float
-                Parameter of the initialization law.
-
-            decay: tf.Tensor, float
-                Decay used to update the moving average of the batch norm. The moving average is used to learn the
-                empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
-
-            epsilon: float
-                 Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
-
-            decay_renorm: tf.Tensor, float
-                Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
-
-            rmin: tf.Tensor, float
-                Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.
-
-            rmax: tf.Tensor, float
-                Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.
-
-            dmax: tf.Tensor, float
-                When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).
-
-        Attributes
-        ----------
-
-            w : Variable with size (width, n_channel, n_filter)
-                Weight of the filter.
-
-            b : Variable with size (n_filter,)
-                Bias of the convolution.
-
-        """
 
         super().__init__(act_funct, keep_proba, batch_norm, batch_renorm, is_training, law_name, law_param, decay,
                          epsilon, decay_renorm, rmin, rmax, dmax, name)
@@ -330,7 +334,7 @@ class Conv1dLayer(AbstractLayer):
             x: tf.Tensor
                 Input 3 dimensional tensor having the format 'NWC'.
 
-            w_int : np.array with shape (width, n_channel, n_filter), None
+            w_init: np.array with shape (width, n_channel, n_filter), None
                 Array to initialize the weight variable.
 
             b_init : np.array with shape (n_filter,), None
@@ -357,23 +361,22 @@ class Conv1dLayer(AbstractLayer):
 
 
 class MinMaxLayer(AbstractLayer):
+    """
+    Allow to use a MinMax layer. Given a 2 dimensional input array, this layer keep only the n best and the n
+    worse entries. The aim is to reduce the problem dimensionality by keeping only extremes values from the
+    input data.
+
+    Args
+    ----
+
+        n_entries : int
+            Number of top and worse neurons to keep.
+
+        name: str
+            Layer name.
+    """
 
     def __init__(self, n_entries: int, name: str = "minmax"):
-
-        """
-        Allow to use a MinMax layer. Given a 2 dimensional input array, this layer keep only the n best and the n
-        worse entries. The aim is to reduce the problem dimensionality by keeping only extremes values from the
-        input data.
-
-        Args
-        ----
-
-            n_entries : int
-                Number of top and worse neurons to keep.
-
-            Name: str
-                Layer name.
-        """
 
         super().__init__(name=name, keep_proba=None, act_funct=None)
 
@@ -402,7 +405,8 @@ class MinMaxLayer(AbstractLayer):
 
         self.x_out = tf.concat([x_min, x_max], axis=1)
 
-    def build(self, x: tf.Tensor) -> tf.Tensor:
+    def build(self,
+              x: tf.Tensor) -> tf.Tensor:
 
         """
         Build the MinMax layer using the 2 dimensional input tensor x.
