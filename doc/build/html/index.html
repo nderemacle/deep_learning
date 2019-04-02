@@ -93,6 +93,7 @@
 <li><a class="reference internal" href="#module-core.deep_learning.abstract_architecture">Abstract Architecture</a></li>
 <li><a class="reference internal" href="#module-core.deep_learning.abstract_operator">Abstract Operator</a></li>
 <li><a class="reference internal" href="#module-core.deep_learning.layer">Layer</a></li>
+<li><a class="reference internal" href="#module-core.deep_learning.loss">Loss</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
@@ -213,7 +214,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <li><strong>x</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Input tensor of the network.</li>
 <li><strong>y</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Tensor containing all True target variable to predict.</li>
 <li><strong>x_out</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Output of the network.</li>
-<li><strong>loss</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Loss function optimized to train the MLP.</li>
+<li><a class="reference internal" href="#module-core.deep_learning.loss" title="core.deep_learning.loss"><strong>loss</strong></a> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Loss function optimized to train the MLP.</li>
 <li><strong>y_pred</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Prediction tensor.</li>
 <li><strong>l_fc</strong> (<em>List</em><em>[</em><a class="reference internal" href="#core.deep_learning.layer.FcLayer" title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>]</em><em>, </em><em>None</em>) – List containing all fully connected layer objects.</li>
 <li><strong>l_output</strong> (<a class="reference internal" href="#core.deep_learning.layer.FcLayer" title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>, </em><em>None</em>) – Final layer for network output reduction.</li>
@@ -405,7 +406,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <li><strong>x</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Input tensor of the network.</li>
 <li><strong>y</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Tensor containing all True target variable to predict.</li>
 <li><strong>x_out</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Output of the network.</li>
-<li><strong>loss</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Loss function optimized to train the MLP.</li>
+<li><a class="reference internal" href="#module-core.deep_learning.loss" title="core.deep_learning.loss"><strong>loss</strong></a> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Loss function optimized to train the MLP.</li>
 <li><strong>y_pred</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Prediction tensor.</li>
 <li><strong>l_fc</strong> (<em>List</em><em>[</em><a class="reference internal" href="#core.deep_learning.layer.FcLayer" title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>]</em><em>, </em><em>None</em>) – List containing all fully connected layer objects.</li>
 <li><strong>l_output</strong> (<a class="reference internal" href="#core.deep_learning.layer.FcLayer" title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>, </em><em>None</em>) – Final layer for network output reduction.</li>
@@ -620,7 +621,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <li><strong>x</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Input tensor of the network.</li>
 <li><strong>y</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Tensor containing all True target variable to predict.</li>
 <li><strong>x_out</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Output of the network.</li>
-<li><strong>loss</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Loss function optimized to train the MLP.</li>
+<li><a class="reference internal" href="#module-core.deep_learning.loss" title="core.deep_learning.loss"><strong>loss</strong></a> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Loss function optimized to train the MLP.</li>
 <li><strong>y_pred</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Prediction tensor.</li>
 <li><strong>l_fc</strong> (<em>List</em><em>[</em><a class="reference internal" href="#core.deep_learning.layer.FcLayer" title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>]</em><em>, </em><em>None</em>) – List containing all fully connected layer objects.</li>
 <li><strong>l_output</strong> (<a class="reference internal" href="#core.deep_learning.layer.FcLayer" title="core.deep_learning.layer.FcLayer"><em>FcLayer</em></a><em>, </em><em>None</em>) – Final layer for network output reduction.</li>
@@ -1416,7 +1417,7 @@ be applied on a list of weight transforming the final function to optimize.</p>
 <li><strong>y</strong> (<em>tf.Tensor</em>) – Placeholder containing all target variable to learn.</li>
 <li><strong>x_out</strong> (<em>tf.Tensor</em>) – Output of the network.</li>
 <li><strong>y_pred</strong> (<em>tf.Tensor</em>) – Final prediction return by the network.</li>
-<li><strong>loss</strong> (<em>tf.Tensor</em>) – loss function of the network</li>
+<li><a class="reference internal" href="#module-core.deep_learning.loss" title="core.deep_learning.loss"><strong>loss</strong></a> (<em>tf.Tensor</em>) – loss function of the network</li>
 <li><strong>loss_opt</strong> (<em>tf.Tensor</em>) – Final loss function to optimize representing the sum of the loss with all regularization parts.</li>
 </ul>
 </td>
@@ -1586,8 +1587,10 @@ the loss function independent of any regularization.</p>
 <dd><p>Bases: <a class="reference internal" href="#core.deep_learning.abstract_operator.AbstractLayer" title="core.deep_learning.abstract_operator.AbstractLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLayer</span></code></a></p>
 <p>Use a fully connected layer having a number of neurons equal to the <cite>size</cite> parameters. A neurons is a
 function making a linear transformation on a set of input and output a single output value bounded by an
-activation function: <img class="math" src="_images/math/3a1961e9d1c7c49f23c872aade3a8c75958c07be.png" alt="y = \sigma(b + W \times x)"/></p>
-<p>To prevent overfitting the class allows the used of state of the art deep learning regularization method: batch
+activation function:</p>
+<div class="math">
+<p><img src="_images/math/e46a511372dd904f507071088ce7cc82c0eb65b0.png" alt="y = \sigma(b + W \times x)"/></p>
+</div><p>To prevent overfitting the class allows the used of state of the art deep learning regularization method: batch
 normalization, batch renormalization and dropout.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1667,8 +1670,11 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <em class="property">class </em><code class="descclassname">core.deep_learning.layer.</code><code class="descname">Conv1dLayer</code><span class="sig-paren">(</span><em>filter_width</em>, <em>n_filters</em>, <em>stride=1</em>, <em>padding='VALID'</em>, <em>add_bias=True</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>is_training=None</em>, <em>name='conv'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>decay=0.99</em>, <em>epsilon=0.001</em>, <em>decay_renorm=0.99</em>, <em>rmin=0.33</em>, <em>rmax=3</em>, <em>dmax=5</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.Conv1dLayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#core.deep_learning.abstract_operator.AbstractLayer" title="core.deep_learning.abstract_operator.AbstractLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLayer</span></code></a></p>
 <p>Build a 1d convolution layer. The filter take as input an array with shape (batch_size, Width, Channel),
-compute a convolution using one or many filter and return a tensor with size (batch_size, new_Width, n_filters).
-The Width can change regarding the filter_width, the stride and the padding selected.</p>
+compute a convolution using one or many filter and return a tensor with size (batch_size, new_Width, n_filters):</p>
+<div class="math">
+<p><img src="_images/math/5e2627e27dc3ccb22f42bf70e8867b6ccac8be17.png" alt="\sigma(b + W \otimes x)"/></p>
+</div><p>Where <img class="math" src="_images/math/0f548ef53ce12dd373ce8484a54a66f278b1b616.png" alt="\otimes"/> is the convolution operation. The output width size can change regarding the filter_width,
+the stride and the padding selected.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1753,7 +1759,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <dd><p>Bases: <a class="reference internal" href="#core.deep_learning.abstract_operator.AbstractLayer" title="core.deep_learning.abstract_operator.AbstractLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLayer</span></code></a></p>
 <p>Allow to use a MinMax layer. Given a 2 dimensional input array, this layer keep only the n best and the n
 worse entries. The aim is to reduce the problem dimensionality by keeping only extremes values from the
-input data.</p>
+input layer data.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1788,6 +1794,170 @@ input data.</p>
 <dt id="core.deep_learning.layer.MinMaxLayer.restore">
 <code class="descname">restore</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.MinMaxLayer.restore" title="Permalink to this definition">¶</a></dt>
 <dd><p>Restore input/output tensor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-core.deep_learning.loss">
+<span id="loss"></span><h2>Loss<a class="headerlink" href="#module-core.deep_learning.loss" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="core.deep_learning.loss.CrossEntropy">
+<em class="property">class </em><code class="descclassname">core.deep_learning.loss.</code><code class="descname">CrossEntropy</code><span class="sig-paren">(</span><em>penalization_rate=0.5</em>, <em>penalization_type=None</em>, <em>name='cross_entropy'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.loss.CrossEntropy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#core.deep_learning.abstract_operator.AbstractLoss" title="core.deep_learning.abstract_operator.AbstractLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLoss</span></code></a></p>
+<p>Build a cross entropy loss function for classification problems. Given an output network which predict <img class="math" src="_images/math/afce44aa7c55836ca9345404c22fc7b599d2ed84.png" alt="C"/>
+class, learns network parameters by minimising for all observations the following function function:</p>
+<div class="math">
+<p><img src="_images/math/cc0caabb95cfb3b2256bd2a77fd854cff8f888ac.png" alt="- \sum_{c=1}^{C} y_{c} \log(p_{c}) \quad \text{with} \quad p_{c} = \frac{\exp(o_{c})}{\sum_{i=1}^{C} \exp(o_i)}"/></p>
+</div><p>The final predicted label is the output network <img class="math" src="_images/math/4b31c6ac33249811b5839ac1ef883cb26d7d0162.png" alt="o_{c}"/> with the highest value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>penalization_rate</strong> (<em>tf.Tensor</em><em>, </em><em>float</em>) – Penalization rate to apply to regularization terms.</li>
+<li><strong>penalization_type</strong> (<em>str</em><em>, </em><em>None</em>) – Name of the penalization to use on network weight. If None no regularization is used.</li>
+<li><strong>name</strong> (<em>str</em>) – Layer name for the Tensorflow graph.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="core.deep_learning.loss.CrossEntropy.check_input">
+<code class="descname">check_input</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.loss.CrossEntropy.check_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the shape of all input tensor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="core.deep_learning.loss.CrossEntropy.build">
+<code class="descname">build</code><span class="sig-paren">(</span><em>y</em>, <em>x_out</em>, <em>weights</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.loss.CrossEntropy.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the cross entropy loss tensor and return the</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>y</strong> (<em>tf.Tensor</em>) – Tensor of true label to predict.</li>
+<li><strong>x_out</strong> (<em>tf.Tensor</em>) – Output network tensor which must have the save dimension as y.</li>
+<li><strong>weights</strong> (<em>Sequence</em><em>[</em><em>tf.Variable</em><em>]</em>) – Weights which must be regularized.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><em>tf.Tensor</em> – Loss tensor to optimize.</li>
+<li><em>tf.Tensor</em> – Loss tensor without any regularization terms.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="core.deep_learning.loss.CrossEntropy.restore">
+<code class="descname">restore</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.loss.CrossEntropy.restore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restore all loss tensor from the current graph.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="core.deep_learning.loss.MeanSquareError">
+<em class="property">class </em><code class="descclassname">core.deep_learning.loss.</code><code class="descname">MeanSquareError</code><span class="sig-paren">(</span><em>penalization_rate=0.5</em>, <em>penalization_type=None</em>, <em>name='mean_square_error'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.loss.MeanSquareError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#core.deep_learning.abstract_operator.AbstractLoss" title="core.deep_learning.abstract_operator.AbstractLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLoss</span></code></a></p>
+<p>Build a mean square error loss function allowing to learn one or many objective function in same time. If the
+problem has <img class="math" src="_images/math/afce44aa7c55836ca9345404c22fc7b599d2ed84.png" alt="C"/> objective variable to predict, the following function is minimize for each observation:</p>
+<div class="math">
+<p><img src="_images/math/ad629b5d3b425691d320f548a132edfb5623a1eb.png" alt="\frac{1}{C} \sum_{c=1}^{C} (y_c - \hat{y_c})^2"/></p>
+</div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>penalization_rate</strong> (<em>tf.Tensor</em><em>, </em><em>float</em>) – Penalization rate to apply to regularization terms.</li>
+<li><strong>penalization_type</strong> (<em>str</em><em>, </em><em>None</em>) – Name of the penalization to use on network weight. If None no regularization is used.</li>
+<li><strong>name</strong> (<em>str</em>) – Layer name for the Tensorflow graph.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="core.deep_learning.loss.MeanSquareError.check_input">
+<code class="descname">check_input</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.loss.MeanSquareError.check_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check all input tensors are 2 dimensional.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="core.deep_learning.loss.MeanSquareError.build">
+<code class="descname">build</code><span class="sig-paren">(</span><em>y</em>, <em>x_out</em>, <em>weights</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.loss.MeanSquareError.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the cross entropy loss tensor and return the</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>y</strong> (<em>tf.Tensor</em>) – Tensor of true label to predict.</li>
+<li><strong>x_out</strong> (<em>tf.Tensor</em>) – Output network tensor which must have the save dimension as y.</li>
+<li><strong>weights</strong> (<em>Sequence</em><em>[</em><em>tf.Variable</em><em>]</em>) – Weights which must be regularized.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><em>tf.Tensor</em> – Loss tensor to optimize.</li>
+<li><em>tf.Tensor</em> – Loss tensor without any regularization terms.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="core.deep_learning.loss.MeanSquareError.restore">
+<code class="descname">restore</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.loss.MeanSquareError.restore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restore all loss tensor from the current graph.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />

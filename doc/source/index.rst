@@ -50,6 +50,14 @@ Layer
    :inherited-members:
    :show-inheritance:
 
+Loss
+-----------------
+
+.. automodule:: core.deep_learning.loss
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
 Indices and tables
 ==================
 

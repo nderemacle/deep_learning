@@ -12,7 +12,11 @@ class FcLayer(AbstractLayer):
     """
     Use a fully connected layer having a number of neurons equal to the `size` parameters. A neurons is a
     function making a linear transformation on a set of input and output a single output value bounded by an
-    activation function: :math:`y = \\sigma(b + W \\times x)`
+    activation function:
+
+    .. math::
+
+                y = \\sigma(b + W \\times x)
 
     To prevent overfitting the class allows the used of state of the art deep learning regularization method: batch
     normalization, batch renormalization and dropout.
@@ -92,7 +96,6 @@ class FcLayer(AbstractLayer):
                  rmin: Union[tf.Tensor, float] = 0.33,
                  rmax: Union[tf.Tensor, float] = 3,
                  dmax: Union[tf.Tensor, float] = 5):
-
         super().__init__(act_funct, keep_proba, batch_norm, batch_renorm, is_training, law_name, law_param, decay,
                          epsilon, decay_renorm, rmin, rmax, dmax, name)
 
@@ -171,8 +174,14 @@ class FcLayer(AbstractLayer):
 class Conv1dLayer(AbstractLayer):
     """
     Build a 1d convolution layer. The filter take as input an array with shape (batch_size, Width, Channel),
-    compute a convolution using one or many filter and return a tensor with size (batch_size, new_Width, n_filters).
-    The Width can change regarding the filter_width, the stride and the padding selected.
+    compute a convolution using one or many filter and return a tensor with size (batch_size, new_Width, n_filters):
+
+    .. math::
+
+                \\sigma(b + W \\otimes x)
+
+    Where :math:`\\otimes` is the convolution operation. The output width size can change regarding the filter_width,
+    the stride and the padding selected.
 
     Args
     ----
@@ -364,7 +373,7 @@ class MinMaxLayer(AbstractLayer):
     """
     Allow to use a MinMax layer. Given a 2 dimensional input array, this layer keep only the n best and the n
     worse entries. The aim is to reduce the problem dimensionality by keeping only extremes values from the
-    input data.
+    input layer data.
 
     Args
     ----
