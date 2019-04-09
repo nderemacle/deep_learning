@@ -488,7 +488,7 @@ class AbstractLoss(AbstractOperator, ABC):
         Args
         ----
 
-            kwargs: Any
+            args: Any
                 Key arguments for the _build methods which must be define by the child class.
 
         Returns
