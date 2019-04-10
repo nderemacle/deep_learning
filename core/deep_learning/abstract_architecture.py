@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 
 import core.deep_learning.env as env
-from core.deep_learning.tf_utils import get_tf_operation, get_tf_tensor
+from core.deep_learning.tf_utils import get_tf_operation, get_tf_tensor, get_optimizer
 from core.utils.reader_writer import write_pickle, read_pickle
 from core.utils.validation import is_not_in_graph
 
@@ -90,7 +90,8 @@ class AbstractArchitecture(ABC):
                 Tensorflow session object.
         """
         if self.use_gpu:
-            conf = tf.ConfigProto(log_device_placement=True, allow_soft_placement=True,
+            conf = tf.ConfigProto(log_device_placement=True,
+                                  allow_soft_placement=True,
                                   gpu_options=tf.GPUOptions(allow_growth=True))
         else:
             conf = tf.ConfigProto(allow_soft_placement=True)
@@ -131,7 +132,7 @@ class AbstractArchitecture(ABC):
                 self.sess.run(tf.initializers.global_variables())
 
     @abstractmethod
-    def fit(self, **kwargs) -> None:
+    def fit(self, **kwargs: Any) -> None:
 
         """
         The fit methods to train the neural network.
@@ -144,7 +145,7 @@ class AbstractArchitecture(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def predict(self, **kwargs) -> np.ndarray:
+    def predict(self, **kwargs: Any) -> np.ndarray:
 
         """
         Make a prediction using input arrays with shape (n_observations, ...).
@@ -173,7 +174,7 @@ class AbstractArchitecture(ABC):
         ----
 
             path_folder : str
-                Path of the folder where the network is saved. It must ended by a '/'.
+                Path of the folder where the network is saved. It must ended by '/'.
         """
 
         assert path_folder.endswith("/")
@@ -268,31 +269,7 @@ class AbstractArchitecture(ABC):
         finally:
             env.RESTORE = False
 
-    def _get_optimizer(self) -> tf.train.Optimizer:
-
-        """
-        Return the valid optimizer.
-        TODO: Move into tf_utils.
-
-        Returns
-        -------
-
-            tf.train.Optimizer
-                Tensorflow optimizer object.
-        """
-
-        if self.optimizer_name == "RMSProp":
-            return tf.train.RMSPropOptimizer(self.learning_rate)
-        elif self.optimizer_name == "SGD":
-            return tf.train.GradientDescentOptimizer(self.learning_rate)
-        elif self.optimizer_name == "Adam":
-            return tf.train.AdamOptimizer(self.learning_rate)
-        else:
-            list_optimizer = ['RMSProp', 'SGD', 'Adam']
-            raise TypeError(
-                f"{self.optimizer_name} isn't a valid optimiser. optimiser_type must be in {list_optimizer}")
-
-    def _minimize(self, f: tf.Tensor, name: str = "optimizer") -> tf.train.Optimizer:
+    def _minimize(self, f: tf.Tensor, name: str = "optimizer") -> Union[tf.train.Optimizer, tf.Tensor]:
 
         """
         Return an optimizer which minimize a tensor f. Add all parameters store in the UPDATE_OPS such that all moving
@@ -319,13 +296,12 @@ class AbstractArchitecture(ABC):
         else:
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):
-                return self._get_optimizer().minimize(f, name=name)
+                return get_optimizer(self.optimizer_name, self.learning_rate).minimize(f, name=name)
 
     def _placeholder(self, dtype: tf.DType, shape: Union[Sequence[int], None], name: str) -> tf.placeholder:
 
         """
         Set or restore a placeholder.
-        TODO: Move into tf_utils.
 
         Args
         ----

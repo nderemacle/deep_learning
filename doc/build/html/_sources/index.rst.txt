@@ -58,6 +58,14 @@ Loss
    :inherited-members:
    :show-inheritance:
 
+Tensorflow Utils
+-----------------
+
+.. automodule:: core.deep_learning.tf_utils
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
 Indices and tables
 ==================
 

@@ -94,6 +94,7 @@
 <li><a class="reference internal" href="#module-core.deep_learning.abstract_operator">Abstract Operator</a></li>
 <li><a class="reference internal" href="#module-core.deep_learning.layer">Layer</a></li>
 <li><a class="reference internal" href="#module-core.deep_learning.loss">Loss</a></li>
+<li><a class="reference internal" href="#module-core.deep_learning.tf_utils">Tensorflow Utils</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
@@ -357,7 +358,7 @@ and save all network parameters inside a pickle file.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path_folder</strong> (<em>str</em>) – Path of the folder where the network is saved. It must ended by a ‘/’.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path_folder</strong> (<em>str</em>) – Path of the folder where the network is saved. It must ended by ‘/’.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
 </tr>
@@ -573,7 +574,7 @@ and save all network parameters inside a pickle file.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path_folder</strong> (<em>str</em>) – Path of the folder where the network is saved. It must ended by a ‘/’.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path_folder</strong> (<em>str</em>) – Path of the folder where the network is saved. It must ended by ‘/’.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
 </tr>
@@ -764,7 +765,7 @@ and save all network parameters inside a pickle file.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path_folder</strong> (<em>str</em>) – Path of the folder where the network is saved. It must ended by a ‘/’.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path_folder</strong> (<em>str</em>) – Path of the folder where the network is saved. It must ended by ‘/’.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
 </tr>
@@ -907,7 +908,7 @@ and save all network parameters inside a pickle file.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path_folder</strong> (<em>str</em>) – Path of the folder where the network is saved. It must ended by a ‘/’.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path_folder</strong> (<em>str</em>) – Path of the folder where the network is saved. It must ended by ‘/’.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
 </tr>
@@ -968,23 +969,6 @@ environment variable to False and raise the error.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="core.deep_learning.abstract_architecture.AbstractArchitecture._get_optimizer">
-<code class="descname">_get_optimizer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.abstract_architecture.AbstractArchitecture._get_optimizer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the valid optimizer.
-TODO: Move into tf_utils.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Tensorflow optimizer object.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tf.train.Optimizer</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
 <dt id="core.deep_learning.abstract_architecture.AbstractArchitecture._minimize">
 <code class="descname">_minimize</code><span class="sig-paren">(</span><em>f</em>, <em>name='optimizer'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.abstract_architecture.AbstractArchitecture._minimize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an optimizer which minimize a tensor f. Add all parameters store in the UPDATE_OPS such that all moving
@@ -1012,8 +996,7 @@ mean and variance parameters of a batch normalization.</p>
 <dl class="method">
 <dt id="core.deep_learning.abstract_architecture.AbstractArchitecture._placeholder">
 <code class="descname">_placeholder</code><span class="sig-paren">(</span><em>dtype</em>, <em>shape</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.abstract_architecture.AbstractArchitecture._placeholder" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set or restore a placeholder.
-TODO: Move into tf_utils.</p>
+<dd><p>Set or restore a placeholder.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1459,7 +1442,7 @@ the loss function independent of any regularization.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>kwargs</strong> (<em>Any</em>) – Key arguments for the _build methods which must be define by the child class.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>Any</em>) – Key arguments for the _build methods which must be define by the child class.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</td>
 </tr>
@@ -1968,6 +1951,188 @@ problem has <img class="math" src="_images/math/afce44aa7c55836ca9345404c22fc7b5
 </table>
 </dd></dl>
 
+</dd></dl>
+
+</div>
+<div class="section" id="module-core.deep_learning.tf_utils">
+<span id="tensorflow-utils"></span><h2>Tensorflow Utils<a class="headerlink" href="#module-core.deep_learning.tf_utils" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="core.deep_learning.tf_utils.random_law">
+<code class="descclassname">core.deep_learning.tf_utils.</code><code class="descname">random_law</code><span class="sig-paren">(</span><em>shape</em>, <em>law_name</em>, <em>law_param</em>, <em>dtype=tf.float32</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.tf_utils.random_law" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a random generator tensor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>shape</strong> (<em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Dimension of the tensor generated.</li>
+<li><strong>law_name</strong> (<em>str</em>) – Law of the random law to use. Must be “normal” for normal law or “uniform” for uniform law.</li>
+<li><strong>law_param</strong> (<em>float</em>) – Law parameters which is dependent to the law selected. If uniform, all tensor
+elements are initialized using a U(-law_params, law_params) and if normal all parameters are initialized
+using a N(0, law_parameters).</li>
+<li><strong>dtype</strong> (<em>tf.DType</em>) – Type for generated tensor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Random generator tensor.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tf.Tensor</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="core.deep_learning.tf_utils.variable">
+<code class="descclassname">core.deep_learning.tf_utils.</code><code class="descname">variable</code><span class="sig-paren">(</span><em>shape</em>, <em>initial_value=None</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>name=None</em>, <em>dtype=tf.float32</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.tf_utils.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a Tensorflow Variable object uninitialised using either a random number law generator or a deterministic
+value allowing the use no implemented random law generator or the use of transfer learning methods.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>shape</strong> (<em>Sequence</em><em>[</em><em>int</em><em>]</em>) – Dimension of the tensor generated.</li>
+<li><strong>initial_value</strong> (<em>np.array</em>) – Optional initial value for the variable allowing the use of not implemented initialization methods.</li>
+<li><strong>law_name</strong> (<em>str</em>) – Law of the random law to use. Must be “normal” for normal law or “uniform” for uniform law.</li>
+<li><strong>law_param</strong> (<em>float</em>) – Law parameters which is dependent to the law selected. If uniform, all tensor
+elements are initialized using a U(-law_params, law_params) and if normal all parameters are initialized
+using a N(0, law_parameters).</li>
+<li><strong>name</strong> (<em>str</em>) – Tensor name.</li>
+<li><strong>dtype</strong> (<em>Tensorflow type</em>) – Type of values generated.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Tensorflow Variable object.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tf.Variable</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="core.deep_learning.tf_utils.get_act_funct">
+<code class="descclassname">core.deep_learning.tf_utils.</code><code class="descname">get_act_funct</code><span class="sig-paren">(</span><em>name='relu'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.tf_utils.get_act_funct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a Tensor activation method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) – Name of the activation function. Must be included in: [‘relu’, ‘sigmoid’, ‘tanh’, ‘relu6’,
+‘crelu’, ‘elu’, ‘softplus’, ‘softsign’]</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Activation function tensor.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="core.deep_learning.tf_utils.get_tf_tensor">
+<code class="descclassname">core.deep_learning.tf_utils.</code><code class="descname">get_tf_tensor</code><span class="sig-paren">(</span><em>name</em>, <em>graph=None</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.tf_utils.get_tf_tensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Tensorflow tensor with the given name. Each tensor must be include inside a scope or a sub scope.
+Regarding the mechanise of the framework, if a tensor is instance at the network level its name should be
+“NetworkName/TensorName” or should be “NetworkName/OperatorName/TensorName” if instance in an operator object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em>) – Name of the tensor which must be included in the graph.</li>
+<li><strong>graph</strong> (<em>tf.Graph</em><em>, </em><em>None</em>) – Tensorflow grah object. If None take the default graph.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Restored tensor link to the entry name.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tf.Tensor</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="core.deep_learning.tf_utils.get_tf_operation">
+<code class="descclassname">core.deep_learning.tf_utils.</code><code class="descname">get_tf_operation</code><span class="sig-paren">(</span><em>name</em>, <em>graph=None</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.tf_utils.get_tf_operation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Tensorflow operation with the given name. Each operation must be include inside a scope or a sub scope.
+Regarding the mechanise of the framework, if an operation is instance at the network level its name should be
+“NetworkName/OperationName” or should be “NetworkName/OperatorName/OperationName” if instance in an operator object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em>) – Name of the tensor which must be included in the graph.</li>
+<li><strong>graph</strong> (<em>tf.Graph</em><em>, </em><em>None</em>) – Tensorflow grah object. If None take the default graph.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Restored tensor link to the entry name.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tf.Tensor</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="core.deep_learning.tf_utils.identity">
+<code class="descclassname">core.deep_learning.tf_utils.</code><code class="descname">identity</code><span class="sig-paren">(</span><em>x</em>, <em>name</em>, <em>graph=None</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.tf_utils.identity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give or force a name for a given tensor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>tf.Tensor</em>) – Tensor to name.</li>
+<li><strong>name</strong> (<em>str</em>) – Name for the tensor.</li>
+<li><strong>graph</strong> (<em>tf.Graph</em><em>, </em><em>None</em>) – Tensorflow grah object. If None take the default graph.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Renamed tensor.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="core.deep_learning.tf_utils.get_optimizer">
+<code class="descclassname">core.deep_learning.tf_utils.</code><code class="descname">get_optimizer</code><span class="sig-paren">(</span><em>name</em>, <em>learning_rate</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.tf_utils.get_optimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a Tensorflow optimizer Tensor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>learning_rate</strong> (<em>tf.Tensor</em><em>, </em><em>float</em>) – Learning rate to use for optimization.</li>
+<li><strong>name</strong> (<em>str</em>) – Name of the optimizer. Must be RMSProp, SGD or Adam.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Tensorflow optimizer object.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tf.train.Optimizer</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Sequence, Union, Callable
 
 import numpy as np
 import tensorflow as tf
@@ -6,29 +6,32 @@ import tensorflow as tf
 from core.utils.validation import is_in_graph, is_not_in_graph
 
 
-def random_law(shape: Tuple, law_name: str, law_param: float, dtype: tf.DType = tf.float32):
+def random_law(shape: Sequence[int], law_name: str, law_param: float, dtype: tf.DType = tf.float32) -> tf.Tensor:
     """
-    Return a Tensorflow random generator.
+    Return a random generator tensor.
 
-    Attributes:
+    Args
+    ----
 
-        shape : Tuple
-            Dimension of the tensor generate
+        shape: Sequence[int]
+            Dimension of the tensor generated.
 
-        law_name : str
-            Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
+        law_name: str
+            Law of the random law to use. Must be "normal" for normal law or "uniform" for uniform law.
 
-        law_params : float
-            Law parameters which is dependent to the initialised law choose. If uniform, all tensor
-            elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
+        law_param: float
+            Law parameters which is dependent to the law selected. If uniform, all tensor
+            elements are initialized using a U(-law_params, law_params) and if normal all parameters are initialized
             using a N(0, law_parameters).
 
-        dtype : Tensorflow type
-            type of values generate
+        dtype: tf.DType
+            Type for generated tensor.
 
-    Output:
+    Returns
+    -------
 
-        Tensorflow random generator
+        tf.Tensor
+            Random generator tensor.
 
     """
 
@@ -40,38 +43,40 @@ def random_law(shape: Tuple, law_name: str, law_param: float, dtype: tf.DType = 
         list_law = ['normal', 'uniform']
         raise TypeError(f"{law_name} isn't a valide law_name. Name must be in {list_law}")
 
-
-def variable(shape: Tuple, initial_value: np.ndarray = None, law_name: str = "uniform", law_param: float = 0.1,
-             name: str = None, dtype: tf.DType = tf.float32):
+def variable(shape: Sequence[int], initial_value: Union[np.ndarray, None] = None, law_name: str = "uniform",
+             law_param: float = 0.1, name: Union[str, None] = None, dtype: tf.DType = tf.float32) -> tf.Variable:
     """
-    Build a Tensorflow variable uninitialised using either a random number law generator or deterministic value
-    allowing no implemented random law generator or the use of transfer learning methods.
+    Return a Tensorflow Variable object uninitialised using either a random number law generator or a deterministic
+    value allowing the use no implemented random law generator or the use of transfer learning methods.
 
-    Attributes:
+    Args
+    ----
 
-    shape : Tuple
-        Dimension of the tensor generate
+        shape: Sequence[int]
+            Dimension of the tensor generated.
 
-    initial_value : array
-        Optional initial value for the variable allowing to used not implemented initialized methods
+        initial_value: np.array
+            Optional initial value for the variable allowing the use of not implemented initialization methods.
 
-    law_name : str
-        Law of the ransom law to used. Must be "normal" for normal law or "uniform" for uniform law.
+        law_name: str
+            Law of the random law to use. Must be "normal" for normal law or "uniform" for uniform law.
 
-    law_params : float
-        Law parameters which is dependent to the initialised law choose. If uniform, all tensor
-        elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
-        using a N(0, law_parameters).
+        law_param: float
+            Law parameters which is dependent to the law selected. If uniform, all tensor
+            elements are initialized using a U(-law_params, law_params) and if normal all parameters are initialized
+            using a N(0, law_parameters).
 
-    name : str
-        tensor name
+        name: str
+            Tensor name.
 
-    dtype : Tensorflow type
-        type of values generate
+        dtype: Tensorflow type
+            Type of values generated.
 
-    Output:
+    Returns
+    -------
 
-        Tensorflow Variable object
+        tf.Variable
+            Tensorflow Variable object.
     """
 
     if initial_value is None:
@@ -84,18 +89,22 @@ def variable(shape: Tuple, initial_value: np.ndarray = None, law_name: str = "un
     return tf.Variable(initial_value, name=name)
 
 
-def get_act_funct(name: str = 'relu'):
+def get_act_funct(name: str = 'relu') -> Callable[[tf.Tensor], tf.Tensor]:
     """
-    Return a Tensorflow activation method.
+    Return a Tensor activation method.
 
-    Attributes:
+    Args
+    ----
 
-        name : str
-            name of the activation function
+        name: str
+            Name of the activation function. Must be included in: ['relu', 'sigmoid', 'tanh', 'relu6',
+            'crelu', 'elu', 'softplus', 'softsign']
 
-    Output:
+    Returns
+    -------
 
-        activation function object
+       Activation function tensor.
+
     """
 
     if name == 'relu':
@@ -120,22 +129,26 @@ def get_act_funct(name: str = 'relu'):
             f"{name} isn't a valide activation function. Methods must be in {list_act_funct}")
 
 
-def get_tf_tensor(name: str, graph: tf.Graph = None):
+def get_tf_tensor(name: str, graph: Union[tf.Graph, None] = None) -> tf.Tensor:
     """
-    Return the Tensorflow tensor with the given name. Each tensor must be include a scope or a sub scope.
+    Return the Tensorflow tensor with the given name. Each tensor must be include inside a scope or a sub scope.
     Regarding the mechanise of the framework, if a tensor is instance at the network level its name should be
     "NetworkName/TensorName" or should be "NetworkName/OperatorName/TensorName" if instance in an operator object.
 
-    Attributes:
+    Args
+    ----
 
-        name : str
-            Name of the tensor which must be include in the graph.
+        name: str
+            Name of the tensor which must be included in the graph.
 
-        graph : tf.Graph or None
+        graph: tf.Graph, None
             Tensorflow grah object. If None take the default graph.
 
-    Output:
-        Tensor
+    Returns
+    -------
+
+        tf.Tensor
+            Restored tensor link to the entry name.
     """
 
     _graph = tf.get_default_graph() if graph is None else graph
@@ -146,22 +159,27 @@ def get_tf_tensor(name: str, graph: tf.Graph = None):
         return g.get_tensor_by_name(tensor_name + ":0")
 
 
-def get_tf_operation(name: str, graph: tf.Graph = None):
+def get_tf_operation(name: str, graph: Union[tf.Graph, None] = None) -> tf.Tensor:
     """
-    Return the Tensorflow operation with the given name. Each operation must be include a scope or a sub scope.
+    Return the Tensorflow operation with the given name. Each operation must be include inside a scope or a sub scope.
     Regarding the mechanise of the framework, if an operation is instance at the network level its name should be
     "NetworkName/OperationName" or should be "NetworkName/OperatorName/OperationName" if instance in an operator object.
 
-    Attributes:
+    Args
+    ----
 
-    name : str
-        Name of the tensor which must be include in the graph.
+        name: str
+            Name of the tensor which must be included in the graph.
 
-    graph : tf.Graph or None
-        Tensorflow grah object. If None take the default graph.
+        graph : tf.Graph, None
+            Tensorflow grah object. If None take the default graph.
 
-    Output:
-        Tensor
+    Returns
+    -------
+
+        tf.Tensor
+            Restored tensor link to the entry name.
+
     """
 
     _graph = tf.get_default_graph() if graph is None else graph
@@ -171,9 +189,62 @@ def get_tf_operation(name: str, graph: tf.Graph = None):
         return g.get_operation_by_name(operation_name)
 
 
-def identity(x: tf.Tensor, name: str, graph: tf.Graph = None):
+def identity(x: tf.Tensor, name: str, graph: Union[tf.Graph, None] = None) -> tf.Tensor:
+    """
+    Give or force a name for a given tensor.
+
+    Args
+    ----
+
+        x: tf.Tensor
+            Tensor to name.
+
+        name:  str
+            Name for the tensor.
+
+        graph: tf.Graph, None
+            Tensorflow grah object. If None take the default graph.
+
+    Returns
+    -------
+
+        Renamed tensor.
+
+    """
     _graph = tf.get_default_graph() if graph is None else graph
 
     is_not_in_graph(name, _graph)
 
     return tf.identity(x, name)
+
+
+def get_optimizer(name: str, learning_rate: Union[tf.Tensor, float]) -> tf.train.Optimizer:
+
+    """
+    Return a Tensorflow optimizer Tensor.
+
+    Args
+    ----
+        learning_rate: tf.Tensor, float
+            Learning rate to use for optimization.
+
+        name: str
+            Name of the optimizer. Must be RMSProp, SGD or Adam.
+
+    Returns
+    -------
+
+        tf.train.Optimizer
+            Tensorflow optimizer object.
+    """
+
+    if name == "RMSProp":
+        return tf.train.RMSPropOptimizer(learning_rate)
+    elif name == "SGD":
+        return tf.train.GradientDescentOptimizer(learning_rate)
+    elif name == "Adam":
+        return tf.train.AdamOptimizer(learning_rate)
+    else:
+        list_optimizer = ['RMSProp', 'SGD', 'Adam']
+        raise TypeError(
+            f"{name} isn't a valid optimiser. optimiser_type must be in {list_optimizer}")
