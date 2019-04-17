@@ -385,7 +385,7 @@ class AbstractLayer(AbstractOperator, ABC):
             renorm = self.batch_renorm,
             renorm_clipping = {'rmin': self.rmin, 'rmax': self.rmax, 'dmax': self.dmax},
             renorm_momentum = self.decay_renorm,
-            trainable = False)(self.x_out, training=self.is_training)
+            trainable = True)(self.x_out, training=self.is_training)
 
     def _apply_act_funct(self) -> None:
 

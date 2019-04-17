@@ -163,6 +163,8 @@ class AbstractConvNet(AbstractArchitecture, ABC):
         """
         Build the network architecture.
 
+        TODO: Solve problem Batch Norm
+
         Args
         ----
 

@@ -15,47 +15,46 @@ def main():
     boston = tf.keras.datasets.boston_housing
     (x_train, y_train), (x_test, y_test) = boston.load_data()
 
-    mu_y, sigma_y = y_train.mean(), y_train.std()
+    y_max = y_train.max()
     mu_x, sigma_x = x_train.mean(0), x_train.std(0)
-
     x_train, x_test = (x_train - mu_x) / sigma_x, (x_test - mu_x) / sigma_x
-    y_train = (y_train - mu_y) / sigma_y
+    y_train /= y_max
     y_train, y_test = y_train.reshape(-1, 1), y_test.reshape(-1, 1)
 
     # Build and train a first time the network
     reg = MlpRegressor(name="Boston_Regressor", use_gpu=False)
 
-    reg.build(layer_size=(32, 64),
+    reg.build(layer_size=(16,),
               input_dim=13,
               output_dim=1,
-              act_funct='relu',
+              act_funct='tanh',
               keep_proba=1.,
               batch_norm=True,
-              batch_renorm=False,
-              law_name='uniform',
-              law_param=1e-3,
+              batch_renorm=True,
+              law_name='normal',
+              law_param=1e-2,
               penalization_rate=0.,
               penalization_type="L2",
               optimizer_name="Adam",
               decay=0.99,
               decay_renorm=0.99,
-              epsilon=0.0001)
+              epsilon=0.01)
 
     print("First training begin:")
     reg.fit(x=x_train,
             y=y_train,
             n_epoch=100,
             batch_size=32,
-            learning_rate=1e-3,
+            learning_rate=1e-2,
             rmin=1,
             rmax=1,
             dmax=0,
             verbose=True)
 
     # Make prediction
-    y_train_predict = reg.predict(x=x_train, batch_size=32) * sigma_y + mu_y
-    y_test_predict = reg.predict(x=x_test, batch_size=32) * sigma_y + mu_y
-    print("Score train:  {}".format(rmse(y_train * sigma_y + mu_y, y_train_predict)))
+    y_train_predict = reg.predict(x=x_train, batch_size=32) * y_max
+    y_test_predict = reg.predict(x=x_test, batch_size=32) * y_max
+    print("Score train:  {}".format(rmse(y_train * y_max, y_train_predict)))
     print("Score test:  {}".format(rmse(y_test, y_test_predict)))
 
     # Save the network and free the memory
@@ -70,18 +69,18 @@ def main():
     print("Second training begin:")
     reg.fit(x=x_train,
             y=y_train,
-            n_epoch=50,
+            n_epoch=100,
             batch_size=32,
             learning_rate=1e-3,
-            rmin=1 / 3,
+            rmin=0.33,
             rmax=3,
             dmax=5,
             verbose=True)
 
     # Make prediction
-    y_train_predict = reg.predict(x=x_train, batch_size=32) * sigma_y + mu_y
-    y_test_predict = reg.predict(x=x_test, batch_size=32) * sigma_y + mu_y
-    print("Score train:  {}".format(rmse(y_train * sigma_y + mu_y, y_train_predict)))
+    y_train_predict = reg.predict(x=x_train, batch_size=32) * y_max
+    y_test_predict = reg.predict(x=x_test, batch_size=32) * y_max
+    print("Score train:  {}".format(rmse(y_train * y_max, y_train_predict)))
     print("Score test:  {}".format(rmse(y_test, y_test_predict)))
 
     # Save the network and free the memory

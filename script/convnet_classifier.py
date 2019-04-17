@@ -51,7 +51,7 @@ def main():
             y=one_hot_encoding(y_train),
             n_epoch=2,
             batch_size=32,
-            learning_rate=1e-3,
+            learning_rate=1e-2,
             rmin=1,
             rmax=1,
             dmax=0,
