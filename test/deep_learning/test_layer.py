@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 import core.deep_learning.env as env
-from core.deep_learning.layer import AbstractLayer, FcLayer, Conv1dLayer, MinMaxLayer
+from core.deep_learning.layer import AbstractLayer, FullyConnected, Conv1d, MinMax, Conv2d
 
 # 2d and 3d array for testing
 X_2d = np.array([
@@ -18,6 +18,13 @@ X_3d = np.array([
 
     [[0, 0, 0],
      [1, 2, -3]]])
+
+X_4d = np.array([
+    [[[1., -2., 3.], [10., 20., -30.]],
+     [[0, 0, 0], [1, 2, -3]]],
+
+    [[[1., -2., 3.], [10., 20., -30.]],
+     [[0, 0, 0], [1, 2, -3]]]])
 
 
 def test_operator(self: tf.test.TestCase, sess: tf.Session, layer: AbstractLayer, x_input: np.ndarray,
@@ -64,7 +71,7 @@ class TestFcLayer(tf.test.TestCase):
 
     def test_operator(self):
         with self.test_session() as sess:
-            layer = FcLayer(size=1)
+            layer = FullyConnected(size=1)
             layer.w = [[1], [0.], [-1.]]
             layer.b = [1.]
 
@@ -72,7 +79,7 @@ class TestFcLayer(tf.test.TestCase):
             test_operator(self, sess, layer, X_2d, expected_output)
 
     def test_restore(self):
-        layer = FcLayer(size=1)
+        layer = FullyConnected(size=1)
         test_restore(self, layer, [100, 3], ["w", "b", "x", "x_out"])
 
 
@@ -88,7 +95,7 @@ class TestConv1dLayer(tf.test.TestCase):
             b = [1., -1.]
 
             # With bias
-            layer = Conv1dLayer(filter_width=1, n_filters=2, stride=1, padding="VALID", add_bias=True)
+            layer = Conv1d(width=1, channels=2, stride=1, padding="VALID", add_bias=True)
             layer.w = w
             layer.b = b
 
@@ -102,7 +109,7 @@ class TestConv1dLayer(tf.test.TestCase):
             test_operator(self, sess, layer, X_3d, expected_output)
 
             # Without bias
-            layer = Conv1dLayer(filter_width=1, n_filters=2, stride=1, padding="VALID", add_bias=False)
+            layer = Conv1d(width=1, channels=2, stride=1, padding="VALID", add_bias=False)
             layer.w = w
             layer.b = b
 
@@ -117,10 +124,10 @@ class TestConv1dLayer(tf.test.TestCase):
 
     def test_restore(self):
         # With bias
-        layer = Conv1dLayer(filter_width=1, n_filters=2, stride=1, padding="VALID", add_bias=True, name="with_bias")
+        layer = Conv1d(width=1, channels=2, stride=1, padding="VALID", add_bias=True, name="with_bias")
         test_restore(self, layer, [100, 1, 3], ["w", "b", "x", "x_out"])
         # Without bias
-        layer = Conv1dLayer(filter_width=1, n_filters=2, stride=1, padding="VALID", add_bias=False, name="without_bias")
+        layer = Conv1d(width=1, channels=2, stride=1, padding="VALID", add_bias=False, name="without_bias")
         test_restore(self, layer, [100, 1, 3], ["w", "x", "x_out"])
 
 
@@ -128,7 +135,7 @@ class TestMinMaxLayer(tf.test.TestCase):
 
     def test_operator(self):
         with self.test_session() as sess:
-            layer = MinMaxLayer(1)
+            layer = MinMax(1)
             expected_output = np.array([
                 [-2., 3.],
                 [-30., 20.]])
@@ -136,8 +143,50 @@ class TestMinMaxLayer(tf.test.TestCase):
             test_operator(self, sess, layer, X_2d, expected_output)
 
     def test_restore(self):
-        layer = MinMaxLayer(1)
+        layer = MinMax(1)
         test_restore(self, layer, [100, 3], ["x", "x_out"])
+
+
+class TestConv2dLayer(tf.test.TestCase):
+
+    def test_operator(self):
+        # Simple Conv2d
+        with self.test_session() as sess:
+            X = np.ones((10, 32, 32, 3)).astype(np.float32)
+            w = np.ones((2, 2, 3, 1)).astype(np.float32)
+            b = np.ones(1).astype(np.float32)
+
+            layer = Conv2d(width=3, height=3, filter=1, stride=(1, 1), dilation=None, padding="VALID",
+                           add_bias=True, act_funct=None, name="TestOp")
+            layer.w = w
+            layer.b = b
+
+            expected_output = np.ones((10, 31, 31, 1)) * 13
+
+            test_operator(self, sess, layer, X, expected_output)
+
+        # with dilation
+        with self.test_session() as sess:
+            X = np.ones((10, 32, 32, 3)).astype(np.float32)
+            X[:, 0, 1, 0] = 2
+            w = np.ones((2, 2, 3, 1)).astype(np.float32)
+            b = np.ones(1).astype(np.float32)
+
+            layer = Conv2d(width=3, height=3, filter=1, stride=(1, 1), dilation=(1, 1), padding="VALID",
+                           add_bias=True, act_funct=None, name="TestOpDilation")
+            layer.w = w
+            layer.b = b
+
+            expected_output = np.ones((10, 30, 30, 1)) * 13
+            expected_output[:, 0, 1, 0] = 14
+
+            test_operator(self, sess, layer, X, expected_output)
+
+    def test_restore(self):
+        # With bias
+        layer = Conv2d(width=1, height=1, filter=1, stride=(1, 1), dilation=None, padding="VALID",
+                       add_bias=True, act_funct=None, name="TestRestore")
+        test_restore(self, layer, [None, 16, 16, 3], ["w", "b", "x", "x_out"])
 
 
 if __name__ == '__main__':

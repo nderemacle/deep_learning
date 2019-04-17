@@ -1,29 +1,45 @@
 from abc import ABC, abstractmethod
-from typing import Tuple, List, Union, Dict, Any, Sequence
+from typing import List, Union, Dict, Any, Sequence
 
 import numpy as np
 import tensorflow as tf
 
 from core.deep_learning.abstract_architecture import AbstractArchitecture
-from core.deep_learning.abstract_operator import AbstractLoss
-from core.deep_learning.layer import FullyConnected
+from core.deep_learning.abstract_operator import AbstractLoss, AbstractLayer
+from core.deep_learning.layer import FullyConnected, Conv2d
 from core.deep_learning.loss import CrossEntropy, MeanSquareError
 from core.utils.validation import check_array
 
 
-class AbstractMlp(AbstractArchitecture, ABC):
-    """
-    This class set the major core of a Multi Layer Perceptron neural network. The neural network architecture
-    takes as input a linear vector of input data put in a succession of fully connected layers. In the end a
-    last layer reduce the dimensionality of the network to match with the number of target variables to predict.
+class AbstractConvNet(AbstractArchitecture, ABC):
+    """This class set the major core of a Convolution Neural Network (ConvNet).
+
+    The ConvNet takes as input a 3D tensor of input data which are filtered using a series of convolution, pooling and
+    inception steps. In the end data are used as input of a series of fully connected layer in order to solve the
+    prediction task.
 
     The abstract schema assume the child class must define the methods to set the loss function. In ths way it is simple
-    to enlarge this architecture to any type of problems.
+    to enlarge this architecture to many types of problem.
+
+    The class allows to chains different type of filtering operators ordered inside the ``conv_params`` class
+    attributes. Each step can be set using a dictionary of parameters. All dictionary have at least a key ``type``
+    informing about the type of step to use: ``CONV``, ``MAXPOOL`` or ``INCEPTION``. Their parameters are the following:
+
+        * type = ``CONV``:
+
+            * **shape**: (Tuple[int]) - Tuple of filter shape (height, width, filter).
+            * **stride**: (Tuple[int]) - Tuple indicating the strides to use (heights, width).
+            * **padding**: (str) -  The padding method to use "SAME" or "VALID".
+            * **add_bias**: (bool) -  Use a bias or not.
+            * **act_funct**: (None, str) -  Name of the activation function to use. If None, no activation function
+              is used.
+            * **dilation**: (None, Tuple[int]) - Tuple indicating the dilation level to use (heights, width).
+              If None no dilation is used.
 
     Args
     ----
 
-        name : str
+        name: str
             Name of the network.
 
         use_gpu: bool
@@ -32,18 +48,20 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
     Attributes
     ----------
+        conv_params: Sequence[Dict[str, Any]]
+            Sequence containing all parameters of all convolution step. See the class description for details.
 
-        layer_size: Tuple
+        fc_size: Sequence[int]
             Number of neurons for each fully connected step.
 
-        input_dim: int, None
-            Number of input data.
+        input_dim: Sequence[int], None
+            3D input shape which must be (heights, width, channel).
 
         output_dim: int, None
             Number of target variable to predict.
 
         act_funct: str, None
-            Name of the activation function. If None, no activation function is used.
+            Name of the activation function used for the fully connected layer. If None, no activation function is used.
 
         keep_proba: float
             Probability to keep a neuron activated during training.
@@ -103,14 +121,15 @@ class AbstractMlp(AbstractArchitecture, ABC):
             Loss layer object.
     """
 
-    def __init__(self, name: str = 'AbstractMlp', use_gpu: bool = False):
+    def __init__(self, name: str = 'AbstractConvNet', use_gpu: bool = False):
 
         super().__init__(name, use_gpu)
 
-        self.layer_size: Tuple = ()
-        self.input_dim: Union[int, None] = None
+        self.conv_params: Sequence[Dict[str, Any]] = []
+        self.fc_size: Sequence[int] = []
+        self.input_dim: Union[Sequence[int], None] = None
         self.output_dim: Union[int, None] = None
-        self.act_funct: str = 'relu'
+        self.act_funct: Union[str, None] = "relu"
 
         self.keep_proba: float = 1.
         self.batch_norm: bool = False
@@ -130,15 +149,16 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.loss: Union[tf.Tensor, None] = None
         self.optimizer: Union[tf.Tensor, None] = None
 
+        self.l_conv: Union[List[AbstractLayer], None] = None
         self.l_fc: Union[List[FullyConnected], None] = None
         self.l_output: Union[FullyConnected, None] = None
         self.l_loss: Union[AbstractLoss, None] = None
 
-    def build(self, layer_size: Sequence[int], input_dim: int, output_dim: int, act_funct: Union[str, None] = "relu",
-              keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1, batch_norm: bool = False,
-              batch_renorm: bool = False, decay: float = 0.999, decay_renorm: float = 0.99, epsilon: float = 0.001,
-              penalization_rate: float = 0., penalization_type: Union[str, None] = None,
-              optimizer_name: str = "Adam") -> None:
+    def build(self, conv_params: Sequence[Dict[str, Any]], fc_size: Sequence[int], input_dim: Sequence[int],
+              output_dim: int, act_funct: Union[str, None] = "relu", keep_proba: float = 1., law_name: str = "uniform",
+              law_param: float = 0.1, batch_norm: bool = False, batch_renorm: bool = False, decay: float = 0.999,
+              decay_renorm: float = 0.99, epsilon: float = 0.001, penalization_rate: float = 0.,
+              penalization_type: Union[str, None] = None, optimizer_name: str = "Adam") -> None:
 
         """
         Build the network architecture.
@@ -146,17 +166,21 @@ class AbstractMlp(AbstractArchitecture, ABC):
         Args
         ----
 
-            layer_size: Sequence[int]
+            conv_params: Sequence[Dict[str, Any]]
+                Sequence containing all parameters of all convolution step. See the class description for details.
+
+            fc_size: Sequence[int]
                 Number of neurons for each fully connected step.
 
-            input_dim: int
-                Number of input data.
+            input_dim: Sequence[int], None
+                3D input shape which must be (heights, width, channel).
 
-            output_dim: int
+            output_dim: int, None
                 Number of target variable to predict.
 
             act_funct: str, None
-                Name of the activation function. If None, no activation function is used.
+                Name of the activation function used for the fully connected layer. If None, no activation function is
+                used.
 
             keep_proba: float
                 Probability to keep a neuron activated during training.
@@ -196,8 +220,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
         """
 
-        super().build(layer_size=layer_size,
-                      input_dim=input_dim,
+        super().build(conv_params=conv_params,
+                      fc_size=fc_size,
+                      input_dim=tuple(input_dim),
                       output_dim=output_dim,
                       act_funct=act_funct,
                       keep_proba=keep_proba,
@@ -213,21 +238,56 @@ class AbstractMlp(AbstractArchitecture, ABC):
                       optimizer_name=optimizer_name)
 
     def _build(self) -> None:
-        """Build the MLP Network architecture."""
+        """Build the Convolution Network architecture."""
 
         # Define learning rate and drop_out tensor
         super()._build()
 
         # Define input and target tensor
-        self.x = self._placeholder(tf.float32, (None, self.input_dim), name="x")
+        self.x = self._placeholder(tf.float32, (None,) + self.input_dim, name="x")
         self.y = self._placeholder(tf.float32, (None, self.output_dim), name="y")
 
         # Define all fully connected layer
-        self.l_fc = []
+        self.l_conv = []
         weights = []
         i = 0
         self.x_out = self.x
-        for s in self.layer_size:
+        for param in self.conv_params:
+
+            if param["type"] == "CONV":
+                self.l_conv.append(
+                    Conv2d(width=param["shape"][1],
+                           height=param["shape"][0],
+                           filter=param["shape"][2],
+                           stride=param["stride"],
+                           dilation=param["dilation"],
+                           padding=param["padding"],
+                           add_bias=param["add_bias"],
+                           act_funct=param["act_funct"],
+                           keep_proba=self.keep_proba_tensor,
+                           batch_norm=self.batch_norm,
+                           batch_renorm=self.batch_renorm,
+                           is_training=self.is_training,
+                           name=f"ConvStep{i}",
+                           law_name=self.law_name,
+                           law_param=self.law_param,
+                           decay=self.decay,
+                           epsilon=self.epsilon,
+                           decay_renorm=self.decay_renorm,
+                           rmin=self.rmin,
+                           rmax=self.rmax,
+                           dmax=self.dmax))
+
+            self.x_out = self.l_conv[-1].build(self.x_out)
+            weights.append(self.l_conv[-1].w)
+            i += 1
+
+        # TODO: Find a solution for build/restore reshaping
+        self.x_out = tf.reshape(self.x_out, [-1, int(np.prod(self.x_out.shape[1:]))])
+
+        i = 0
+        self.fc_size = []
+        for s in self.fc_size:
             self.l_fc.append(
                 FullyConnected(size=s,
                                act_funct=self.act_funct,
@@ -276,7 +336,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
             learning_rate: float = 0.001, rmax: float = 3., rmin: float = 0.33, dmax: float = 5,
             verbose: bool = True) -> None:
 
-        """ Fit the MLP ``n_epoch`` using the ``x`` and ``y`` array of observations.
+        """ Fit the ConvNet along  ``n_epoch`` using the ``x`` and ``y`` array of observations.
 
         Args
         ----
@@ -310,7 +370,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
         """
 
-        check_array(x, shape=(-1, self.input_dim))
+        check_array(x, shape=(-1,) + tuple(self.input_dim))
         check_array(y, shape=(-1, self.output_dim))
 
         sample_index = np.arange(len(x))
@@ -324,8 +384,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
                 np.random.shuffle(sample_index)
                 for batch_index in np.array_split(sample_index, n_split):
                     _, loss = self.sess.run([self.optimizer, self.loss],
-                                            feed_dict={self.x: x[batch_index, :],
-                                                       self.y: y[batch_index, :],
+                                            feed_dict={self.x: x[batch_index, ...],
+                                                       self.y: y[batch_index, ...],
                                                        self.learning_rate: learning_rate,
                                                        self.keep_proba_tensor: self.keep_proba,
                                                        self.rmin: rmin,
@@ -362,7 +422,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
                 Array of predictions
          """
 
-        check_array(x, shape=(-1, self.input_dim))
+        check_array(x, shape=(-1,) + tuple(self.input_dim))
 
         n_split = 1 if batch_size is None else len(x) // batch_size
 
@@ -389,7 +449,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
         """
 
         params = {
-            'layer_size': self.layer_size,
+            'conv_params': self.conv_params,
+            'fc_size': self.fc_size,
             'input_dim': self.input_dim,
             'output_dim': self.output_dim,
             'act_funct': self.act_funct,
@@ -408,96 +469,114 @@ class AbstractMlp(AbstractArchitecture, ABC):
         return params
 
 
-class MlpClassifier(AbstractMlp):
+class ConvNetClassifier(AbstractConvNet):
+    """This class allow to train a Convolution Network for classification problems.
+
+       The ConvNet takes as input a 3D tensor of input data which are filtered using a series of convolution, pooling and
+       inception steps. In the end data are used as input of a series of fully connected layer in order to solve the
+       prediction task.
+
+       The class allows to chains different type of filtering operators ordered inside the ``conv_params`` class
+       attributes. Each step can be set using a dictionary of parameters. All dictionary have at least a key ``type``
+       informing about the type of step to use: ``CONV``, ``MAXPOOL`` or ``INCEPTION``. Their parameters are the following:
+
+           * type = ``CONV``:
+
+               * **shape**: (Tuple[int, int, int]) - Tuple of filter shape (height, width, filter).
+               * **stride**: (Tuple[int, int]) - Tuple indicating the strides to use (heights, width).
+               * **padding**: (str) -  The padding method to use "SAME" or "VALID".
+               * **add_bias**: (bool) -  Use a bias or not.
+               * **act_funct**: (None, str) -  Name of the activation function to use. If None, no activation function
+                 is used.
+               * **dilation**: (None, Tuple[int, int]) - Tuple indicating the dilation level to use (heights, width).
+                 If None no dilation is used.
+
+       Args
+       ----
+
+           name: str
+               Name of the network.
+
+           use_gpu: bool
+               If true train the network on a single GPU otherwise used all cpu. Parallelism setting can be improve with
+               future version.
+
+       Attributes
+       ----------
+           conv_params: Sequence[Dict[str, Any]]
+               Sequence containing all parameters of all convolution step. See the class description for details.
+
+           fc_size: Sequence[int]
+               Number of neurons for each fully connected step.
+
+           input_dim: Sequence[int], None
+               3D input shape which must be (heights, width, channel).
+
+           output_dim: int, None
+               Number of target variable to predict.
+
+           act_funct: str, None
+               Name of the activation function used for the fully connected layer. If None, no activation function is used.
+
+           keep_proba: float
+               Probability to keep a neuron activated during training.
+
+           batch_norm: bool
+               If True apply the batch normalization method.
+
+           batch_renorm: bool
+               If True apply the batch renormalization method.
+
+           penalization_rate : float
+               Penalization rate if regularization is used.
+
+           penalization_type: str, None
+               Indicates the type of penalization to use if not None.
+
+           law_name: str
+               Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
+
+           law_param: float
+               Law parameters dependent to the initialised law choose. If uniform, all tensor
+               elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
+               using a N(0, law_parameters).
+
+           decay: float
+               Decay used to update the moving average of the batch norm. The moving average is used to learn the
+               empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
+
+           epsilon: float
+               Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+
+           decay_renorm: float
+               Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
+
+           x: tf.Tensor, None
+               Input tensor of the network.
+
+           y: tf.Tensor, None
+               Tensor containing all True target variable to predict.
+
+           x_out: tf.Tensor, None
+               Output of the network.
+
+           loss: tf.Tensor, None
+               Loss function optimized to train the MLP.
+
+           y_pred: tf.Tensor, None
+               Prediction tensor.
+
+           l_fc: List[FullyConnected], None
+               List containing all fully connected layer objects.
+
+           l_output: FullyConnected, None
+               Final layer for network output reduction.
+
+           l_loss: AbstractLoss, None
+               Loss layer object.
     """
-    This class allows to train a MLP for classification task. The target array must be a One Hot Vector Encoding
-    with dimension equal to the number of label to predict. In addition the class provide an additional methods to
-    predict directly the probability for each label.
 
-    Args
-    ----
-
-        name : str
-            Name of the network.
-
-        use_gpu: bool
-            If true train the network on a single GPU otherwise used all cpu. Parallelism setting can be improve with
-            future version.
-
-    Attributes
-    ----------
-
-        layer_size: Sequence[int]
-            Number of neurons for each fully connected step.
-
-        input_dim: int, None
-            Number of input data.
-
-        output_dim: int, None
-            Number of target variable to predict.
-
-        act_funct: str, None
-            Name of the activation function. If None, no activation function are used.
-
-        keep_proba: float
-            Probability to keep a neuron activate during training.
-
-        batch_norm: bool
-            If True apply the batch normalization method.
-
-        batch_renorm: bool
-            If True apply the batch renormalization method.
-
-        penalization_rate : float
-            Penalization rate if regularization is used.
-
-        penalization_type: str, None
-            Indicates the type of penalization to use if not None.
-
-        law_name: str
-            Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
-
-        law_params: float
-            Law parameters dependent to the initialised law choose. If uniform, all tensor
-            elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
-            using a N(0, law_parameters).
-
-        decay: float
-            Decay used to update the moving average of the batch norm. The moving average is used to learn the
-            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
-
-        epsilon: float
-            Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
-
-        decay_renorm: float
-            Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
-
-        x: tf.Tensor, None
-            Input tensor of the network.
-
-        y: tf.Tensor, None
-            Tensor containing all True target variable to predict.
-
-        x_out: tf.Tensor, None
-            Output of the network.
-
-        loss: tf.Tensor, None
-            Loss function optimized to train the MLP.
-
-        y_pred: tf.Tensor, None
-            Prediction tensor.
-
-        l_fc: List[FullyConnected], None
-            List containing all fully connected layer objects.
-
-        l_output: FullyConnected, None
-            Final layer for network output reduction.
-
-        l_loss: AbstractLoss, None
-            Loss layer object.
-    """
-
-    def __init__(self, name: str = 'MlpClassifier', use_gpu: bool = False):
+    def __init__(self, name: str = 'ConvNetClassifier', use_gpu: bool = False):
         super().__init__(name, use_gpu)
 
     def _set_loss(self, weights: Sequence[tf.Variable]) -> None:
@@ -525,8 +604,8 @@ class MlpClassifier(AbstractMlp):
 
     def predict_proba(self, x: np.ndarray, batch_size: int = None) -> np.ndarray:
         """
-        Predict a vector of probability for each label. If ``batch_size`` is not None predictions are predicted by
-        mini-batch
+        Predict a vector of probability for each label. If ``batch_size`` is not None predictions are predicted
+        by mini-batch
 
         Args
         ----
@@ -544,7 +623,7 @@ class MlpClassifier(AbstractMlp):
                 Array of predicted probabilities.
         """
 
-        check_array(x, shape=(-1, self.input_dim))
+        check_array(x, shape=(-1,) + tuple(self.input_dim))
 
         n_split = 1 if batch_size is None else len(x) // batch_size
 
@@ -561,96 +640,114 @@ class MlpClassifier(AbstractMlp):
             return y_pred / y_pred.sum(1).reshape(-1, 1)
 
 
-class MlpRegressor(AbstractMlp):
-    """
-    This class allows to train a MLP for regression task. The target array must be a square matrix having one or more
-    objective variable to learn.
+class ConvNetRegressor(AbstractConvNet):
+    """This class allow to train a Convolution Network for regression problems.
+
+    The ConvNet takes as input a 3D tensor of input data which are filtered using a series of convolution, pooling and
+    inception steps. In the end data are used as input of a series of fully connected layer in order to solve the
+    prediction task.
+
+    The class allows to chains different type of filtering operators ordered inside the ``conv_params`` class
+    attributes. Each step can be set using a dictionary of parameters. All dictionary have at least a key ``type``
+    informing about the type of step to use: ``CONV``, ``MAXPOOL`` or ``INCEPTION``. Their parameters are the following:
+
+       * type = ``CONV``:
+
+           * **shape**: (Tuple[int, int, int]) - Tuple of filter shape (height, width, filter).
+           * **stride**: (Tuple[int, int]) - Tuple indicating the strides to use (heights, width).
+           * **padding**: (str) -  The padding method to use "SAME" or "VALID".
+           * **add_bias**: (bool) -  Use a bias or not.
+           * **act_funct**: (None, str) -  Name of the activation function to use. If None, no activation function
+             is used.
+           * **dilation**: (None, Tuple[int, int]) - Tuple indicating the dilation level to use (heights, width).
+             If None no dilation is used.
 
     Args
     ----
 
-        name : str
-            Name of the network.
+       name: str
+           Name of the network.
 
-        use_gpu: bool
-            If true train the network on a single GPU otherwise used all cpu. Parallelism setting can be improve with
-            future version.
+       use_gpu: bool
+           If true train the network on a single GPU otherwise used all cpu. Parallelism setting can be improve with
+           future version.
 
     Attributes
     ----------
+       conv_params: Sequence[Dict[str, Any]]
+           Sequence containing all parameters of all convolution step. See the class description for details.
 
-        layer_size: Sequence[int]
-            Number of neurons for each fully connected step.
+       fc_size: Sequence[int]
+           Number of neurons for each fully connected step.
 
-        input_dim: int, None
-            Number of input data.
+       input_dim: Sequence[int], None
+           3D input shape which must be (heights, width, channel).
 
-        output_dim: int, None
-            Number of target variable to predict.
+       output_dim: int, None
+           Number of target variable to predict.
 
-        act_funct: str, None
-            Name of the activation function. If None, no activation function is used.
+       act_funct: str, None
+           Name of the activation function used for the fully connected layer. If None, no activation function is used.
 
-        keep_proba: float
-            Probability to keep a neuron activated during training.
+       keep_proba: float
+           Probability to keep a neuron activated during training.
 
-        batch_norm: bool
-            If True apply the batch normalization method.
+       batch_norm: bool
+           If True apply the batch normalization method.
 
-        batch_renorm: bool
-            If True apply the batch renormalization method.
+       batch_renorm: bool
+           If True apply the batch renormalization method.
 
-        penalization_rate : float
-            Penalization rate if regularization is used.
+       penalization_rate : float
+           Penalization rate if regularization is used.
 
-        penalization_type: str, None
-            Indicates the type of penalization to use if not None.
+       penalization_type: str, None
+           Indicates the type of penalization to use if not None.
 
-        law_name: str
-            Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
+       law_name: str
+           Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
 
-        law_param: float
-            Law parameters dependent to the initialised law choose. If uniform, all tensor
-            elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
-            using a N(0, law_parameters).
+       law_param: float
+           Law parameters dependent to the initialised law choose. If uniform, all tensor
+           elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
+           using a N(0, law_parameters).
 
-        decay: float
-            Decay used to update the moving average of the batch norm. The moving average is used to learn the
-            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
+       decay: float
+           Decay used to update the moving average of the batch norm. The moving average is used to learn the
+           empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
 
-        epsilon: float
-            Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+       epsilon: float
+           Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
 
-        decay_renorm: float
-            Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
+       decay_renorm: float
+           Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
-        x: tf.Tensor, None
-            Input tensor of the network.
+       x: tf.Tensor, None
+           Input tensor of the network.
 
-        y: tf.Tensor, None
-            Tensor containing all True target variable to predict.
+       y: tf.Tensor, None
+           Tensor containing all True target variable to predict.
 
-        x_out: tf.Tensor, None
-            Output of the network.
+       x_out: tf.Tensor, None
+           Output of the network.
 
-        loss: tf.Tensor, None
-            Loss function optimized to train the MLP.
+       loss: tf.Tensor, None
+           Loss function optimized to train the MLP.
 
-        y_pred: tf.Tensor, None
-            Prediction tensor.
+       y_pred: tf.Tensor, None
+           Prediction tensor.
 
-        l_fc: List[FullyConnected], None
-            List containing all fully connected layer objects.
+       l_fc: List[FullyConnected], None
+           List containing all fully connected layer objects.
 
-        l_output: FullyConnected, None
-            Final layer for network output reduction.
+       l_output: FullyConnected, None
+           Final layer for network output reduction.
 
-        l_loss: AbstractLoss, None
-            Loss layer object.
-
+       l_loss: AbstractLoss, None
+           Loss layer object.
     """
 
-    def __init__(self, name: str = 'MlpRegressor', use_gpu: bool = False):
+    def __init__(self, name: str = 'ConvNetRegressor', use_gpu: bool = False):
         super().__init__(name, use_gpu)
 
     def _set_loss(self, weights: Sequence[tf.Variable]) -> None:

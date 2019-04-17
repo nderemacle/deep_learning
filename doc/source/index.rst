@@ -21,6 +21,15 @@ MLP Algorithm
    :inherited-members:
    :show-inheritance:
 
+ConvNet Algorithm
+-----------------
+
+.. automodule:: core.algo.ConvNet
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
+
 Deep Learning
 =============
 

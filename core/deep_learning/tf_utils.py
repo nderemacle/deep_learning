@@ -43,6 +43,7 @@ def random_law(shape: Sequence[int], law_name: str, law_param: float, dtype: tf.
         list_law = ['normal', 'uniform']
         raise TypeError(f"{law_name} isn't a valide law_name. Name must be in {list_law}")
 
+
 def variable(shape: Sequence[int], initial_value: Union[np.ndarray, None] = None, law_name: str = "uniform",
              law_param: float = 0.1, name: Union[str, None] = None, dtype: tf.DType = tf.float32) -> tf.Variable:
     """
@@ -219,7 +220,6 @@ def identity(x: tf.Tensor, name: str, graph: Union[tf.Graph, None] = None) -> tf
 
 
 def get_optimizer(name: str, learning_rate: Union[tf.Tensor, float]) -> tf.train.Optimizer:
-
     """
     Return a Tensorflow optimizer Tensor.
 

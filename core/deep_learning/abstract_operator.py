@@ -340,8 +340,8 @@ class AbstractLayer(AbstractOperator, ABC):
     def _apply_dropout(self) -> None:
 
         """Apply the dropout operator on the output attribute."""
-
-        self.x_out = tf.nn.dropout(self.x_out, keep_prob=self.keep_proba)
+        # TODO: Replace keep_proba by skip_proba or dropout_rate
+        self.x_out = tf.nn.dropout(self.x_out, rate=1 - self.keep_proba)
 
     def _apply_batch_norm(self) -> None:
         """
@@ -375,9 +375,11 @@ class AbstractLayer(AbstractOperator, ABC):
             Data format must be 'NC' or 'NHWC'.
 
         """
-
+        # TODO: Use another methods. Problem with ConvNet + tensorflow 2.0 issues.
         self.x_out = tf.contrib.layers.batch_norm(
             inputs=self.x_out,
+            center=True,
+            scale=True,
             decay=self.decay,
             epsilon=self.epsilon,
             updates_collections=tf.GraphKeys.UPDATE_OPS,
@@ -398,7 +400,7 @@ class AbstractLayer(AbstractOperator, ABC):
 class AbstractLoss(AbstractOperator, ABC):
     """This class set a cortex for the implementation of a loss.
 
-    The class takes inherite all property of the AbstractOperator class to use the restore or build operator process.
+    The class takes inherit all property of the AbstractOperator class to use the restore or build operator process.
     The loss can be view as a graph operator taking as input a target tensor y and and a network prediction tensor
     x_out. It can use a last transformation or return directly the algorithm prediction y_pred. The output is a loss
     tensor representing the final function to minimize to train the algorithm. In addition regularization function can

@@ -37,14 +37,14 @@ def main():
               penalization_rate=1.,
               penalization_type="L2",
               optimizer_name="Adam",
-              decay=0.99,
+              decay=0.099,
               decay_renorm=0.99,
               epsilon=0.001)
 
     print("First training begin:")
     reg.fit(x=x_train,
             y=y_train,
-            n_epoch=50,
+            n_epoch=100,
             batch_size=32,
             learning_rate=1e-3,
             rmin=1,
@@ -85,7 +85,7 @@ def main():
     print("Score test:  {}".format(rmse(y_test, y_test_predict)))
 
     # Save the network and free the memory
-    reg.save(path_folder="output/MlpCLassifier/")
+    reg.save(path_folder="output/MlpRegressor/")
     del reg
 
     sys.exit(0)

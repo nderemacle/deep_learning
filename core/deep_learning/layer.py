@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -8,7 +8,7 @@ from core.deep_learning.tf_utils import variable, get_tf_tensor
 from core.utils.validation import check_tensor
 
 
-class FcLayer(AbstractLayer):
+class FullyConnected(AbstractLayer):
     """
     Use a fully connected layer having a number of neurons equal to the `size` parameters. A neurons is a
     function making a linear transformation on a set of input and output a single output value bounded by an
@@ -45,10 +45,10 @@ class FcLayer(AbstractLayer):
        name: str
            Name of the layer.
 
-       law_name : str
+       law_name: str
             Name of the law to use to initialized weights and biases.
 
-       law_param : float
+       law_param: float
             Parameter of the law used to initialized weight. This parameter is law_name dependent.
 
        decay: float
@@ -171,10 +171,10 @@ class FcLayer(AbstractLayer):
         self.b = get_tf_tensor(name="b")
 
 
-class Conv1dLayer(AbstractLayer):
+class Conv1d(AbstractLayer):
     """
-    Build a 1d convolution layer. The filter take as input an array with shape (batch_size, Width, Channel),
-    compute a convolution using one or many filter and return a tensor with size (batch_size, new_Width, n_filters):
+    Build a 1d convolution layer. The filter take as input an array with shape (Width, Channel),
+    compute a convolution using one or many filter and return a tensor with size (Width, filters):
 
     .. math::
 
@@ -186,26 +186,26 @@ class Conv1dLayer(AbstractLayer):
     Args
     ----
 
-        filter_width : int
+        width: int
             Width of the filter apply on the matrix.
 
-        n_filter : int
+        channels: int
             Number of filter of the convolution.
 
-        stride : int
+        stride: int
             Stride for the filter moving.
 
-        padding : str
-            Padding can be SAME or VALID. If PADDING is SAME the convolution output a matrix having the same size
-            as the input tensor. VALID keep the dimension reduction.
+        padding: str
+            Padding can be SAME or VALID. If padding is SAME, apply padding to input so that input image gets fully
+            covered by filter and stride whereas VALID skip input not covered by the filter.
 
         add_bias: bool
-            Whether to add the biase or not.
+            Whether to add the bias or not.
 
-        act_funct : str, None
+        act_funct: str, None
             Name of the activation function to use. If None no activation function are used.
 
-        keep_proba : float, tf.Tensor
+        keep_proba: float, tf.Tensor
             Probability to keep a neuron activate during training if we want to apply the dropout method.
 
         batch_norm: bool
@@ -214,16 +214,16 @@ class Conv1dLayer(AbstractLayer):
         batch_renorm: bool
             Whether to used batch renormalization or not.
 
-        is_training : tf.Tensor, None
+        is_training: tf.Tensor, None
             Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
 
-        name : str
+        name: str
             Name of the layer.
 
-        law_name : str
+        law_name: str
             Name of the lax to use for weights and biases initialization.
 
-        law_param : float
+        law_param: float
             Parameter of the initialization law.
 
         decay: tf.Tensor, float
@@ -257,8 +257,8 @@ class Conv1dLayer(AbstractLayer):
     """
 
     def __init__(self,
-                 filter_width: int,
-                 n_filters: int,
+                 width: int,
+                 channels: int,
                  stride: int = 1,
                  padding: str = "VALID",
                  add_bias: bool = True,
@@ -267,7 +267,7 @@ class Conv1dLayer(AbstractLayer):
                  batch_norm: bool = False,
                  batch_renorm: bool = False,
                  is_training: Union[tf.Tensor, None] = None,
-                 name: str = "conv",
+                 name: str = "conv1D",
                  law_name: str = "uniform",
                  law_param: float = 0.1,
                  decay: float = 0.99,
@@ -282,8 +282,8 @@ class Conv1dLayer(AbstractLayer):
 
         assert padding in ["SAME", "VALID"]
 
-        self.filter_width = filter_width
-        self.n_filters = n_filters
+        self.width = width
+        self.channels = channels
         self.stride = stride
         self.padding = padding
         self.add_bias = add_bias
@@ -303,20 +303,20 @@ class Conv1dLayer(AbstractLayer):
         Args
         ----
 
-            w_init : array with size (width, n_channel, n_filter)
+            w_init: array with size (width, n_channel, n_filter)
                 Array which can be used to initialized weight filter variable.
 
-            b_init : array with size (n_filter,)
+            b_init: array with size (n_filter,)
                 Array which can be sue dto initialized bias filter variable.
         """
 
         width, n_channel = self.x.shape[1].value, self.x.shape[2].value
 
-        w_shape = (self.filter_width, n_channel, self.n_filters)
+        w_shape = (self.width, n_channel, self.channels)
         self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
 
         if self.add_bias:
-            b_shape = (self.n_filters,)
+            b_shape = (self.channels,)
             self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
 
     def _operator(self) -> None:
@@ -335,7 +335,7 @@ class Conv1dLayer(AbstractLayer):
               w_init: Union[np.ndarray, None] = None,
               b_init: Union[np.ndarray, None] = None) -> tf.Tensor:
         """
-        Allow to build the convolution taking in entry the x_input tensor.
+        Build the convolution taking in entry the x_input tensor.
 
         Args
         ----
@@ -369,7 +369,7 @@ class Conv1dLayer(AbstractLayer):
         super().restore()
 
 
-class MinMaxLayer(AbstractLayer):
+class MinMax(AbstractLayer):
     """
     Allow to use a MinMax layer. Given a 2 dimensional input array, this layer keep only the n best and the n
     worse entries. The aim is to reduce the problem dimensionality by keeping only extremes values from the
@@ -378,7 +378,7 @@ class MinMaxLayer(AbstractLayer):
     Args
     ----
 
-        n_entries : int
+        n_entries: int
             Number of top and worse neurons to keep.
 
         name: str
@@ -441,4 +441,232 @@ class MinMaxLayer(AbstractLayer):
         Restore input/output tensor.
         """
 
+        super().restore()
+
+
+class Conv2d(AbstractLayer):
+    """
+    Build a two dimensional convolution layer. A convolution is an operation which aims to extract information locally
+    from an input tensor with two dimension and many channels. The size of the filter can be define by setting its width
+    and height whereas the channel define the number of filter which composed the layer. The move of the filter is
+    controlled by adjustment of the stride level. The dilation parameter allows to extract information from
+    input spaced by a given rate. Given a filter weight :math:`W` with shape (h, w, c, f) and an input subset
+    :math:`x` with shape (h, w, c), the convolution operation is:
+
+    .. math::
+
+                o[i, j, f] = \\sum_{h} \\sum_{w}  \\sum_{c} x[i -h, j - w, c] * W[h, w, c, f]
+
+    The output width size can change regarding the filter_width, the stride and the padding selected and the padding
+    level necessary:
+
+    .. math::
+
+                \\cfrac{A - F - (F - 1 )D)}{S} + 1
+
+    where :math:`A` represent the size of an input axis, :math:`F` the filter size, :math:`D` the dilation rate and
+    :math:`S` the stride use.
+
+    Args
+    ----
+
+        width: int
+            Width of the filter.
+
+        height: int
+            height of the filter.
+
+        channel: int
+            Number of filter of the convolution.
+
+        stride: Tuple[int, int]
+            Stride for the filter moving. The first element is the height stride whereas the second is the width stride.
+
+        dilation: Tuple[int, int]
+            Number of positions skip between two filter entries. The first element is the height dialtion whereas the
+            second is the width dilation. If None, no dilation is used.
+
+        padding: str
+            Padding can be SAME or VALID. If padding is SAME, apply padding to input so that input image gets fully
+            covered by filter and stride whereas VALID skip input not covered by the filter.
+
+        add_bias: bool
+            Whether to add the bias or not.
+
+        act_funct: str, None
+            Name of the activation function to use. If None no activation function are used.
+
+        keep_proba: float, tf.Tensor
+            Probability to keep a neuron activate during training if we want to apply the dropout method.
+
+        batch_norm: bool
+            If True apply the batch normalization after the _operator methods.
+
+        batch_renorm: bool
+            Whether to used batch renormalization or not.
+
+        is_training: tf.Tensor, None
+            Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.
+
+        name: str
+            Name of the layer.
+
+        law_name: str
+            Name of the lax to use for weights and biases initialization.
+
+        law_param: float
+            Parameter of the initialization law.
+
+        decay: tf.Tensor, float
+            Decay used to update the moving average of the batch norm. The moving average is used to learn the
+            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
+
+        epsilon: float
+             Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+
+        decay_renorm: tf.Tensor, float
+            Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
+
+        rmin: tf.Tensor, float
+            Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.
+
+        rmax: tf.Tensor, float
+            Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.
+
+        dmax: tf.Tensor, float
+            When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).
+
+    Attributes
+    ----------
+
+        w : Variable with size (height, width, input_channel, n_filter)
+            Convolution weights variable.
+
+        b : Variable with size (n_filter,)
+            Convolution bias variable.
+
+
+    """
+
+    def __init__(self,
+                 width: int,
+                 height: int,
+                 filter: int,
+                 stride: Tuple[int, int] = (1, 1),
+                 dilation: Union[Tuple[int, int], None] = None,
+                 padding: str = "VALID",
+                 add_bias: bool = False,
+                 act_funct: Union[str, None] = None,
+                 keep_proba: Union[tf.Tensor, float] = 1.,
+                 batch_norm: bool = False,
+                 batch_renorm: bool = False,
+                 is_training: Union[tf.Tensor, None] = None,
+                 name: str = "conv2D",
+                 law_name: str = "uniform",
+                 law_param: float = 0.1,
+                 decay: float = 0.99,
+                 epsilon: float = 0.001,
+                 decay_renorm: float = 0.99,
+                 rmin: Union[tf.Tensor, float] = 0.33,
+                 rmax: Union[tf.Tensor, float] = 3,
+                 dmax: Union[tf.Tensor, float] = 5):
+
+        super().__init__(act_funct, keep_proba, batch_norm, batch_renorm, is_training, law_name, law_param, decay,
+                         epsilon, decay_renorm, rmin, rmax, dmax, name)
+
+        self.width = width
+        self.height = height
+        self.filter = filter
+        self.stride = stride
+        self.dilation = dilation
+        self.padding = padding
+        self.add_bias = add_bias
+
+        self.w: Union[tf.Variable, None] = None
+        self.b: Union[tf.Variable, None] = None
+
+    def _check_input(self) -> None:
+
+        """Assert the input input tensor is 4 dimensional."""
+
+        check_tensor(self.x, shape_dim=4)
+
+        if self.x.shape[1] < self.height:
+            raise (f"{self.name}: Input heights must be higher or equal to filter heights."
+                   f"Input heights {self.x.shape[1]}, filter heights {self.height}")
+
+        if self.x.shape[2] < self.width:
+            raise (f"{self.name}: Input heights must be higher or equal to filter heights."
+                   f"Input heights {self.x.shape[2]}, filter heights {self.width}")
+
+    def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None) -> None:
+        """Initialize the weight and bias. If init matrix are input variable are initialize using them.
+
+        Args
+        ----
+
+            w_init : np.array with shape (height, width, input_channel, channel), None
+                Matrix to initialize the filter weight variable.
+
+            b_init : np.array with shape (channel,), None
+                Matrix of filter bias to initialize bias.
+        """
+
+        input_channel = self.x.shape[3].value
+        w_shape = (self.height, self.width, input_channel, self.filter)
+
+        self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
+
+        if self.add_bias:
+            b_shape = (self.filter,)
+            self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
+
+    def build(self,
+              x: tf.Tensor) -> tf.Tensor:
+
+        """
+        Build the Conv2d layer using the 4 dimensional input tensor x.
+
+        Args
+        ----
+
+            x: tf.Tensor
+                Input tensor filtered by the layer.
+
+        Returns
+        -------
+
+            tf.Tensor
+                Layer output Tensor.
+        """
+
+        return super().build(x)
+
+    def _operator(self) -> None:
+
+        if self.dilation is None:
+            dilation = (1, 1, 1, 1)
+        else:
+            dilation = (1, self.dilation[0] + 1, self.dilation[1] + 1, 1)
+
+        self.x_out = tf.nn.conv2d(
+            input=self.x,
+            filter=self.w,
+            strides=(1, self.stride[0], self.stride[1], 1),
+            padding=self.padding,
+            use_cudnn_on_gpu=True,
+            data_format='NHWC',
+            dilations=dilation)
+
+        if self.add_bias:
+            self.x_out = tf.add(self.b, self.x_out)
+
+    def restore(self) -> None:
+        """
+        Restore input/output tensor and all layer variables.
+        """
+
+        self.w = get_tf_tensor(name="w")
+        if self.add_bias:
+            self.b = get_tf_tensor(name="b")
         super().restore()

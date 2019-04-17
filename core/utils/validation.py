@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Union
 
 import numpy as np
 import tensorflow as tf
@@ -81,7 +81,7 @@ def is_not_in_graph(name: str, graph: tf.Graph = None):
         raise NameError(f"{name} already exist.")
 
 
-def check_tensor(x: tf.Tensor, shape: (Tuple, None) = None, shape_dim: (int, None) = None):
+def check_tensor(x: tf.Tensor, shape: Union[Tuple, None] = None, shape_dim: Union[int, None] = None):
     if not isinstance(x, tf.Tensor):
         raise TypeError(f"Expected tf.Tensor type object but received {type(x)}.")
 
@@ -92,11 +92,11 @@ def check_tensor(x: tf.Tensor, shape: (Tuple, None) = None, shape_dim: (int, Non
 
     if shape_dim is not None:
         if len(x.shape) != shape_dim:
-            raise TypeError(f"Expected tensor with shame dimension {shape_dim} but received"
-                            f" a tensor with shape_dim {x.ndims}")
+            raise TypeError(f"Expected tensor with shape dimension {shape_dim} but received"
+                            f" a tensor with shape_dim {x.shape.ndims}")
 
 
-def check_variable(x: tf.Variable, shape: (Tuple, None) = None, shape_dim: (int, None) = None):
+def check_variable(x: tf.Variable, shape: Union[Tuple, None] = None, shape_dim: Union[int, None] = None):
     if not isinstance(x, tf.Variable):
         raise TypeError(f"Expected tf.Variable type object but received {type(x)}.")
 
@@ -108,4 +108,4 @@ def check_variable(x: tf.Variable, shape: (Tuple, None) = None, shape_dim: (int,
     if shape_dim is not None:
         if len(x.shape) != shape_dim:
             raise TypeError(f"Expected variable with shame dimension {shape_dim} but received"
-                            f" a tensor with shape_dim {x.ndims}")
+                            f" a tensor with shape_dim {x.shape.ndims}")

@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import tensorflow as tf
 
-from core.algo.MLP import MlpClassifier
+from core.algo.ConvNet import ConvNetClassifier
 
 
 def one_hot_encoding(x: np.ndarray):
@@ -19,18 +19,24 @@ def main():
     # Load and prepare data
     mnist = tf.keras.datasets.mnist
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
-    x_train, x_test = x_train.reshape(-1, 784) / 255.0, x_test.reshape(-1, 784) / 255.0
+    x_train, x_test = x_train[..., np.newaxis] / 255.0, x_test[..., np.newaxis] / 255.0
 
     # Build and train a first time the network
-    clf = MlpClassifier(name="MNIST_Classifier", use_gpu=False)
+    clf = ConvNetClassifier(name="MNIST_Classifier", use_gpu=False)
 
-    clf.build(layer_size=(256, 512),
-              input_dim=784,
+    conv_params = [
+        {"type": "CONV", "shape": (3, 3, 16), "stride": (1, 1), "padding": "VALID", "add_bias": False,
+         "act_funct": None,
+         "dilation": None}
+    ]
+    clf.build(conv_params=conv_params,
+              fc_size=(128, 128),
+              input_dim=(28, 28, 1),
               output_dim=10,
               act_funct='relu',
               keep_proba=0.8,
-              batch_norm=True,
-              batch_renorm=True,
+              batch_norm=False,
+              batch_renorm=False,
               law_name='uniform',
               law_param=1e-2,
               penalization_rate=0.01,
@@ -58,12 +64,12 @@ def main():
     print("Score test:  {}".format((y_test == y_test_predict).mean()))
 
     # Save the network and free the memory
-    clf.save(path_folder="output/MlpClassifier/")
+    clf.save(path_folder="output/ConvNetClassifier/")
     del clf
 
     # Restore the mlp
-    clf = MlpClassifier(use_gpu=False)
-    clf.restore(path_folder="output/MlpClassifier/")
+    clf = ConvNetClassifier(use_gpu=False)
+    clf.restore(path_folder="output/ConvNetClassifier/")
 
     # Continue the training
     print("Second training begin:")
@@ -84,7 +90,7 @@ def main():
     print("Score test:  {}".format((y_test == y_test_predict).mean()))
 
     # Save the network and free the memory
-    clf.save(path_folder="output/MlpClassifier/")
+    clf.save(path_folder="output/ConvNetClassifier/")
     del clf
 
     sys.exit(0)
