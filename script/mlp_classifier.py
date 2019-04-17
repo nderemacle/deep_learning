@@ -24,7 +24,7 @@ def main():
     # Build and train a first time the network
     clf = MlpClassifier(name="MNIST_Classifier", use_gpu=False)
 
-    clf.build(layer_size=(256, 512),
+    clf.build(layer_size=(64, 128),
               input_dim=784,
               output_dim=10,
               act_funct='relu',
@@ -33,7 +33,7 @@ def main():
               batch_renorm=True,
               law_name='uniform',
               law_param=1e-2,
-              penalization_rate=0.01,
+              penalization_rate=0.,
               penalization_type='L2',
               optimizer_name="Adam",
               decay=0.99,

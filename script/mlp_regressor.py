@@ -31,15 +31,15 @@ def main():
               act_funct='relu',
               keep_proba=1.,
               batch_norm=True,
-              batch_renorm=True,
+              batch_renorm=False,
               law_name='uniform',
-              law_param=1e-2,
-              penalization_rate=1.,
+              law_param=1e-3,
+              penalization_rate=0.,
               penalization_type="L2",
               optimizer_name="Adam",
-              decay=0.099,
+              decay=0.99,
               decay_renorm=0.99,
-              epsilon=0.001)
+              epsilon=0.0001)
 
     print("First training begin:")
     reg.fit(x=x_train,

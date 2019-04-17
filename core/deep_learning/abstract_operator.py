@@ -375,19 +375,17 @@ class AbstractLayer(AbstractOperator, ABC):
             Data format must be 'NC' or 'NHWC'.
 
         """
-        # TODO: Use another methods. Problem with ConvNet + tensorflow 2.0 issues.
-        self.x_out = tf.contrib.layers.batch_norm(
-            inputs=self.x_out,
-            center=True,
-            scale=True,
-            decay=self.decay,
-            epsilon=self.epsilon,
-            updates_collections=tf.GraphKeys.UPDATE_OPS,
-            is_training=self.is_training,
-            data_format='NHWC',
-            renorm=self.batch_renorm,
-            renorm_clipping={'rmin': self.rmin, 'rmax': self.rmax, 'dmax': self.dmax},
-            renorm_decay=self.decay_renorm)
+
+        self.x_out = tf.keras.layers.BatchNormalization(
+            axis = -1,
+            momentum = self.decay,
+            epsilon = self.epsilon,
+            center = True,
+            scale = True,
+            renorm = self.batch_renorm,
+            renorm_clipping = {'rmin': self.rmin, 'rmax': self.rmax, 'dmax': self.dmax},
+            renorm_momentum = self.decay_renorm,
+            trainable = False)(self.x_out, training=self.is_training)
 
     def _apply_act_funct(self) -> None:
 
