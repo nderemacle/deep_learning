@@ -48,6 +48,9 @@ class AbstractConvNet(AbstractArchitecture, ABC):
         y_pred: tf.Tensor, None
             Prediction tensor.
 
+        l_conv: List[Union[Conv2d]], None
+            List containing all input filter layer.
+
         l_fc: List[FullyConnected], None
             List containing all fully connected layer objects.
 
@@ -86,7 +89,7 @@ class AbstractConvNet(AbstractArchitecture, ABC):
         self.loss: Union[tf.Tensor, None] = None
         self.optimizer: Union[tf.Tensor, None] = None
 
-        self.l_conv: Union[List[AbstractLayer], None] = None
+        self.l_conv: Union[List[Union[Conv2d]], None] = None
         self.l_fc: Union[List[FullyConnected], None] = None
         self.l_output: Union[FullyConnected, None] = None
         self.l_loss: Union[AbstractLoss, None] = None
