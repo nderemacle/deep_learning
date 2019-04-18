@@ -377,15 +377,15 @@ class AbstractLayer(AbstractOperator, ABC):
         """
 
         self.x_out = tf.keras.layers.BatchNormalization(
-            axis = -1,
-            momentum = self.decay,
-            epsilon = self.epsilon,
-            center = True,
-            scale = True,
-            renorm = self.batch_renorm,
-            renorm_clipping = {'rmin': self.rmin, 'rmax': self.rmax, 'dmax': self.dmax},
-            renorm_momentum = self.decay_renorm,
-            trainable = True)(self.x_out, training=self.is_training)
+            axis=-1,
+            momentum=self.decay,
+            epsilon=self.epsilon,
+            center=True,
+            scale=True,
+            renorm=self.batch_renorm,
+            renorm_clipping={'rmin': self.rmin, 'rmax': self.rmax, 'dmax': self.dmax},
+            renorm_momentum=self.decay_renorm,
+            trainable=True)(self.x_out, training=self.is_training)
 
     def _apply_act_funct(self) -> None:
 

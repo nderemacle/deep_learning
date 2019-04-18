@@ -33,50 +33,6 @@ class AbstractMlp(AbstractArchitecture, ABC):
     Attributes
     ----------
 
-        layer_size: Tuple
-            Number of neurons for each fully connected step.
-
-        input_dim: int, None
-            Number of input data.
-
-        output_dim: int, None
-            Number of target variable to predict.
-
-        act_funct: str, None
-            Name of the activation function. If None, no activation function is used.
-
-        keep_proba: float
-            Probability to keep a neuron activated during training.
-
-        batch_norm: bool
-            If True apply the batch normalization method.
-
-        batch_renorm: bool
-            If True apply the batch renormalization method.
-
-        penalization_rate : float
-            Penalization rate if regularization is used.
-
-        penalization_type: str, None
-            Indicates the type of penalization to use if not None.
-
-        law_name: str
-            Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
-
-        law_param: float
-            Law parameters dependent to the initialised law choose. If uniform, all tensor
-            elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
-            using a N(0, law_parameters).
-
-        decay: float
-            Decay used to update the moving average of the batch norm. The moving average is used to learn the
-            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
-
-        epsilon: float
-            Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
-
-        decay_renorm: float
-            Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
         x: tf.Tensor, None
             Input tensor of the network.
@@ -240,7 +196,10 @@ class AbstractMlp(AbstractArchitecture, ABC):
                                law_param=self.law_param,
                                decay=self.decay,
                                decay_renorm=self.decay_renorm,
-                               epsilon=self.epsilon))
+                               epsilon=self.epsilon,
+                               rmin=self.rmin,
+                               rmax=self.rmax,
+                               dmax=self.dmax))
 
             self.x_out = self.l_fc[-1].build(self.x_out)
             weights.append(self.l_fc[-1].w)
@@ -323,15 +282,10 @@ class AbstractMlp(AbstractArchitecture, ABC):
             for epoch in range(n_epoch):
                 np.random.shuffle(sample_index)
                 for batch_index in np.array_split(sample_index, n_split):
-                    _, loss = self.sess.run([self.optimizer, self.loss],
-                                            feed_dict={self.x: x[batch_index, :],
-                                                       self.y: y[batch_index, :],
-                                                       self.learning_rate: learning_rate,
-                                                       self.keep_proba_tensor: self.keep_proba,
-                                                       self.rmin: rmin,
-                                                       self.rmax: rmax,
-                                                       self.dmax: dmax,
-                                                       self.is_training: True})
+                    feed_dict = self._get_feed_dict(True, learning_rate, self.keep_proba, rmin, rmax, dmax)
+                    feed_dict.update({self.x: x[batch_index, :], self.y: y[batch_index, :]})
+                    _, loss = self.sess.run([self.optimizer, self.loss], feed_dict=feed_dict)
+
                     m_loss *= n
                     m_loss += loss
                     n += 1
@@ -369,10 +323,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
         with self.graph.as_default():
             y_predict = []
             for x_batch in [x] if batch_size is None else np.array_split(x, n_split, axis=0):
-                y_predict.append(self.sess.run(self.y_pred,
-                                               feed_dict={self.x: x_batch,
-                                                          self.keep_proba_tensor: 1.,
-                                                          self.is_training: False}))
+                feed_dict = self._get_feed_dict(is_training=False, keep_proba=1.)
+                feed_dict.update({self.x: x_batch})
+                y_predict.append(self.sess.run(self.y_pred, feed_dict=feed_dict))
 
             return np.concatenate(y_predict, 0)
 
@@ -426,51 +379,6 @@ class MlpClassifier(AbstractMlp):
 
     Attributes
     ----------
-
-        layer_size: Sequence[int]
-            Number of neurons for each fully connected step.
-
-        input_dim: int, None
-            Number of input data.
-
-        output_dim: int, None
-            Number of target variable to predict.
-
-        act_funct: str, None
-            Name of the activation function. If None, no activation function are used.
-
-        keep_proba: float
-            Probability to keep a neuron activate during training.
-
-        batch_norm: bool
-            If True apply the batch normalization method.
-
-        batch_renorm: bool
-            If True apply the batch renormalization method.
-
-        penalization_rate : float
-            Penalization rate if regularization is used.
-
-        penalization_type: str, None
-            Indicates the type of penalization to use if not None.
-
-        law_name: str
-            Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
-
-        law_params: float
-            Law parameters dependent to the initialised law choose. If uniform, all tensor
-            elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
-            using a N(0, law_parameters).
-
-        decay: float
-            Decay used to update the moving average of the batch norm. The moving average is used to learn the
-            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
-
-        epsilon: float
-            Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
-
-        decay_renorm: float
-            Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
         x: tf.Tensor, None
             Input tensor of the network.
@@ -551,10 +459,9 @@ class MlpClassifier(AbstractMlp):
         with self.graph.as_default():
             y_pred = []
             for x_batch in [x] if batch_size is None else np.array_split(x, n_split, axis=0):
-                y_pred.append(self.sess.run(self.x_out,
-                                            feed_dict={self.x: x_batch,
-                                                       self.keep_proba_tensor: 1.,
-                                                       self.is_training: False}))
+                feed_dict = self._get_feed_dict(is_training=False, keep_proba=1.)
+                feed_dict.update({self.x: x_batch})
+                y_pred.append(self.sess.run(self.x_out, feed_dict=feed_dict))
 
             y_pred = np.exp(np.concatenate(y_pred, 0))
 
@@ -578,51 +485,6 @@ class MlpRegressor(AbstractMlp):
 
     Attributes
     ----------
-
-        layer_size: Sequence[int]
-            Number of neurons for each fully connected step.
-
-        input_dim: int, None
-            Number of input data.
-
-        output_dim: int, None
-            Number of target variable to predict.
-
-        act_funct: str, None
-            Name of the activation function. If None, no activation function is used.
-
-        keep_proba: float
-            Probability to keep a neuron activated during training.
-
-        batch_norm: bool
-            If True apply the batch normalization method.
-
-        batch_renorm: bool
-            If True apply the batch renormalization method.
-
-        penalization_rate : float
-            Penalization rate if regularization is used.
-
-        penalization_type: str, None
-            Indicates the type of penalization to use if not None.
-
-        law_name: str
-            Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
-
-        law_param: float
-            Law parameters dependent to the initialised law choose. If uniform, all tensor
-            elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
-            using a N(0, law_parameters).
-
-        decay: float
-            Decay used to update the moving average of the batch norm. The moving average is used to learn the
-            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
-
-        epsilon: float
-            Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
-
-        decay_renorm: float
-            Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
         x: tf.Tensor, None
             Input tensor of the network.

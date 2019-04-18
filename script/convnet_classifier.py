@@ -25,7 +25,7 @@ def main():
     clf = ConvNetClassifier(name="MNIST_Classifier", use_gpu=False)
 
     conv_params = [
-        {"type": "CONV", "shape": (3, 3, 16), "stride": (1, 1), "padding": "VALID", "add_bias": False,
+        {"type": "CONV", "shape": (3, 3, 16), "stride": (2, 2), "padding": "VALID", "add_bias": True,
          "act_funct": None,
          "dilation": None}
     ]
@@ -35,11 +35,11 @@ def main():
               output_dim=10,
               act_funct='relu',
               keep_proba=0.8,
-              batch_norm=False,
-              batch_renorm=False,
+              batch_norm=True,
+              batch_renorm=True,
               law_name='uniform',
               law_param=1e-2,
-              penalization_rate=0.01,
+              penalization_rate=0.,
               penalization_type='L2',
               optimizer_name="Adam",
               decay=0.99,
@@ -49,7 +49,7 @@ def main():
     print("First training begin:")
     clf.fit(x=x_train,
             y=one_hot_encoding(y_train),
-            n_epoch=2,
+            n_epoch=5,
             batch_size=32,
             learning_rate=1e-2,
             rmin=1,
@@ -75,7 +75,7 @@ def main():
     print("Second training begin:")
     clf.fit(x=x_train,
             y=one_hot_encoding(y_train),
-            n_epoch=10,
+            n_epoch=5,
             batch_size=32,
             learning_rate=1e-3,
             rmin=1 / 3,

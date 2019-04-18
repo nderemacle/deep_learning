@@ -21,21 +21,6 @@ class AbstractConvNet(AbstractArchitecture, ABC):
     The abstract schema assume the child class must define the methods to set the loss function. In ths way it is simple
     to enlarge this architecture to many types of problem.
 
-    The class allows to chains different type of filtering operators ordered inside the ``conv_params`` class
-    attributes. Each step can be set using a dictionary of parameters. All dictionary have at least a key ``type``
-    informing about the type of step to use: ``CONV``, ``MAXPOOL`` or ``INCEPTION``. Their parameters are the following:
-
-        * type = ``CONV``:
-
-            * **shape**: (Tuple[int]) - Tuple of filter shape (height, width, filter).
-            * **stride**: (Tuple[int]) - Tuple indicating the strides to use (heights, width).
-            * **padding**: (str) -  The padding method to use "SAME" or "VALID".
-            * **add_bias**: (bool) -  Use a bias or not.
-            * **act_funct**: (None, str) -  Name of the activation function to use. If None, no activation function
-              is used.
-            * **dilation**: (None, Tuple[int]) - Tuple indicating the dilation level to use (heights, width).
-              If None no dilation is used.
-
     Args
     ----
 
@@ -48,54 +33,6 @@ class AbstractConvNet(AbstractArchitecture, ABC):
 
     Attributes
     ----------
-        conv_params: Sequence[Dict[str, Any]]
-            Sequence containing all parameters of all convolution step. See the class description for details.
-
-        fc_size: Sequence[int]
-            Number of neurons for each fully connected step.
-
-        input_dim: Sequence[int], None
-            3D input shape which must be (heights, width, channel).
-
-        output_dim: int, None
-            Number of target variable to predict.
-
-        act_funct: str, None
-            Name of the activation function used for the fully connected layer. If None, no activation function is used.
-
-        keep_proba: float
-            Probability to keep a neuron activated during training.
-
-        batch_norm: bool
-            If True apply the batch normalization method.
-
-        batch_renorm: bool
-            If True apply the batch renormalization method.
-
-        penalization_rate : float
-            Penalization rate if regularization is used.
-
-        penalization_type: str, None
-            Indicates the type of penalization to use if not None.
-
-        law_name: str
-            Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
-
-        law_param: float
-            Law parameters dependent to the initialised law choose. If uniform, all tensor
-            elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
-            using a N(0, law_parameters).
-
-        decay: float
-            Decay used to update the moving average of the batch norm. The moving average is used to learn the
-            empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
-
-        epsilon: float
-            Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
-
-        decay_renorm: float
-            Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
-
         x: tf.Tensor, None
             Input tensor of the network.
 
@@ -160,16 +97,28 @@ class AbstractConvNet(AbstractArchitecture, ABC):
               decay_renorm: float = 0.99, epsilon: float = 0.001, penalization_rate: float = 0.,
               penalization_type: Union[str, None] = None, optimizer_name: str = "Adam") -> None:
 
-        """
-        Build the network architecture.
+        """Build the network architecture.
 
-        TODO: Solve problem Batch Norm
+        The class allows to chains different type of filtering operators ordered inside the ``conv_params`` class
+        attributes. Each step can be set using a dictionary of parameters. All dictionary have at least a key ``type``
+        informing about the type of step to use: ``CONV``, ``MAXPOOL`` or ``INCEPTION``. Their parameters are the following:
+
+            * type = ``CONV``:
+
+                * **shape**: (Tuple[int]) - Tuple of filter shape (height, width, filter).
+                * **stride**: (Tuple[int]) - Tuple indicating the strides to use (heights, width).
+                * **padding**: (str) -  The padding method to use "SAME" or "VALID".
+                * **add_bias**: (bool) -  Use a bias or not.
+                * **act_funct**: (None, str) -  Name of the activation function to use. If None, no activation function
+                  is used.
+                * **dilation**: (None, Tuple[int]) - Tuple indicating the dilation level to use (heights, width).
+                  If None no dilation is used.
 
         Args
         ----
 
             conv_params: Sequence[Dict[str, Any]]
-                Sequence containing all parameters of all convolution step. See the class description for details.
+                Sequence containing all parameters of all convolution step. See description above for details.
 
             fc_size: Sequence[int]
                 Number of neurons for each fully connected step.
@@ -302,7 +251,10 @@ class AbstractConvNet(AbstractArchitecture, ABC):
                                law_param=self.law_param,
                                decay=self.decay,
                                decay_renorm=self.decay_renorm,
-                               epsilon=self.epsilon))
+                               epsilon=self.epsilon,
+                               rmin=self.rmin,
+                               rmax=self.rmax,
+                               dmax=self.dmax))
 
             self.x_out = self.l_fc[-1].build(self.x_out)
             weights.append(self.l_fc[-1].w)
@@ -385,15 +337,10 @@ class AbstractConvNet(AbstractArchitecture, ABC):
             for epoch in range(n_epoch):
                 np.random.shuffle(sample_index)
                 for batch_index in np.array_split(sample_index, n_split):
-                    _, loss = self.sess.run([self.optimizer, self.loss],
-                                            feed_dict={self.x: x[batch_index, ...],
-                                                       self.y: y[batch_index, ...],
-                                                       self.learning_rate: learning_rate,
-                                                       self.keep_proba_tensor: self.keep_proba,
-                                                       self.rmin: rmin,
-                                                       self.rmax: rmax,
-                                                       self.dmax: dmax,
-                                                       self.is_training: True})
+                    feed_dict = self._get_feed_dict(True, learning_rate, self.keep_proba, rmin, rmax, dmax)
+                    feed_dict.update({self.x: x[batch_index, ...], self.y: y[batch_index, ...]})
+                    _, loss = self.sess.run([self.optimizer, self.loss], feed_dict=feed_dict)
+
                     m_loss *= n
                     m_loss += loss
                     n += 1
@@ -431,10 +378,9 @@ class AbstractConvNet(AbstractArchitecture, ABC):
         with self.graph.as_default():
             y_predict = []
             for x_batch in [x] if batch_size is None else np.array_split(x, n_split, axis=0):
-                y_predict.append(self.sess.run(self.y_pred,
-                                               feed_dict={self.x: x_batch,
-                                                          self.keep_proba_tensor: 1.,
-                                                          self.is_training: False}))
+                feed_dict = self._get_feed_dict(is_training=False, keep_proba=1.)
+                feed_dict.update({self.x: x_batch})
+                y_predict.append(self.sess.run(self.y_pred, feed_dict=feed_dict))
 
             return np.concatenate(y_predict, 0)
 
@@ -478,21 +424,6 @@ class ConvNetClassifier(AbstractConvNet):
        inception steps. In the end data are used as input of a series of fully connected layer in order to solve the
        prediction task.
 
-       The class allows to chains different type of filtering operators ordered inside the ``conv_params`` class
-       attributes. Each step can be set using a dictionary of parameters. All dictionary have at least a key ``type``
-       informing about the type of step to use: ``CONV``, ``MAXPOOL`` or ``INCEPTION``. Their parameters are the following:
-
-           * type = ``CONV``:
-
-               * **shape**: (Tuple[int, int, int]) - Tuple of filter shape (height, width, filter).
-               * **stride**: (Tuple[int, int]) - Tuple indicating the strides to use (heights, width).
-               * **padding**: (str) -  The padding method to use "SAME" or "VALID".
-               * **add_bias**: (bool) -  Use a bias or not.
-               * **act_funct**: (None, str) -  Name of the activation function to use. If None, no activation function
-                 is used.
-               * **dilation**: (None, Tuple[int, int]) - Tuple indicating the dilation level to use (heights, width).
-                 If None no dilation is used.
-
        Args
        ----
 
@@ -505,53 +436,6 @@ class ConvNetClassifier(AbstractConvNet):
 
        Attributes
        ----------
-           conv_params: Sequence[Dict[str, Any]]
-               Sequence containing all parameters of all convolution step. See the class description for details.
-
-           fc_size: Sequence[int]
-               Number of neurons for each fully connected step.
-
-           input_dim: Sequence[int], None
-               3D input shape which must be (heights, width, channel).
-
-           output_dim: int, None
-               Number of target variable to predict.
-
-           act_funct: str, None
-               Name of the activation function used for the fully connected layer. If None, no activation function is used.
-
-           keep_proba: float
-               Probability to keep a neuron activated during training.
-
-           batch_norm: bool
-               If True apply the batch normalization method.
-
-           batch_renorm: bool
-               If True apply the batch renormalization method.
-
-           penalization_rate : float
-               Penalization rate if regularization is used.
-
-           penalization_type: str, None
-               Indicates the type of penalization to use if not None.
-
-           law_name: str
-               Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
-
-           law_param: float
-               Law parameters dependent to the initialised law choose. If uniform, all tensor
-               elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
-               using a N(0, law_parameters).
-
-           decay: float
-               Decay used to update the moving average of the batch norm. The moving average is used to learn the
-               empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
-
-           epsilon: float
-               Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
-
-           decay_renorm: float
-               Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
            x: tf.Tensor, None
                Input tensor of the network.
@@ -632,10 +516,9 @@ class ConvNetClassifier(AbstractConvNet):
         with self.graph.as_default():
             y_pred = []
             for x_batch in [x] if batch_size is None else np.array_split(x, n_split, axis=0):
-                y_pred.append(self.sess.run(self.x_out,
-                                            feed_dict={self.x: x_batch,
-                                                       self.keep_proba_tensor: 1.,
-                                                       self.is_training: False}))
+                feed_dict = self._get_feed_dict(is_training=False, keep_proba=1.)
+                feed_dict.update({self.x: x_batch})
+                y_pred.append(self.sess.run(self.x_out, feed_dict=feed_dict))
 
             y_pred = np.exp(np.concatenate(y_pred, 0))
 
@@ -649,21 +532,6 @@ class ConvNetRegressor(AbstractConvNet):
     inception steps. In the end data are used as input of a series of fully connected layer in order to solve the
     prediction task.
 
-    The class allows to chains different type of filtering operators ordered inside the ``conv_params`` class
-    attributes. Each step can be set using a dictionary of parameters. All dictionary have at least a key ``type``
-    informing about the type of step to use: ``CONV``, ``MAXPOOL`` or ``INCEPTION``. Their parameters are the following:
-
-       * type = ``CONV``:
-
-           * **shape**: (Tuple[int, int, int]) - Tuple of filter shape (height, width, filter).
-           * **stride**: (Tuple[int, int]) - Tuple indicating the strides to use (heights, width).
-           * **padding**: (str) -  The padding method to use "SAME" or "VALID".
-           * **add_bias**: (bool) -  Use a bias or not.
-           * **act_funct**: (None, str) -  Name of the activation function to use. If None, no activation function
-             is used.
-           * **dilation**: (None, Tuple[int, int]) - Tuple indicating the dilation level to use (heights, width).
-             If None no dilation is used.
-
     Args
     ----
 
@@ -676,53 +544,6 @@ class ConvNetRegressor(AbstractConvNet):
 
     Attributes
     ----------
-       conv_params: Sequence[Dict[str, Any]]
-           Sequence containing all parameters of all convolution step. See the class description for details.
-
-       fc_size: Sequence[int]
-           Number of neurons for each fully connected step.
-
-       input_dim: Sequence[int], None
-           3D input shape which must be (heights, width, channel).
-
-       output_dim: int, None
-           Number of target variable to predict.
-
-       act_funct: str, None
-           Name of the activation function used for the fully connected layer. If None, no activation function is used.
-
-       keep_proba: float
-           Probability to keep a neuron activated during training.
-
-       batch_norm: bool
-           If True apply the batch normalization method.
-
-       batch_renorm: bool
-           If True apply the batch renormalization method.
-
-       penalization_rate : float
-           Penalization rate if regularization is used.
-
-       penalization_type: str, None
-           Indicates the type of penalization to use if not None.
-
-       law_name: str
-           Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
-
-       law_param: float
-           Law parameters dependent to the initialised law choose. If uniform, all tensor
-           elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
-           using a N(0, law_parameters).
-
-       decay: float
-           Decay used to update the moving average of the batch norm. The moving average is used to learn the
-           empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
-
-       epsilon: float
-           Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
-
-       decay_renorm: float
-           Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
        x: tf.Tensor, None
            Input tensor of the network.

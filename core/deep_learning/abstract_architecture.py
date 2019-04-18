@@ -106,9 +106,9 @@ class AbstractArchitecture(ABC):
         self.learning_rate = self._placeholder(tf.float32, None, name="learning_rate")
         self.keep_proba_tensor = self._placeholder(tf.float32, None, name="keep_proba_tensor")
         self.is_training = self._placeholder(tf.bool, None, name="is_training")
-        self.rmax = self._placeholder(tf.float32, None, name="rmax")
-        self.rmin = self._placeholder(tf.float32, None, name="rmin")
-        self.dmax = self._placeholder(tf.float32, None, name="dmax")
+        self.rmax = self._placeholder(tf.float32, 1, name="rmax")
+        self.rmin = self._placeholder(tf.float32, 1, name="rmin")
+        self.dmax = self._placeholder(tf.float32, 1, name="dmax")
 
     def build(self, **kwargs: Any) -> None:
 
@@ -130,6 +130,43 @@ class AbstractArchitecture(ABC):
             with tf.name_scope(self.name + "/"):
                 self._build()
                 self.sess.run(tf.initializers.global_variables())
+
+    def _get_feed_dict(self, is_training: bool, learning_rate: float = 1, keep_proba: float = 1., rmin: float = 1.,
+                       rmax: float = 1., dmax: float = 0.) -> Dict[tf.Tensor, Any]:
+        """
+        Return a initialize feed_dict with all network parameters correctly set.
+
+        Args
+        ----
+
+            is_training: bool
+                Indicated whether the feedict is in training or in inference.
+
+            learning_rate: bool
+                Learning_rate to use duting training.
+
+            keep_proba: bool
+                Probability to let a neurons activate.
+
+            dmax: float
+                Tensor used to clip the batch renormalization scale parameter.
+
+            rmin: float
+                Lower bound used to clip the batch renormalization shift parameter.
+
+            rmax: float
+                Upper bound used to clip the batch renormalization shift parameter.
+
+        Returns
+        -------
+
+            Dict[tf.Tensor, Any]
+                Feed dictionary with all neural network tensor correctly set.
+
+        """
+
+        return {self.keep_proba_tensor: keep_proba, self.rmin: (rmin,), self.rmax: (rmax,), self.dmax: (dmax,),
+                self.is_training: is_training, self.learning_rate: learning_rate}
 
     @abstractmethod
     def fit(self, **kwargs: Any) -> None:
@@ -298,7 +335,7 @@ class AbstractArchitecture(ABC):
             with tf.control_dependencies(update_ops):
                 return get_optimizer(self.optimizer_name, self.learning_rate).minimize(f, name=name)
 
-    def _placeholder(self, dtype: tf.DType, shape: Union[Sequence[int], None], name: str) -> tf.placeholder:
+    def _placeholder(self, dtype: tf.DType, shape: Union[Sequence[int], int, None], name: str) -> tf.placeholder:
 
         """
         Set or restore a placeholder.
@@ -309,7 +346,7 @@ class AbstractArchitecture(ABC):
             dtype : tf.DType
                 Type of the placeholder.
 
-            shape : Sequence[int], None
+            shape : Sequence[int], int, None
                 Size of the placeholder.
 
             name : str
@@ -327,4 +364,7 @@ class AbstractArchitecture(ABC):
             return get_tf_tensor(name, self.graph)
         else:
             is_not_in_graph(name, self.graph)
-            return tf.placeholder(dtype, shape, name)
+            if shape is None:
+                return tf.placeholder(dtype, name=name)
+            else:
+                return tf.placeholder(dtype, shape, name)
