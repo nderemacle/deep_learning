@@ -30,8 +30,8 @@ class FullyConnected(AbstractLayer):
        act_funct: str, None
            name of the activation function to use. If None, no activation function is used.
 
-       keep_proba: (tf.Tensor, float)
-           Probability to keep a neuron activated during training.
+       dropout: bool
+            Whether to use dropout or not.
 
        batch_norm: bool
             If True apply the batch normalization method.
@@ -50,6 +50,9 @@ class FullyConnected(AbstractLayer):
 
        law_param: float
             Parameter of the law used to initialized weight. This parameter is law_name dependent.
+
+       keep_proba: (tf.Tensor, float)
+            Probability to keep a neuron activated during training.
 
        decay: float
             Decay used to update the moving average of the batch norm. The moving average is used to learn the
@@ -82,22 +85,23 @@ class FullyConnected(AbstractLayer):
 
     def __init__(self,
                  size: int,
-                 act_funct: Union[str, None] = "relu",
-                 keep_proba: Union[tf.Tensor, float] = 1.,
+                 act_funct: Union[str, None] = None,
+                 dropout: bool = False,
                  batch_norm: bool = False,
                  batch_renorm: bool = False,
                  is_training: Union[tf.Tensor, None] = None,
                  name: str = "fc",
                  law_name: str = "uniform",
                  law_param: float = 0.1,
+                 keep_proba: Union[tf.Tensor, float, None] = None,
                  decay: float = 0.99,
                  epsilon: float = 0.001,
                  decay_renorm: float = 0.99,
                  rmin: Union[tf.Tensor, float] = 0.33,
                  rmax: Union[tf.Tensor, float] = 3,
                  dmax: Union[tf.Tensor, float] = 5):
-        super().__init__(act_funct, keep_proba, batch_norm, batch_renorm, is_training, law_name, law_param, decay,
-                         epsilon, decay_renorm, rmin, rmax, dmax, name)
+        super().__init__(act_funct, dropout, batch_norm, batch_renorm, is_training, law_name, law_param, keep_proba,
+                         decay, epsilon, decay_renorm, rmin, rmax, dmax, name)
 
         self.size = size
         self.w: Union[tf.Variable, None] = None
@@ -205,8 +209,8 @@ class Conv1d(AbstractLayer):
         act_funct: str, None
             Name of the activation function to use. If None no activation function are used.
 
-        keep_proba: float, tf.Tensor
-            Probability to keep a neuron activate during training if we want to apply the dropout method.
+        dropout: bool
+            Whether to use dropout or not.
 
         batch_norm: bool
             If True apply the batch normalization after the _operator methods.
@@ -225,6 +229,9 @@ class Conv1d(AbstractLayer):
 
         law_param: float
             Parameter of the initialization law.
+
+        keep_proba: float, tf.Tensor
+            Probability to keep a neuron activate during training if we want to apply the dropout method.
 
         decay: tf.Tensor, float
             Decay used to update the moving average of the batch norm. The moving average is used to learn the
@@ -263,13 +270,14 @@ class Conv1d(AbstractLayer):
                  padding: str = "VALID",
                  add_bias: bool = True,
                  act_funct: Union[str, None] = "relu",
-                 keep_proba: Union[tf.Tensor, float] = 1.,
+                 dropout: bool = False,
                  batch_norm: bool = False,
                  batch_renorm: bool = False,
                  is_training: Union[tf.Tensor, None] = None,
                  name: str = "conv1D",
                  law_name: str = "uniform",
                  law_param: float = 0.1,
+                 keep_proba: Union[tf.Tensor, float, None] = None,
                  decay: float = 0.99,
                  epsilon: float = 0.001,
                  decay_renorm: float = 0.99,
@@ -277,8 +285,8 @@ class Conv1d(AbstractLayer):
                  rmax: Union[tf.Tensor, float] = 3,
                  dmax: Union[tf.Tensor, float] = 5):
 
-        super().__init__(act_funct, keep_proba, batch_norm, batch_renorm, is_training, law_name, law_param, decay,
-                         epsilon, decay_renorm, rmin, rmax, dmax, name)
+        super().__init__(act_funct, dropout, batch_norm, batch_renorm, is_training, law_name, law_param, keep_proba,
+                         decay, epsilon, decay_renorm, rmin, rmax, dmax, name)
 
         assert padding in ["SAME", "VALID"]
 
@@ -387,7 +395,7 @@ class MinMax(AbstractLayer):
 
     def __init__(self, n_entries: int, name: str = "minmax"):
 
-        super().__init__(name=name, keep_proba=None, act_funct=None)
+        super().__init__(name=name)
 
         self.n_entries = n_entries
 
@@ -483,7 +491,7 @@ class Conv2d(AbstractLayer):
             Stride for the filter moving. The first element is the height stride whereas the second is the width stride.
 
         dilation: Tuple[int, int]
-            Number of positions skip between two filter entries. The first element is the height dialtion whereas the
+            Number of positions skip between two filter entries. The first element is the height dilation whereas the
             second is the width dilation. If None, no dilation is used.
 
         padding: str
@@ -496,8 +504,8 @@ class Conv2d(AbstractLayer):
         act_funct: str, None
             Name of the activation function to use. If None no activation function are used.
 
-        keep_proba: float, tf.Tensor
-            Probability to keep a neuron activate during training if we want to apply the dropout method.
+        dropout: bool
+            Whether to use dropout or not.
 
         batch_norm: bool
             If True apply the batch normalization after the _operator methods.
@@ -516,6 +524,9 @@ class Conv2d(AbstractLayer):
 
         law_param: float
             Parameter of the initialization law.
+
+         keep_proba: float, tf.Tensor
+            Probability to keep a neuron activate during training if we want to apply the dropout method.
 
         decay: tf.Tensor, float
             Decay used to update the moving average of the batch norm. The moving average is used to learn the
@@ -557,13 +568,14 @@ class Conv2d(AbstractLayer):
                  padding: str = "VALID",
                  add_bias: bool = False,
                  act_funct: Union[str, None] = None,
-                 keep_proba: Union[tf.Tensor, float] = 1.,
+                 dropout: bool = False,
                  batch_norm: bool = False,
                  batch_renorm: bool = False,
                  is_training: Union[tf.Tensor, None] = None,
                  name: str = "conv2D",
                  law_name: str = "uniform",
                  law_param: float = 0.1,
+                 keep_proba: Union[tf.Tensor, float, None] = None,
                  decay: float = 0.99,
                  epsilon: float = 0.001,
                  decay_renorm: float = 0.99,
@@ -571,8 +583,8 @@ class Conv2d(AbstractLayer):
                  rmax: Union[tf.Tensor, float] = 3,
                  dmax: Union[tf.Tensor, float] = 5):
 
-        super().__init__(act_funct, keep_proba, batch_norm, batch_renorm, is_training, law_name, law_param, decay,
-                         epsilon, decay_renorm, rmin, rmax, dmax, name)
+        super().__init__(act_funct, dropout, batch_norm, batch_renorm, is_training, law_name, law_param, keep_proba,
+                         decay, epsilon, decay_renorm, rmin, rmax, dmax, name)
 
         self.width = width
         self.height = height
@@ -669,4 +681,142 @@ class Conv2d(AbstractLayer):
         self.w = get_tf_tensor(name="w")
         if self.add_bias:
             self.b = get_tf_tensor(name="b")
+        super().restore()
+
+
+class Pool2d(AbstractLayer):
+    """
+    Build a two dimensional pooling layer. The pooling is an operator which aims to reduce the dimension of an image
+    without loss of relevant information. It can be view as a filter making aggregation of input at a local level.
+    In addition it allows to decrease noise and keep only the most relevant signals in the 2D input matrix.
+    During a convolution step the pooling operator allows the neural network to be invariant to short image
+    translation which increases the final accuracy.
+
+    The class allows to use the operator min, max and average.
+
+    Warnings
+    --------
+        Dilation is not available for pooling_type == ``ÀVG``.
+
+    Args
+    ----
+
+        width: int
+            Width of the filter.
+
+        height: int
+            height of the filter.
+
+        stride: Tuple[int, int]
+            Stride for the filter moving. The first element is the height stride whereas the second is the width stride.
+
+        padding: str
+            Padding can be SAME or VALID. If padding is SAME, apply padding to input so that input image gets fully
+            covered by filter and stride whereas VALID skip input not covered by the filter.
+
+        dilation: Tuple[int, int]
+            Number of positions skip between two filter entries. The first element is the height dilation whereas the
+            second is the width dilation. If None, no dilation is used.
+
+        name: str
+            Name of the layer.
+
+    Attributes
+    ----------
+
+        w : Variable with size (height, width, input_channel, n_filter)
+            Convolution weights variable.
+
+        b : Variable with size (n_filter,)
+            Convolution bias variable.
+
+
+    """
+
+    def __init__(self,
+                 width: int,
+                 height: int,
+                 stride: Tuple[int, int] = (1, 1),
+                 padding: str = "VALID",
+                 dilation: Union[Tuple[int, int], None] = None,
+                 pooling_type: str = "MAX",
+                 name: str = "Pool2D"):
+
+        super().__init__(name=name)
+
+        self.width = width
+        self.height = height
+        self.stride = stride
+        self.padding = padding
+        self.pooling_type = pooling_type
+        self.dilation = dilation
+
+    def _check_input(self) -> None:
+
+        """Assert the input input tensor is 4 dimensional."""
+
+        check_tensor(self.x, shape_dim=4)
+
+        if self.x.shape[1] < self.height:
+            raise (f"{self.name}: Input heights must be higher or equal to filter heights."
+                   f"Input heights {self.x.shape[1]}, filter heights {self.height}")
+
+        if self.x.shape[2] < self.width:
+            raise (f"{self.name}: Input heights must be higher or equal to filter heights."
+                   f"Input heights {self.x.shape[2]}, filter heights {self.width}")
+
+    def build(self,
+              x: tf.Tensor) -> tf.Tensor:
+
+        """
+        Build the MaxPool2d layer using the 4 dimensional input tensor x.
+
+        Args
+        ----
+
+            x: tf.Tensor
+                Input tensor filtered by the layer.
+
+        Returns
+        -------
+
+            tf.Tensor
+                Layer output Tensor.
+        """
+
+        return super().build(x)
+
+    def _operator(self) -> None:
+
+        ksize = (1, self.height, self.width, 1)
+        strides = (1, self.stride[0], self.stride[1], 1)
+        data_format = "NHWC"
+
+        self.x_out = tf.multiply(-1., self.x) if self.pooling_type == "MIN" else self.x
+
+        if self.pooling_type in ["MAX", "MIN"]:
+            if self.dilation is None:
+                self.x_out = tf.nn.max_pool(value=self.x_out, ksize=ksize, strides=strides, padding=self.padding,
+                                            data_format=data_format)
+            else:
+                dilation = (1, self.dilation[0] + 1, self.dilation[1] + 1, 1)
+                filter = np.zeros((self.height, self.width, self.x.shape[-1]))
+                self.x_out = tf.nn.dilation2d(input=self.x_out, filter=filter, strides=strides, rates=dilation,
+                                              padding=self.padding)
+        elif self.pooling_type == "AVG":
+            if self.dilation is None:
+                self.x_out = tf.nn.avg_pool(value=self.x_out, ksize=ksize, strides=strides, padding=self.padding,
+                                            data_format=data_format)
+            else:
+                raise TypeError("Dilation not implemented for pooling_type == 'AVG'.")
+        else:
+            list_type = ["MAX", "AVG", "MIN"]
+            raise TypeError(f"{self.pooling_type} isn't a valid pooling type. Pooling_type must be in {list_type}.")
+
+        self.x_out = tf.multiply(-1., self.x_out) if self.pooling_type == "MIN" else self.x_out
+
+    def restore(self) -> None:
+        """
+        Restore input/output tensor and all layer variables.
+        """
         super().restore()

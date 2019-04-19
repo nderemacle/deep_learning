@@ -47,7 +47,7 @@ class AbstractArchitecture(ABC):
         learning_rate: tf.Tensor
             Learnig rate tensor for optimization.
 
-        keep_proba_tensor: tf.Tensor
+        keep_proba: tf.Tensor
             Tensor for dropout methods.
 
         is_training: tf.Tensor
@@ -74,7 +74,7 @@ class AbstractArchitecture(ABC):
         self.learning_curve = []
 
         self.learning_rate: Union[tf.placeholder, None] = None
-        self.keep_proba_tensor: Union[tf.placeholder, None] = None
+        self.keep_proba: Union[tf.placeholder, None] = None
         self.is_training: Union[tf.placeholder, None] = None
         self.rmax: Union[tf.placeholder, None] = None
         self.rmin: Union[tf.placeholder, None] = None
@@ -104,7 +104,7 @@ class AbstractArchitecture(ABC):
         """Can be called to instance often used deep learning tensor."""
 
         self.learning_rate = self._placeholder(tf.float32, None, name="learning_rate")
-        self.keep_proba_tensor = self._placeholder(tf.float32, None, name="keep_proba_tensor")
+        self.keep_proba = self._placeholder(tf.float32, None, name="keep_proba_tensor")
         self.is_training = self._placeholder(tf.bool, None, name="is_training")
         self.rmax = self._placeholder(tf.float32, 1, name="rmax")
         self.rmin = self._placeholder(tf.float32, 1, name="rmin")
@@ -165,7 +165,7 @@ class AbstractArchitecture(ABC):
 
         """
 
-        return {self.keep_proba_tensor: keep_proba, self.rmin: (rmin,), self.rmax: (rmax,), self.dmax: (dmax,),
+        return {self.keep_proba: keep_proba, self.rmin: (rmin,), self.rmax: (rmax,), self.dmax: (dmax,),
                 self.is_training: is_training, self.learning_rate: learning_rate}
 
     @abstractmethod

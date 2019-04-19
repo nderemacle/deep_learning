@@ -68,7 +68,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.output_dim: Union[int, None] = None
         self.act_funct: str = 'relu'
 
-        self.keep_proba: float = 1.
+        self.dropout: bool = False
         self.batch_norm: bool = False
         self.batch_renorm: bool = False
         self.penalization_rate: float = 0.
@@ -91,7 +91,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
         self.l_loss: Union[AbstractLoss, None] = None
 
     def build(self, layer_size: Sequence[int], input_dim: int, output_dim: int, act_funct: Union[str, None] = "relu",
-              keep_proba: float = 1., law_name: str = "uniform", law_param: float = 0.1, batch_norm: bool = False,
+              law_name: str = "uniform", law_param: float = 0.1, dropout: bool = True, batch_norm: bool = False,
               batch_renorm: bool = False, decay: float = 0.999, decay_renorm: float = 0.99, epsilon: float = 0.001,
               penalization_rate: float = 0., penalization_type: Union[str, None] = None,
               optimizer_name: str = "Adam") -> None:
@@ -114,14 +114,14 @@ class AbstractMlp(AbstractArchitecture, ABC):
             act_funct: str, None
                 Name of the activation function. If None, no activation function is used.
 
-            keep_proba: float
-                Probability to keep a neuron activated during training.
-
             batch_norm: bool
                 If True apply the batch normalization method.
 
             batch_renorm: bool
                 If True apply the batch renormalization method.
+
+            dropout: bool
+                Whether to use dropout or not.
 
             penalization_rate : float
                 Penalization rate if regularization is used.
@@ -156,9 +156,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
                       input_dim=input_dim,
                       output_dim=output_dim,
                       act_funct=act_funct,
-                      keep_proba=keep_proba,
                       law_name=law_name,
                       law_param=law_param,
+                      dropout=dropout,
                       batch_norm=batch_norm,
                       batch_renorm=batch_renorm,
                       decay=decay,
@@ -169,9 +169,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
                       optimizer_name=optimizer_name)
 
     def _build(self) -> None:
-        """Build the MLP Network architecture."""
 
-        # Define learning rate and drop_out tensor
+        """Build the MLP Network architecture."""
         super()._build()
 
         # Define input and target tensor
@@ -187,7 +186,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
             self.l_fc.append(
                 FullyConnected(size=s,
                                act_funct=self.act_funct,
-                               keep_proba=self.keep_proba_tensor,
+                               keep_proba=self.keep_proba,
+                               dropout=self.dropout,
                                batch_norm=self.batch_norm,
                                batch_renorm=self.batch_renorm,
                                is_training=self.is_training,
@@ -207,8 +207,6 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
         # Define the final output layer
         self.l_output = FullyConnected(size=self.output_dim,
-                                       act_funct=None,
-                                       keep_proba=1.,
                                        name=f"OutputLayer",
                                        law_name=self.law_name,
                                        law_param=self.law_param)
@@ -232,8 +230,8 @@ class AbstractMlp(AbstractArchitecture, ABC):
         raise NotImplementedError
 
     def fit(self, x: np.ndarray, y: np.ndarray, n_epoch: int = 1, batch_size: int = 10,
-            learning_rate: float = 0.001, rmax: float = 3., rmin: float = 0.33, dmax: float = 5,
-            verbose: bool = True) -> None:
+            learning_rate: float = 0.001, keep_proba: float = 1., rmax: float = 3.,
+            rmin: float = 0.33, dmax: float = 5, verbose: bool = True) -> None:
 
         """ Fit the MLP ``n_epoch`` using the ``x`` and ``y`` array of observations.
 
@@ -254,6 +252,9 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
             learning_rate: float
                 Learning rate use for gradient descent methodologies.
+
+            keep_proba: float
+                Probability to keep a neurone activate during training.
 
             rmin: float
                 Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.
@@ -282,7 +283,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
             for epoch in range(n_epoch):
                 np.random.shuffle(sample_index)
                 for batch_index in np.array_split(sample_index, n_split):
-                    feed_dict = self._get_feed_dict(True, learning_rate, self.keep_proba, rmin, rmax, dmax)
+                    feed_dict = self._get_feed_dict(True, learning_rate, keep_proba, rmin, rmax, dmax)
                     feed_dict.update({self.x: x[batch_index, :], self.y: y[batch_index, :]})
                     _, loss = self.sess.run([self.optimizer, self.loss], feed_dict=feed_dict)
 
@@ -346,7 +347,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
             'input_dim': self.input_dim,
             'output_dim': self.output_dim,
             'act_funct': self.act_funct,
-            'keep_proba': self.keep_proba,
+            'dropout': self.dropout,
             'batch_norm': self.batch_norm,
             'batch_renorm': self.batch_renorm,
             'law_name': self.law_name,

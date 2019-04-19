@@ -5,7 +5,7 @@ import numpy as np
 import tensorflow as tf
 
 import core.deep_learning.env as env
-from core.deep_learning.layer import AbstractLayer, FullyConnected, Conv1d, MinMax, Conv2d
+from core.deep_learning.layer import AbstractLayer, FullyConnected, Conv1d, MinMax, Conv2d, Pool2d
 
 # 2d and 3d array for testing
 X_2d = np.array([
@@ -172,13 +172,12 @@ class TestConv2dLayer(tf.test.TestCase):
             w = np.ones((2, 2, 3, 1)).astype(np.float32)
             b = np.ones(1).astype(np.float32)
 
-            layer = Conv2d(width=3, height=3, filter=1, stride=(1, 1), dilation=(1, 1), padding="VALID",
+            layer = Conv2d(width=3, height=3, filter=1, stride=(1, 2), dilation=(1, 1), padding="VALID",
                            add_bias=True, act_funct=None, name="TestOpDilation")
             layer.w = w
             layer.b = b
 
-            expected_output = np.ones((10, 30, 30, 1)) * 13
-            expected_output[:, 0, 1, 0] = 14
+            expected_output = np.ones((10, 30, 15, 1)) * 13
 
             test_operator(self, sess, layer, X, expected_output)
 
@@ -187,6 +186,64 @@ class TestConv2dLayer(tf.test.TestCase):
         layer = Conv2d(width=1, height=1, filter=1, stride=(1, 1), dilation=None, padding="VALID",
                        add_bias=True, act_funct=None, name="TestRestore")
         test_restore(self, layer, [None, 16, 16, 3], ["w", "b", "x", "x_out"])
+
+
+class TestPool2D(tf.test.TestCase):
+
+    def test_operator_min_max(self):
+        # Simple Conv2d MAX
+        with self.test_session() as sess:
+            X = np.ones((10, 32, 32, 1)).astype(np.float32)
+            X[0, 0, 0, 0] = 10
+
+            layer = Pool2d(width=3, height=3, stride=(1, 1), dilation=None, padding="VALID",
+                           pooling_type="MAX", name="TestOp")
+
+            expected_output = np.ones((10, 30, 30, 1))
+            expected_output[0, 0, 0, 0] = 10
+
+            test_operator(self, sess, layer, X, expected_output)
+
+        # Simple Conv2d MIN
+        with self.test_session() as sess:
+            X = np.ones((10, 32, 32, 1)).astype(np.float32)
+            X[0, 0, 0, 0] = 10
+
+            layer = Pool2d(width=3, height=3, stride=(1, 1), dilation=None, padding="VALID",
+                           pooling_type="MIN", name="TestOp")
+
+            expected_output = np.ones((10, 30, 30, 1))
+
+            test_operator(self, sess, layer, X, expected_output)
+
+        # with dilation
+        with self.test_session() as sess:
+            X = np.ones((10, 32, 32, 1)).astype(np.float32)
+            X[:, 0, 1, 0] = 2
+
+            layer = Pool2d(width=3, height=3, stride=(1, 2), dilation=(1, 1), padding="VALID",
+                           pooling_type="MAX", name="TestDilation")
+
+            expected_output = np.ones((10, 28, 14, 1))
+
+            test_operator(self, sess, layer, X, expected_output)
+
+    def test_operator_avg(self):
+        # Simple Conv2d AVG
+        with self.test_session() as sess:
+            X = np.ones((10, 32, 32, 1)).astype(np.float32)
+
+            layer = Pool2d(width=3, height=3, stride=(1, 1), dilation=None, padding="VALID",
+                           pooling_type="AVG", name="TestOp")
+
+            expected_output = np.ones((10, 30, 30, 1))
+
+            test_operator(self, sess, layer, X, expected_output)
+
+    def test_restore(self):
+        layer = Pool2d(width=3, height=3, stride=(1, 1), dilation=None, padding="VALID",
+                       pooling_type="MAX", name="TestRestore")
+        test_restore(self, layer, [None, 16, 16, 3], ["x", "x_out"])
 
 
 if __name__ == '__main__':

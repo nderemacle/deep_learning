@@ -25,20 +25,21 @@ def main():
     clf = ConvNetClassifier(name="MNIST_Classifier", use_gpu=False)
 
     conv_params = [
-        {"type": "CONV", "shape": (3, 3, 16), "stride": (2, 2), "padding": "VALID", "add_bias": True,
-         "act_funct": None,
-         "dilation": None}
+        {"type": "CONV", "shape": (5, 5, 32), "stride": (2, 2), "padding": "VALID", "add_bias": True,
+         "act_funct": None, "dilation": None},
+        {"type": "POOL", "shape": (5, 5), "stride": (2, 2), "padding": "VALID", "dilation": None,
+         "pooling_type": "MAX"}
     ]
     clf.build(conv_params=conv_params,
-              fc_size=(128, 128),
+              fc_size=(64, 128),
               input_dim=(28, 28, 1),
               output_dim=10,
               act_funct='relu',
-              keep_proba=0.8,
-              batch_norm=True,
-              batch_renorm=True,
+              dropout=False,
+              batch_norm=False,
+              batch_renorm=False,
               law_name='uniform',
-              law_param=1e-2,
+              law_param=1e-3,
               penalization_rate=0.,
               penalization_type='L2',
               optimizer_name="Adam",
@@ -49,9 +50,10 @@ def main():
     print("First training begin:")
     clf.fit(x=x_train,
             y=one_hot_encoding(y_train),
-            n_epoch=5,
+            n_epoch=2,
             batch_size=32,
-            learning_rate=1e-2,
+            learning_rate=1e-3,
+            keep_proba=0.8,
             rmin=1,
             rmax=1,
             dmax=0,
@@ -75,9 +77,10 @@ def main():
     print("Second training begin:")
     clf.fit(x=x_train,
             y=one_hot_encoding(y_train),
-            n_epoch=5,
+            n_epoch=10,
             batch_size=32,
             learning_rate=1e-3,
+            keep_proba=0.8,
             rmin=1 / 3,
             rmax=3,
             dmax=5,

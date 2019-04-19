@@ -211,7 +211,7 @@ future version.</li>
 </table>
 <dl class="method">
 <dt id="core.algo.MLP.AbstractMlp.build">
-<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.AbstractMlp.build" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>dropout=True</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.AbstractMlp.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the network architecture.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -222,9 +222,9 @@ future version.</li>
 <li><strong>input_dim</strong> (<em>int</em>) – Number of input data.</li>
 <li><strong>output_dim</strong> (<em>int</em>) – Number of target variable to predict.</li>
 <li><strong>act_funct</strong> (<em>str</em><em>, </em><em>None</em>) – Name of the activation function. If None, no activation function is used.</li>
-<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neuron activated during training.</li>
 <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply the batch normalization method.</li>
 <li><strong>batch_renorm</strong> (<em>bool</em>) – If True apply the batch renormalization method.</li>
+<li><strong>dropout</strong> (<em>bool</em>) – Whether to use dropout or not.</li>
 <li><strong>penalization_rate</strong> (<em>float</em>) – Penalization rate if regularization is used.</li>
 <li><strong>penalization_type</strong> (<em>None</em><em>, </em><em>str</em>) – Indicates the type of penalization to use if not None.</li>
 <li><strong>law_name</strong> (<em>str</em>) – Law of the random law to used. Must be “normal” for normal law or “uniform” for uniform law.</li>
@@ -248,7 +248,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 
 <dl class="method">
 <dt id="core.algo.MLP.AbstractMlp.fit">
-<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.AbstractMlp.fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>keep_proba=1.0</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.AbstractMlp.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the MLP <code class="docutils literal notranslate"><span class="pre">n_epoch</span></code> using the <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> array of observations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -260,6 +260,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <li><strong>n_epoch</strong> (<em>int</em>) – Number of epochs to train the neural network.</li>
 <li><strong>batch_size</strong> (<em>int</em>) – Number of observations to used for each backpropagation step.</li>
 <li><strong>learning_rate</strong> (<em>float</em>) – Learning rate use for gradient descent methodologies.</li>
+<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neurone activate during training.</li>
 <li><strong>rmin</strong> (<em>float</em>) – Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>rmax</strong> (<em>float</em>) – Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>dmax</strong> (<em>float</em>) – When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).</li>
@@ -411,7 +412,7 @@ mini-batch</p>
 
 <dl class="method">
 <dt id="core.algo.MLP.MlpClassifier.build">
-<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpClassifier.build" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>dropout=True</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpClassifier.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the network architecture.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -422,9 +423,9 @@ mini-batch</p>
 <li><strong>input_dim</strong> (<em>int</em>) – Number of input data.</li>
 <li><strong>output_dim</strong> (<em>int</em>) – Number of target variable to predict.</li>
 <li><strong>act_funct</strong> (<em>str</em><em>, </em><em>None</em>) – Name of the activation function. If None, no activation function is used.</li>
-<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neuron activated during training.</li>
 <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply the batch normalization method.</li>
 <li><strong>batch_renorm</strong> (<em>bool</em>) – If True apply the batch renormalization method.</li>
+<li><strong>dropout</strong> (<em>bool</em>) – Whether to use dropout or not.</li>
 <li><strong>penalization_rate</strong> (<em>float</em>) – Penalization rate if regularization is used.</li>
 <li><strong>penalization_type</strong> (<em>None</em><em>, </em><em>str</em>) – Indicates the type of penalization to use if not None.</li>
 <li><strong>law_name</strong> (<em>str</em>) – Law of the random law to used. Must be “normal” for normal law or “uniform” for uniform law.</li>
@@ -448,7 +449,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 
 <dl class="method">
 <dt id="core.algo.MLP.MlpClassifier.fit">
-<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpClassifier.fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>keep_proba=1.0</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpClassifier.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the MLP <code class="docutils literal notranslate"><span class="pre">n_epoch</span></code> using the <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> array of observations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -460,6 +461,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <li><strong>n_epoch</strong> (<em>int</em>) – Number of epochs to train the neural network.</li>
 <li><strong>batch_size</strong> (<em>int</em>) – Number of observations to used for each backpropagation step.</li>
 <li><strong>learning_rate</strong> (<em>float</em>) – Learning rate use for gradient descent methodologies.</li>
+<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neurone activate during training.</li>
 <li><strong>rmin</strong> (<em>float</em>) – Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>rmax</strong> (<em>float</em>) – Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>dmax</strong> (<em>float</em>) – When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).</li>
@@ -585,7 +587,7 @@ future version.</li>
 </table>
 <dl class="method">
 <dt id="core.algo.MLP.MlpRegressor.build">
-<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpRegressor.build" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build</code><span class="sig-paren">(</span><em>layer_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>dropout=True</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpRegressor.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the network architecture.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -596,9 +598,9 @@ future version.</li>
 <li><strong>input_dim</strong> (<em>int</em>) – Number of input data.</li>
 <li><strong>output_dim</strong> (<em>int</em>) – Number of target variable to predict.</li>
 <li><strong>act_funct</strong> (<em>str</em><em>, </em><em>None</em>) – Name of the activation function. If None, no activation function is used.</li>
-<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neuron activated during training.</li>
 <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply the batch normalization method.</li>
 <li><strong>batch_renorm</strong> (<em>bool</em>) – If True apply the batch renormalization method.</li>
+<li><strong>dropout</strong> (<em>bool</em>) – Whether to use dropout or not.</li>
 <li><strong>penalization_rate</strong> (<em>float</em>) – Penalization rate if regularization is used.</li>
 <li><strong>penalization_type</strong> (<em>None</em><em>, </em><em>str</em>) – Indicates the type of penalization to use if not None.</li>
 <li><strong>law_name</strong> (<em>str</em>) – Law of the random law to used. Must be “normal” for normal law or “uniform” for uniform law.</li>
@@ -622,7 +624,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 
 <dl class="method">
 <dt id="core.algo.MLP.MlpRegressor.fit">
-<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpRegressor.fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>keep_proba=1.0</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.MLP.MlpRegressor.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the MLP <code class="docutils literal notranslate"><span class="pre">n_epoch</span></code> using the <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> array of observations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -634,6 +636,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <li><strong>n_epoch</strong> (<em>int</em>) – Number of epochs to train the neural network.</li>
 <li><strong>batch_size</strong> (<em>int</em>) – Number of observations to used for each backpropagation step.</li>
 <li><strong>learning_rate</strong> (<em>float</em>) – Learning rate use for gradient descent methodologies.</li>
+<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neurone activate during training.</li>
 <li><strong>rmin</strong> (<em>float</em>) – Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>rmax</strong> (<em>float</em>) – Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>dmax</strong> (<em>float</em>) – When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).</li>
@@ -767,19 +770,19 @@ future version.</li>
 </table>
 <dl class="method">
 <dt id="core.algo.ConvNet.AbstractConvNet.build">
-<code class="descname">build</code><span class="sig-paren">(</span><em>conv_params</em>, <em>fc_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.AbstractConvNet.build" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build</code><span class="sig-paren">(</span><em>conv_params</em>, <em>fc_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>dropout=False</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.99</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.AbstractConvNet.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the network architecture.</p>
 <p>The class allows to chains different type of filtering operators ordered inside the <code class="docutils literal notranslate"><span class="pre">conv_params</span></code> class
 attributes. Each step can be set using a dictionary of parameters. All dictionary have at least a key <code class="docutils literal notranslate"><span class="pre">type</span></code>
-informing about the type of step to use: <code class="docutils literal notranslate"><span class="pre">CONV</span></code>, <code class="docutils literal notranslate"><span class="pre">MAXPOOL</span></code> or <code class="docutils literal notranslate"><span class="pre">INCEPTION</span></code>. Their parameters are the following:</p>
+informing about the type of step to use: <code class="docutils literal notranslate"><span class="pre">CONV</span></code>, <code class="docutils literal notranslate"><span class="pre">POOL</span></code> or <code class="docutils literal notranslate"><span class="pre">RES</span></code>. Their parameters are the following:</p>
 <blockquote>
 <div><ul>
-<li><p class="first">type = <code class="docutils literal notranslate"><span class="pre">CONV</span></code>:</p>
+<li><p class="first">type == <code class="docutils literal notranslate"><span class="pre">CONV</span></code>:</p>
 <blockquote>
 <div><ul class="simple">
 <li><strong>shape</strong>: (Tuple[int]) - Tuple of filter shape (height, width, filter).</li>
 <li><strong>stride</strong>: (Tuple[int]) - Tuple indicating the strides to use (heights, width).</li>
-<li><strong>padding</strong>: (str) -  The padding method to use “SAME” or “VALID”.</li>
+<li><strong>padding</strong>: (str) -  The padding method to use <code class="docutils literal notranslate"><span class="pre">SAME</span></code> or <code class="docutils literal notranslate"><span class="pre">VALID</span></code>.</li>
 <li><strong>add_bias</strong>: (bool) -  Use a bias or not.</li>
 <li><strong>act_funct</strong>: (None, str) -  Name of the activation function to use. If None, no activation function
 is used.</li>
@@ -788,8 +791,24 @@ If None no dilation is used.</li>
 </ul>
 </div></blockquote>
 </li>
+<li><p class="first">type == <code class="docutils literal notranslate"><span class="pre">POOL</span></code>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>shape</strong>: (Tuple[int]) - Tuple of filter shape (height, width, filter).</li>
+<li><strong>stride</strong>: (Tuple[int]) - Tuple indicating the strides to use (heights, width).</li>
+<li><strong>padding</strong>: (str) -  The padding method to use “SAME” or “VALID”.</li>
+<li><strong>dilation</strong>: (None, Tuple[int]) - Tuple indicating the dilation level to use (heights, width).
+If None no dilation is used.</li>
+<li><strong>pooling_type</strong>: (str) - Type of pooling to use. Possible values are: <code class="docutils literal notranslate"><span class="pre">MAX</span></code>, <code class="docutils literal notranslate"><span class="pre">MIN</span></code>, <code class="docutils literal notranslate"><span class="pre">AVG</span></code></li>
 </ul>
 </div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Dilation is not available for pooling_type == <code class="docutils literal notranslate"><span class="pre">ÀVG</span></code>.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -801,7 +820,7 @@ If None no dilation is used.</li>
 <li><strong>output_dim</strong> (<em>int</em><em>, </em><em>None</em>) – Number of target variable to predict.</li>
 <li><strong>act_funct</strong> (<em>str</em><em>, </em><em>None</em>) – Name of the activation function used for the fully connected layer. If None, no activation function is
 used.</li>
-<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neuron activated during training.</li>
+<li><strong>dropout</strong> (<em>bool</em>) – Whether to use dropout or not.</li>
 <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply the batch normalization method.</li>
 <li><strong>batch_renorm</strong> (<em>bool</em>) – If True apply the batch renormalization method.</li>
 <li><strong>penalization_rate</strong> (<em>float</em>) – Penalization rate if regularization is used.</li>
@@ -827,7 +846,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 
 <dl class="method">
 <dt id="core.algo.ConvNet.AbstractConvNet.fit">
-<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.AbstractConvNet.fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>keep_proba=1.0</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.AbstractConvNet.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the ConvNet along  <code class="docutils literal notranslate"><span class="pre">n_epoch</span></code> using the <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> array of observations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -839,6 +858,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <li><strong>n_epoch</strong> (<em>int</em>) – Number of epochs to train the neural network.</li>
 <li><strong>batch_size</strong> (<em>int</em>) – Number of observations to used for each backpropagation step.</li>
 <li><strong>learning_rate</strong> (<em>float</em>) – Learning rate use for gradient descent methodologies.</li>
+<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neurons activate.</li>
 <li><strong>rmin</strong> (<em>float</em>) – Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>rmax</strong> (<em>float</em>) – Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>dmax</strong> (<em>float</em>) – When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).</li>
@@ -991,19 +1011,19 @@ by mini-batch</p>
 
 <dl class="method">
 <dt id="core.algo.ConvNet.ConvNetClassifier.build">
-<code class="descname">build</code><span class="sig-paren">(</span><em>conv_params</em>, <em>fc_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.ConvNetClassifier.build" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build</code><span class="sig-paren">(</span><em>conv_params</em>, <em>fc_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>dropout=False</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.99</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.ConvNetClassifier.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the network architecture.</p>
 <p>The class allows to chains different type of filtering operators ordered inside the <code class="docutils literal notranslate"><span class="pre">conv_params</span></code> class
 attributes. Each step can be set using a dictionary of parameters. All dictionary have at least a key <code class="docutils literal notranslate"><span class="pre">type</span></code>
-informing about the type of step to use: <code class="docutils literal notranslate"><span class="pre">CONV</span></code>, <code class="docutils literal notranslate"><span class="pre">MAXPOOL</span></code> or <code class="docutils literal notranslate"><span class="pre">INCEPTION</span></code>. Their parameters are the following:</p>
+informing about the type of step to use: <code class="docutils literal notranslate"><span class="pre">CONV</span></code>, <code class="docutils literal notranslate"><span class="pre">POOL</span></code> or <code class="docutils literal notranslate"><span class="pre">RES</span></code>. Their parameters are the following:</p>
 <blockquote>
 <div><ul>
-<li><p class="first">type = <code class="docutils literal notranslate"><span class="pre">CONV</span></code>:</p>
+<li><p class="first">type == <code class="docutils literal notranslate"><span class="pre">CONV</span></code>:</p>
 <blockquote>
 <div><ul class="simple">
 <li><strong>shape</strong>: (Tuple[int]) - Tuple of filter shape (height, width, filter).</li>
 <li><strong>stride</strong>: (Tuple[int]) - Tuple indicating the strides to use (heights, width).</li>
-<li><strong>padding</strong>: (str) -  The padding method to use “SAME” or “VALID”.</li>
+<li><strong>padding</strong>: (str) -  The padding method to use <code class="docutils literal notranslate"><span class="pre">SAME</span></code> or <code class="docutils literal notranslate"><span class="pre">VALID</span></code>.</li>
 <li><strong>add_bias</strong>: (bool) -  Use a bias or not.</li>
 <li><strong>act_funct</strong>: (None, str) -  Name of the activation function to use. If None, no activation function
 is used.</li>
@@ -1012,8 +1032,24 @@ If None no dilation is used.</li>
 </ul>
 </div></blockquote>
 </li>
+<li><p class="first">type == <code class="docutils literal notranslate"><span class="pre">POOL</span></code>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>shape</strong>: (Tuple[int]) - Tuple of filter shape (height, width, filter).</li>
+<li><strong>stride</strong>: (Tuple[int]) - Tuple indicating the strides to use (heights, width).</li>
+<li><strong>padding</strong>: (str) -  The padding method to use “SAME” or “VALID”.</li>
+<li><strong>dilation</strong>: (None, Tuple[int]) - Tuple indicating the dilation level to use (heights, width).
+If None no dilation is used.</li>
+<li><strong>pooling_type</strong>: (str) - Type of pooling to use. Possible values are: <code class="docutils literal notranslate"><span class="pre">MAX</span></code>, <code class="docutils literal notranslate"><span class="pre">MIN</span></code>, <code class="docutils literal notranslate"><span class="pre">AVG</span></code></li>
 </ul>
 </div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Dilation is not available for pooling_type == <code class="docutils literal notranslate"><span class="pre">ÀVG</span></code>.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1025,7 +1061,7 @@ If None no dilation is used.</li>
 <li><strong>output_dim</strong> (<em>int</em><em>, </em><em>None</em>) – Number of target variable to predict.</li>
 <li><strong>act_funct</strong> (<em>str</em><em>, </em><em>None</em>) – Name of the activation function used for the fully connected layer. If None, no activation function is
 used.</li>
-<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neuron activated during training.</li>
+<li><strong>dropout</strong> (<em>bool</em>) – Whether to use dropout or not.</li>
 <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply the batch normalization method.</li>
 <li><strong>batch_renorm</strong> (<em>bool</em>) – If True apply the batch renormalization method.</li>
 <li><strong>penalization_rate</strong> (<em>float</em>) – Penalization rate if regularization is used.</li>
@@ -1051,7 +1087,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 
 <dl class="method">
 <dt id="core.algo.ConvNet.ConvNetClassifier.fit">
-<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.ConvNetClassifier.fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>keep_proba=1.0</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.ConvNetClassifier.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the ConvNet along  <code class="docutils literal notranslate"><span class="pre">n_epoch</span></code> using the <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> array of observations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1063,6 +1099,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <li><strong>n_epoch</strong> (<em>int</em>) – Number of epochs to train the neural network.</li>
 <li><strong>batch_size</strong> (<em>int</em>) – Number of observations to used for each backpropagation step.</li>
 <li><strong>learning_rate</strong> (<em>float</em>) – Learning rate use for gradient descent methodologies.</li>
+<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neurons activate.</li>
 <li><strong>rmin</strong> (<em>float</em>) – Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>rmax</strong> (<em>float</em>) – Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>dmax</strong> (<em>float</em>) – When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).</li>
@@ -1190,19 +1227,19 @@ future version.</li>
 </table>
 <dl class="method">
 <dt id="core.algo.ConvNet.ConvNetRegressor.build">
-<code class="descname">build</code><span class="sig-paren">(</span><em>conv_params</em>, <em>fc_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.999</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.ConvNetRegressor.build" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build</code><span class="sig-paren">(</span><em>conv_params</em>, <em>fc_size</em>, <em>input_dim</em>, <em>output_dim</em>, <em>act_funct='relu'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>dropout=False</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>decay=0.99</em>, <em>decay_renorm=0.99</em>, <em>epsilon=0.001</em>, <em>penalization_rate=0.0</em>, <em>penalization_type=None</em>, <em>optimizer_name='Adam'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.ConvNetRegressor.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the network architecture.</p>
 <p>The class allows to chains different type of filtering operators ordered inside the <code class="docutils literal notranslate"><span class="pre">conv_params</span></code> class
 attributes. Each step can be set using a dictionary of parameters. All dictionary have at least a key <code class="docutils literal notranslate"><span class="pre">type</span></code>
-informing about the type of step to use: <code class="docutils literal notranslate"><span class="pre">CONV</span></code>, <code class="docutils literal notranslate"><span class="pre">MAXPOOL</span></code> or <code class="docutils literal notranslate"><span class="pre">INCEPTION</span></code>. Their parameters are the following:</p>
+informing about the type of step to use: <code class="docutils literal notranslate"><span class="pre">CONV</span></code>, <code class="docutils literal notranslate"><span class="pre">POOL</span></code> or <code class="docutils literal notranslate"><span class="pre">RES</span></code>. Their parameters are the following:</p>
 <blockquote>
 <div><ul>
-<li><p class="first">type = <code class="docutils literal notranslate"><span class="pre">CONV</span></code>:</p>
+<li><p class="first">type == <code class="docutils literal notranslate"><span class="pre">CONV</span></code>:</p>
 <blockquote>
 <div><ul class="simple">
 <li><strong>shape</strong>: (Tuple[int]) - Tuple of filter shape (height, width, filter).</li>
 <li><strong>stride</strong>: (Tuple[int]) - Tuple indicating the strides to use (heights, width).</li>
-<li><strong>padding</strong>: (str) -  The padding method to use “SAME” or “VALID”.</li>
+<li><strong>padding</strong>: (str) -  The padding method to use <code class="docutils literal notranslate"><span class="pre">SAME</span></code> or <code class="docutils literal notranslate"><span class="pre">VALID</span></code>.</li>
 <li><strong>add_bias</strong>: (bool) -  Use a bias or not.</li>
 <li><strong>act_funct</strong>: (None, str) -  Name of the activation function to use. If None, no activation function
 is used.</li>
@@ -1211,8 +1248,24 @@ If None no dilation is used.</li>
 </ul>
 </div></blockquote>
 </li>
+<li><p class="first">type == <code class="docutils literal notranslate"><span class="pre">POOL</span></code>:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>shape</strong>: (Tuple[int]) - Tuple of filter shape (height, width, filter).</li>
+<li><strong>stride</strong>: (Tuple[int]) - Tuple indicating the strides to use (heights, width).</li>
+<li><strong>padding</strong>: (str) -  The padding method to use “SAME” or “VALID”.</li>
+<li><strong>dilation</strong>: (None, Tuple[int]) - Tuple indicating the dilation level to use (heights, width).
+If None no dilation is used.</li>
+<li><strong>pooling_type</strong>: (str) - Type of pooling to use. Possible values are: <code class="docutils literal notranslate"><span class="pre">MAX</span></code>, <code class="docutils literal notranslate"><span class="pre">MIN</span></code>, <code class="docutils literal notranslate"><span class="pre">AVG</span></code></li>
 </ul>
 </div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Dilation is not available for pooling_type == <code class="docutils literal notranslate"><span class="pre">ÀVG</span></code>.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1224,7 +1277,7 @@ If None no dilation is used.</li>
 <li><strong>output_dim</strong> (<em>int</em><em>, </em><em>None</em>) – Number of target variable to predict.</li>
 <li><strong>act_funct</strong> (<em>str</em><em>, </em><em>None</em>) – Name of the activation function used for the fully connected layer. If None, no activation function is
 used.</li>
-<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neuron activated during training.</li>
+<li><strong>dropout</strong> (<em>bool</em>) – Whether to use dropout or not.</li>
 <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply the batch normalization method.</li>
 <li><strong>batch_renorm</strong> (<em>bool</em>) – If True apply the batch renormalization method.</li>
 <li><strong>penalization_rate</strong> (<em>float</em>) – Penalization rate if regularization is used.</li>
@@ -1250,7 +1303,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 
 <dl class="method">
 <dt id="core.algo.ConvNet.ConvNetRegressor.fit">
-<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.ConvNetRegressor.fit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">fit</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>n_epoch=1</em>, <em>batch_size=10</em>, <em>learning_rate=0.001</em>, <em>keep_proba=1.0</em>, <em>rmax=3.0</em>, <em>rmin=0.33</em>, <em>dmax=5</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#core.algo.ConvNet.ConvNetRegressor.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit the ConvNet along  <code class="docutils literal notranslate"><span class="pre">n_epoch</span></code> using the <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> array of observations.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1262,6 +1315,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <li><strong>n_epoch</strong> (<em>int</em>) – Number of epochs to train the neural network.</li>
 <li><strong>batch_size</strong> (<em>int</em>) – Number of observations to used for each backpropagation step.</li>
 <li><strong>learning_rate</strong> (<em>float</em>) – Learning rate use for gradient descent methodologies.</li>
+<li><strong>keep_proba</strong> (<em>float</em>) – Probability to keep a neurons activate.</li>
 <li><strong>rmin</strong> (<em>float</em>) – Minimum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>rmax</strong> (<em>float</em>) – Maximum ratio used to clip the standard deviation ratio when batch renormalization is applied.</li>
 <li><strong>dmax</strong> (<em>float</em>) – When batch renormalization is used the scaled mu differences is clipped between (-dmax, dmax).</li>
@@ -1385,7 +1439,7 @@ future version.</li>
 <li><strong>optimizer_name</strong> (<em>str</em>) – Name of the optimizer to use. Could become child attribute in future versions</li>
 <li><strong>learning_curve</strong> (<em>list</em>) – A list containing the value of the loss after each training step.</li>
 <li><strong>learning_rate</strong> (<em>tf.Tensor</em>) – Learnig rate tensor for optimization.</li>
-<li><strong>keep_proba_tensor</strong> (<em>tf.Tensor</em>) – Tensor for dropout methods.</li>
+<li><strong>keep_proba</strong> (<em>tf.Tensor</em>) – Tensor for dropout methods.</li>
 <li><strong>is_training</strong> (<em>tf.Tensor</em>) – Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.</li>
 <li><strong>dmax</strong> (<em>tf.Tensor</em>) – Tensor used to clip the batch renormalization scale parameter.</li>
 <li><strong>rmin</strong> (<em>tf.Tensor</em>) – Lower bound used to clip the batch renormalization shift parameter.</li>
@@ -1737,7 +1791,7 @@ tensor.</p>
 
 <dl class="class">
 <dt id="core.deep_learning.abstract_operator.AbstractLayer">
-<em class="property">class </em><code class="descclassname">core.deep_learning.abstract_operator.</code><code class="descname">AbstractLayer</code><span class="sig-paren">(</span><em>act_funct=None</em>, <em>keep_proba=None</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>is_training=None</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>decay=0.99</em>, <em>epsilon=0.001</em>, <em>decay_renorm=0.001</em>, <em>rmin=0.33</em>, <em>rmax=3</em>, <em>dmax=5</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.abstract_operator.AbstractLayer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">core.deep_learning.abstract_operator.</code><code class="descname">AbstractLayer</code><span class="sig-paren">(</span><em>act_funct=None</em>, <em>dropout=False</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>is_training=None</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>keep_proba=None</em>, <em>decay=0.99</em>, <em>epsilon=0.001</em>, <em>decay_renorm=0.001</em>, <em>rmin=0.33</em>, <em>rmax=3</em>, <em>dmax=5</em>, <em>name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.abstract_operator.AbstractLayer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#core.deep_learning.abstract_operator.AbstractOperator" title="core.deep_learning.abstract_operator.AbstractOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractOperator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
 <p>This class set a cortex for the implementation of a layer.</p>
 <p>An abstract layer is a cortex for any kind of deep learning layers. It inherit of all AbstractOperator properties
@@ -1750,12 +1804,13 @@ normalization or dropout.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>act_funct</strong> (<em>str</em><em>, </em><em>None</em>) – Name for the activation function to use.
 If None, no function is applied.</li>
-<li><strong>keep_proba</strong> (<em>tf.Tensor</em><em>, </em><em>float</em><em>, </em><em>None</em>) – Probability to keep a neuron activate during training.</li>
+<li><strong>dropout</strong> (<em>bool</em>) – Whether to use dropout or not.</li>
 <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply the batch normalization after the _operator methods.</li>
 <li><strong>batch_renorm</strong> (<em>bool</em>) – If True used the batch renormalization after the _operator methods.</li>
 <li><strong>is_training</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.</li>
 <li><strong>law_name</strong> (<em>str</em>) – Name of the law to use to initialized Variable.</li>
 <li><strong>law_param</strong> (<em>float</em>) – Parameter of the law used to initialized weight. This parameter is law_name dependent.</li>
+<li><strong>keep_proba</strong> (<em>tf.Tensor</em><em>, </em><em>float</em>) – Probability to keep a neuron activate during training.</li>
 <li><strong>decay</strong> (<em>float</em>) – Decay used to update the moving average of the batch norm. The moving average is used to learn the
 empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).</li>
 <li><strong>epsilon</strong> (<em>float</em>) – Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.</li>
@@ -2173,7 +2228,7 @@ the loss function independent of any regularization.</p>
 <span id="layer"></span><h2>Layer<a class="headerlink" href="#module-core.deep_learning.layer" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="core.deep_learning.layer.FullyConnected">
-<em class="property">class </em><code class="descclassname">core.deep_learning.layer.</code><code class="descname">FullyConnected</code><span class="sig-paren">(</span><em>size</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>is_training=None</em>, <em>name='fc'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>decay=0.99</em>, <em>epsilon=0.001</em>, <em>decay_renorm=0.99</em>, <em>rmin=0.33</em>, <em>rmax=3</em>, <em>dmax=5</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.FullyConnected" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">core.deep_learning.layer.</code><code class="descname">FullyConnected</code><span class="sig-paren">(</span><em>size</em>, <em>act_funct=None</em>, <em>dropout=False</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>is_training=None</em>, <em>name='fc'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>keep_proba=None</em>, <em>decay=0.99</em>, <em>epsilon=0.001</em>, <em>decay_renorm=0.99</em>, <em>rmin=0.33</em>, <em>rmax=3</em>, <em>dmax=5</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.FullyConnected" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#core.deep_learning.abstract_operator.AbstractLayer" title="core.deep_learning.abstract_operator.AbstractLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLayer</span></code></a></p>
 <p>Use a fully connected layer having a number of neurons equal to the <cite>size</cite> parameters. A neurons is a
 function making a linear transformation on a set of input and output a single output value bounded by an
@@ -2189,13 +2244,14 @@ normalization, batch renormalization and dropout.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>size</strong> (<em>int</em>) – Number of neurons of the layer.</li>
 <li><strong>act_funct</strong> (<em>str</em><em>, </em><em>None</em>) – name of the activation function to use. If None, no activation function is used.</li>
-<li><strong>keep_proba</strong> (<em>(</em><em>tf.Tensor</em><em>, </em><em>float</em><em>)</em>) – Probability to keep a neuron activated during training.</li>
+<li><strong>dropout</strong> (<em>bool</em>) – Whether to use dropout or not.</li>
 <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply the batch normalization method.</li>
 <li><strong>batch_renorm</strong> (<em>bool</em>) – If True apply the batch renormalization method.</li>
 <li><strong>is_training</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.</li>
 <li><strong>name</strong> (<em>str</em>) – Name of the layer.</li>
 <li><strong>law_name</strong> (<em>str</em>) – Name of the law to use to initialized weights and biases.</li>
 <li><strong>law_param</strong> (<em>float</em>) – Parameter of the law used to initialized weight. This parameter is law_name dependent.</li>
+<li><strong>keep_proba</strong> (<em>(</em><em>tf.Tensor</em><em>, </em><em>float</em><em>)</em>) – Probability to keep a neuron activated during training.</li>
 <li><strong>decay</strong> (<em>float</em>) – Decay used to update the moving average of the batch norm. The moving average is used to learn the
 empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).</li>
 <li><strong>epsilon</strong> (<em>float</em>) – Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.</li>
@@ -2257,7 +2313,7 @@ empirical mean and variance of the output layer. It is recommended to set this v
 
 <dl class="class">
 <dt id="core.deep_learning.layer.Conv1d">
-<em class="property">class </em><code class="descclassname">core.deep_learning.layer.</code><code class="descname">Conv1d</code><span class="sig-paren">(</span><em>width</em>, <em>channels</em>, <em>stride=1</em>, <em>padding='VALID'</em>, <em>add_bias=True</em>, <em>act_funct='relu'</em>, <em>keep_proba=1.0</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>is_training=None</em>, <em>name='conv1D'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>decay=0.99</em>, <em>epsilon=0.001</em>, <em>decay_renorm=0.99</em>, <em>rmin=0.33</em>, <em>rmax=3</em>, <em>dmax=5</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.Conv1d" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">core.deep_learning.layer.</code><code class="descname">Conv1d</code><span class="sig-paren">(</span><em>width</em>, <em>channels</em>, <em>stride=1</em>, <em>padding='VALID'</em>, <em>add_bias=True</em>, <em>act_funct='relu'</em>, <em>dropout=False</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>is_training=None</em>, <em>name='conv1D'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>keep_proba=None</em>, <em>decay=0.99</em>, <em>epsilon=0.001</em>, <em>decay_renorm=0.99</em>, <em>rmin=0.33</em>, <em>rmax=3</em>, <em>dmax=5</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.Conv1d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#core.deep_learning.abstract_operator.AbstractLayer" title="core.deep_learning.abstract_operator.AbstractLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLayer</span></code></a></p>
 <p>Build a 1d convolution layer. The filter take as input an array with shape (Width, Channel),
 compute a convolution using one or many filter and return a tensor with size (Width, filters):</p>
@@ -2277,13 +2333,14 @@ the stride and the padding selected.</p>
 covered by filter and stride whereas VALID skip input not covered by the filter.</li>
 <li><strong>add_bias</strong> (<em>bool</em>) – Whether to add the bias or not.</li>
 <li><strong>act_funct</strong> (<em>str</em><em>, </em><em>None</em>) – Name of the activation function to use. If None no activation function are used.</li>
-<li><strong>keep_proba</strong> (<em>float</em><em>, </em><em>tf.Tensor</em>) – Probability to keep a neuron activate during training if we want to apply the dropout method.</li>
+<li><strong>dropout</strong> (<em>bool</em>) – Whether to use dropout or not.</li>
 <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply the batch normalization after the _operator methods.</li>
 <li><strong>batch_renorm</strong> (<em>bool</em>) – Whether to used batch renormalization or not.</li>
 <li><strong>is_training</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.</li>
 <li><strong>name</strong> (<em>str</em>) – Name of the layer.</li>
 <li><strong>law_name</strong> (<em>str</em>) – Name of the lax to use for weights and biases initialization.</li>
 <li><strong>law_param</strong> (<em>float</em>) – Parameter of the initialization law.</li>
+<li><strong>keep_proba</strong> (<em>float</em><em>, </em><em>tf.Tensor</em>) – Probability to keep a neuron activate during training if we want to apply the dropout method.</li>
 <li><strong>decay</strong> (<em>tf.Tensor</em><em>, </em><em>float</em>) – Decay used to update the moving average of the batch norm. The moving average is used to learn the
 empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).</li>
 <li><strong>epsilon</strong> (<em>float</em>) – Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.</li>
@@ -2398,7 +2455,7 @@ input layer data.</p>
 
 <dl class="class">
 <dt id="core.deep_learning.layer.Conv2d">
-<em class="property">class </em><code class="descclassname">core.deep_learning.layer.</code><code class="descname">Conv2d</code><span class="sig-paren">(</span><em>width</em>, <em>height</em>, <em>filter</em>, <em>stride=(1</em>, <em>1)</em>, <em>dilation=None</em>, <em>padding='VALID'</em>, <em>add_bias=False</em>, <em>act_funct=None</em>, <em>keep_proba=1.0</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>is_training=None</em>, <em>name='conv2D'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>decay=0.99</em>, <em>epsilon=0.001</em>, <em>decay_renorm=0.99</em>, <em>rmin=0.33</em>, <em>rmax=3</em>, <em>dmax=5</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.Conv2d" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">core.deep_learning.layer.</code><code class="descname">Conv2d</code><span class="sig-paren">(</span><em>width</em>, <em>height</em>, <em>filter</em>, <em>stride=(1</em>, <em>1)</em>, <em>dilation=None</em>, <em>padding='VALID'</em>, <em>add_bias=False</em>, <em>act_funct=None</em>, <em>dropout=False</em>, <em>batch_norm=False</em>, <em>batch_renorm=False</em>, <em>is_training=None</em>, <em>name='conv2D'</em>, <em>law_name='uniform'</em>, <em>law_param=0.1</em>, <em>keep_proba=None</em>, <em>decay=0.99</em>, <em>epsilon=0.001</em>, <em>decay_renorm=0.99</em>, <em>rmin=0.33</em>, <em>rmax=3</em>, <em>dmax=5</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.Conv2d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#core.deep_learning.abstract_operator.AbstractLayer" title="core.deep_learning.abstract_operator.AbstractLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLayer</span></code></a></p>
 <p>Build a two dimensional convolution layer. A convolution is an operation which aims to extract information locally
 from an input tensor with two dimension and many channels. The size of the filter can be define by setting its width
@@ -2423,19 +2480,24 @@ level necessary:</p>
 <li><strong>height</strong> (<em>int</em>) – height of the filter.</li>
 <li><strong>channel</strong> (<em>int</em>) – Number of filter of the convolution.</li>
 <li><strong>stride</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – Stride for the filter moving. The first element is the height stride whereas the second is the width stride.</li>
-<li><strong>dilation</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – Number of positions skip between two filter entries. The first element is the height dialtion whereas the
+<li><strong>dilation</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – Number of positions skip between two filter entries. The first element is the height dilation whereas the
 second is the width dilation. If None, no dilation is used.</li>
 <li><strong>padding</strong> (<em>str</em>) – Padding can be SAME or VALID. If padding is SAME, apply padding to input so that input image gets fully
 covered by filter and stride whereas VALID skip input not covered by the filter.</li>
 <li><strong>add_bias</strong> (<em>bool</em>) – Whether to add the bias or not.</li>
 <li><strong>act_funct</strong> (<em>str</em><em>, </em><em>None</em>) – Name of the activation function to use. If None no activation function are used.</li>
-<li><strong>keep_proba</strong> (<em>float</em><em>, </em><em>tf.Tensor</em>) – Probability to keep a neuron activate during training if we want to apply the dropout method.</li>
+<li><strong>dropout</strong> (<em>bool</em>) – Whether to use dropout or not.</li>
 <li><strong>batch_norm</strong> (<em>bool</em>) – If True apply the batch normalization after the _operator methods.</li>
 <li><strong>batch_renorm</strong> (<em>bool</em>) – Whether to used batch renormalization or not.</li>
 <li><strong>is_training</strong> (<em>tf.Tensor</em><em>, </em><em>None</em>) – Tensor indicating if data are used for training or to make prediction. Useful for batch normalization.</li>
 <li><strong>name</strong> (<em>str</em>) – Name of the layer.</li>
 <li><strong>law_name</strong> (<em>str</em>) – Name of the lax to use for weights and biases initialization.</li>
-<li><strong>law_param</strong> (<em>float</em>) – Parameter of the initialization law.</li>
+<li><strong>law_param</strong> (<em>float</em>) – <p>Parameter of the initialization law.</p>
+<dl class="docutils">
+<dt>keep_proba: float, tf.Tensor</dt>
+<dd>Probability to keep a neuron activate during training if we want to apply the dropout method.</dd>
+</dl>
+</li>
 <li><strong>decay</strong> (<em>tf.Tensor</em><em>, </em><em>float</em>) – Decay used to update the moving average of the batch norm. The moving average is used to learn the
 empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).</li>
 <li><strong>epsilon</strong> (<em>float</em>) – Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.</li>
@@ -2475,6 +2537,78 @@ empirical mean and variance of the output layer. It is recommended to set this v
 <dl class="method">
 <dt id="core.deep_learning.layer.Conv2d.restore">
 <code class="descname">restore</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.Conv2d.restore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restore input/output tensor and all layer variables.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="core.deep_learning.layer.Pool2d">
+<em class="property">class </em><code class="descclassname">core.deep_learning.layer.</code><code class="descname">Pool2d</code><span class="sig-paren">(</span><em>width</em>, <em>height</em>, <em>stride=(1</em>, <em>1)</em>, <em>padding='VALID'</em>, <em>dilation=None</em>, <em>pooling_type='MAX'</em>, <em>name='Pool2D'</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.Pool2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#core.deep_learning.abstract_operator.AbstractLayer" title="core.deep_learning.abstract_operator.AbstractLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">core.deep_learning.abstract_operator.AbstractLayer</span></code></a></p>
+<p>Build a two dimensional pooling layer. The pooling is an operator which aims to reduce the dimension of an image
+without loss of relevant information. It can be view as a filter making aggregation of input at a local level.
+In addition it allows to decrease noise and keep only the most relevant signals in the 2D input matrix.
+During a convolution step the pooling operator allows the neural network to be invariant to short image
+translation which increases the final accuracy.</p>
+<p>The class allows to use the operator min, max and average.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Dilation is not available for pooling_type == <code class="docutils literal notranslate"><span class="pre">ÀVG</span></code>.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>width</strong> (<em>int</em>) – Width of the filter.</li>
+<li><strong>height</strong> (<em>int</em>) – height of the filter.</li>
+<li><strong>stride</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – Stride for the filter moving. The first element is the height stride whereas the second is the width stride.</li>
+<li><strong>padding</strong> (<em>str</em>) – Padding can be SAME or VALID. If padding is SAME, apply padding to input so that input image gets fully
+covered by filter and stride whereas VALID skip input not covered by the filter.</li>
+<li><strong>dilation</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – Number of positions skip between two filter entries. The first element is the height dilation whereas the
+second is the width dilation. If None, no dilation is used.</li>
+<li><strong>name</strong> (<em>str</em>) – Name of the layer.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>w</strong> (<em>Variable with size</em><em> (</em><em>height</em><em>, </em><em>width</em><em>, </em><em>input_channel</em><em>, </em><em>n_filter</em><em>)</em>) – Convolution weights variable.</li>
+<li><strong>b</strong> (<em>Variable with size</em><em> (</em><em>n_filter</em><em>,</em><em>)</em>) – Convolution bias variable.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="core.deep_learning.layer.Pool2d.build">
+<code class="descname">build</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.Pool2d.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the MaxPool2d layer using the 4 dimensional input tensor x.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong> (<em>tf.Tensor</em>) – Input tensor filtered by the layer.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Layer output Tensor.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">tf.Tensor</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="core.deep_learning.layer.Pool2d.restore">
+<code class="descname">restore</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#core.deep_learning.layer.Pool2d.restore" title="Permalink to this definition">¶</a></dt>
 <dd><p>Restore input/output tensor and all layer variables.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

@@ -130,8 +130,8 @@ class AbstractLayer(AbstractOperator, ABC):
             Name for the activation function to use.
             If None, no function is applied.
 
-        keep_proba : tf.Tensor, float, None
-            Probability to keep a neuron activate during training.
+        dropout: bool
+            Whether to use dropout or not.
 
         batch_norm: bool
             If True apply the batch normalization after the _operator methods.
@@ -147,6 +147,9 @@ class AbstractLayer(AbstractOperator, ABC):
 
         law_param : float
             Parameter of the law used to initialized weight. This parameter is law_name dependent.
+
+        keep_proba : tf.Tensor, float
+            Probability to keep a neuron activate during training.
 
         decay: float
             Decay used to update the moving average of the batch norm. The moving average is used to learn the
@@ -204,12 +207,13 @@ class AbstractLayer(AbstractOperator, ABC):
 
     def __init__(self,
                  act_funct: str = None,
-                 keep_proba: Union[tf.Tensor, float, None] = None,
+                 dropout: bool = False,
                  batch_norm: bool = False,
                  batch_renorm: bool = False,
                  is_training: Union[tf.Tensor, None] = None,
                  law_name: str = "uniform",
                  law_param: float = 0.1,
+                 keep_proba: Union[tf.Tensor, float, None] = None,
                  decay: float = 0.99,
                  epsilon: float = 0.001,
                  decay_renorm: float = 0.001,
@@ -221,12 +225,13 @@ class AbstractLayer(AbstractOperator, ABC):
         super().__init__(name)
 
         self.act_funct = act_funct
-        self.keep_proba = keep_proba
+        self.dropout = dropout
         self.is_training = is_training
         self.batch_norm = batch_norm
         self.batch_renorm = batch_renorm
         self.law_param = law_param
         self.law_name = law_name
+        self.keep_proba = keep_proba
         self.decay = decay
         self.epsilon = epsilon
         self.decay_renorm = decay_renorm
@@ -273,7 +278,7 @@ class AbstractLayer(AbstractOperator, ABC):
         if self.act_funct is not None:
             self._apply_act_funct()
 
-        if (self.keep_proba != 1.) & (self.keep_proba is not None):
+        if self.dropout:
             self._apply_dropout()
 
         self.x_out = identity(self.x_out, name="x_out")
