@@ -1,17 +1,17 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Tuple, List, Union, Dict, Any, Sequence
 
 import numpy as np
 import tensorflow as tf
 
-from core.deep_learning.abstract_architecture import AbstractArchitecture
-from core.deep_learning.abstract_operator import AbstractLoss
+from core.deep_learning.base_architecture import BaseArchitecture
+from core.deep_learning.base_operator import BaseLoss
 from core.deep_learning.layer import FullyConnected
 from core.deep_learning.loss import CrossEntropy, MeanSquareError
 from core.utils.validation import check_array
 
 
-class AbstractMlp(AbstractArchitecture, ABC):
+class BaseMlp(BaseArchitecture):
     """
     This class set the major core of a Multi Layer Perceptron neural network. The neural network architecture
     takes as input a linear vector of input data put in a succession of fully connected layers. In the end a
@@ -88,7 +88,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
 
         self.l_fc: Union[List[FullyConnected], None] = None
         self.l_output: Union[FullyConnected, None] = None
-        self.l_loss: Union[AbstractLoss, None] = None
+        self.l_loss: Union[BaseLoss, None] = None
 
     def build(self, layer_size: Sequence[int], input_dim: int, output_dim: int, act_funct: Union[str, None] = "relu",
               law_name: str = "uniform", law_param: float = 0.1, dropout: bool = True, batch_norm: bool = False,
@@ -362,7 +362,7 @@ class AbstractMlp(AbstractArchitecture, ABC):
         return params
 
 
-class MlpClassifier(AbstractMlp):
+class MlpClassifier(BaseMlp):
     """
     This class allows to train a MLP for classification task. The target array must be a One Hot Vector Encoding
     with dimension equal to the number of label to predict. In addition the class provide an additional methods to
@@ -469,7 +469,7 @@ class MlpClassifier(AbstractMlp):
             return y_pred / y_pred.sum(1).reshape(-1, 1)
 
 
-class MlpRegressor(AbstractMlp):
+class MlpRegressor(BaseMlp):
     """
     This class allows to train a MLP for regression task. The target array must be a square matrix having one or more
     objective variable to learn.

@@ -1,6 +1,6 @@
 import os
 import traceback
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Any, Dict, Union, Sequence
 
 import numpy as np
@@ -12,9 +12,9 @@ from core.utils.reader_writer import write_pickle, read_pickle
 from core.utils.validation import is_not_in_graph
 
 
-class AbstractArchitecture(ABC):
+class BaseArchitecture:
     """
-    Cortex for any deep learning architecture. The class initialization step allows to configure the Tensorflow
+    Base for any deep learning architecture. The class initialization step allows to configure the Tensorflow
     interface to use GPU computation for example. In addition this abstract level implement general usage such the
     saving and the restoration methods. It provide also some always use methods such the minimizer or placeholder
     setting.
@@ -335,7 +335,8 @@ class AbstractArchitecture(ABC):
             with tf.control_dependencies(update_ops):
                 return get_optimizer(self.optimizer_name, self.learning_rate).minimize(f, name=name)
 
-    def _placeholder(self, dtype: tf.DType, shape: Union[Sequence[int], int, None], name: str) -> tf.placeholder:
+    def _placeholder(self, dtype: tf.DType, shape: Union[Sequence[Union[int, None]], int, None],
+                     name: str) -> tf.placeholder:
 
         """
         Set or restore a placeholder.

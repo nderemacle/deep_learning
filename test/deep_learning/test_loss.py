@@ -5,11 +5,11 @@ import numpy as np
 import tensorflow as tf
 
 import core.deep_learning.env as env
-from core.deep_learning.abstract_operator import AbstractLoss
+from core.deep_learning.base_operator import BaseLoss
 from core.deep_learning.loss import CrossEntropy, MeanSquareError
 
 
-def test_predict(self: tf.test.TestCase, sess: tf.Session, loss: AbstractLoss, x_out: np.ndarray,
+def test_predict(self: tf.test.TestCase, sess: tf.Session, loss: BaseLoss, x_out: np.ndarray,
                  expected_output: np.ndarray):
     """Test the loss prediction tensor"""
 
@@ -19,7 +19,7 @@ def test_predict(self: tf.test.TestCase, sess: tf.Session, loss: AbstractLoss, x
     self.assertAllEqual(output, expected_output)
 
 
-def test_loss(self: tf.test.TestCase, sess: tf.Session, loss: AbstractLoss, x_out: np.ndarray,
+def test_loss(self: tf.test.TestCase, sess: tf.Session, loss: BaseLoss, x_out: np.ndarray,
               expected_loss: float, y: np.ndarray, rtol: float = 1e-6):
     """Test the loss computation"""
 
@@ -31,7 +31,7 @@ def test_loss(self: tf.test.TestCase, sess: tf.Session, loss: AbstractLoss, x_ou
     self.assertAllClose(output, expected_loss, rtol=rtol)
 
 
-def test_restore(self: tf.test.TestCase, loss: AbstractLoss, x_out_shape: List[int], y_shape: List[int],
+def test_restore(self: tf.test.TestCase, loss: BaseLoss, x_out_shape: List[int], y_shape: List[int],
                  tensors: List[str] = ("loss", "loss_opt", "y", "x_out", "y_pred"), weights: List = []):
     """This methods allow to test the restoration process of a Layer"""
 

@@ -3,12 +3,12 @@ from typing import Union, Tuple
 import numpy as np
 import tensorflow as tf
 
-from core.deep_learning.abstract_operator import AbstractLayer
-from core.deep_learning.tf_utils import variable, get_tf_tensor
+from core.deep_learning.base_operator import BaseLayer
+from core.deep_learning.tf_utils import variable, get_tf_tensor, get_dim_reduction
 from core.utils.validation import check_tensor
 
 
-class FullyConnected(AbstractLayer):
+class FullyConnected(BaseLayer):
     """
     Use a fully connected layer having a number of neurons equal to the `size` parameters. A neurons is a
     function making a linear transformation on a set of input and output a single output value bounded by an
@@ -100,6 +100,7 @@ class FullyConnected(AbstractLayer):
                  rmin: Union[tf.Tensor, float] = 0.33,
                  rmax: Union[tf.Tensor, float] = 3,
                  dmax: Union[tf.Tensor, float] = 5):
+
         super().__init__(act_funct, dropout, batch_norm, batch_renorm, is_training, law_name, law_param, keep_proba,
                          decay, epsilon, decay_renorm, rmin, rmax, dmax, name)
 
@@ -127,15 +128,19 @@ class FullyConnected(AbstractLayer):
 
         input_dim = self.x.shape[1].value
         w_shape = (input_dim, self.size)
-        b_shape = (self.size,)
 
         self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
-        self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
+
+        if not (self.batch_norm | self.batch_renorm):
+            b_shape = (self.size,)
+            self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
 
     def _operator(self) -> None:
         """compute the linear operator :math:`b + W \\times x`."""
 
-        self.x_out = tf.add(self.b, tf.matmul(self.x, self.w))
+        self.x_out = tf.matmul(self.x, self.w)
+        if not (self.batch_norm | self.batch_renorm):
+            self.x_out = tf.add(self.b, self.x_out)
 
     def build(self,
               x: tf.Tensor,
@@ -172,10 +177,12 @@ class FullyConnected(AbstractLayer):
 
         super().restore()
         self.w = get_tf_tensor(name="w")
-        self.b = get_tf_tensor(name="b")
+
+        if not (self.batch_norm | self.batch_renorm):
+            self.b = get_tf_tensor(name="b")
 
 
-class Conv1d(AbstractLayer):
+class Conv1d(BaseLayer):
     """
     Build a 1d convolution layer. The filter take as input an array with shape (Width, Channel),
     compute a convolution using one or many filter and return a tensor with size (Width, filters):
@@ -323,7 +330,7 @@ class Conv1d(AbstractLayer):
         w_shape = (self.width, n_channel, self.channels)
         self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
 
-        if self.add_bias:
+        if (self.add_bias) & (not (self.batch_norm | self.batch_renorm)):
             b_shape = (self.channels,)
             self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
 
@@ -335,7 +342,7 @@ class Conv1d(AbstractLayer):
         """
 
         self.x_out = tf.nn.conv1d(self.x, self.w, self.stride, self.padding, data_format="NWC")
-        if self.add_bias:
+        if (self.add_bias) & (not (self.batch_norm | self.batch_renorm)):
             self.x_out = tf.add(self.b, self.x_out)
 
     def build(self,
@@ -372,12 +379,12 @@ class Conv1d(AbstractLayer):
         """
 
         self.w = get_tf_tensor(name="w")
-        if self.add_bias:
+        if (self.add_bias) & (not (self.batch_norm | self.batch_renorm)):
             self.b = get_tf_tensor(name="b")
         super().restore()
 
 
-class MinMax(AbstractLayer):
+class MinMax(BaseLayer):
     """
     Allow to use a MinMax layer. Given a 2 dimensional input array, this layer keep only the n best and the n
     worse entries. The aim is to reduce the problem dimensionality by keeping only extremes values from the
@@ -452,7 +459,7 @@ class MinMax(AbstractLayer):
         super().restore()
 
 
-class Conv2d(AbstractLayer):
+class Conv2d(BaseLayer):
     """
     Build a two dimensional convolution layer. A convolution is an operation which aims to extract information locally
     from an input tensor with two dimension and many channels. The size of the filter can be define by setting its width
@@ -629,7 +636,7 @@ class Conv2d(AbstractLayer):
 
         self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
 
-        if self.add_bias:
+        if (self.add_bias) & (not (self.batch_norm | self.batch_renorm)):
             b_shape = (self.filter,)
             self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
 
@@ -670,7 +677,7 @@ class Conv2d(AbstractLayer):
             data_format='NHWC',
             dilations=dilation)
 
-        if self.add_bias:
+        if (self.add_bias) & (not (self.batch_norm | self.batch_renorm)):
             self.x_out = tf.add(self.b, self.x_out)
 
     def restore(self) -> None:
@@ -679,12 +686,12 @@ class Conv2d(AbstractLayer):
         """
 
         self.w = get_tf_tensor(name="w")
-        if self.add_bias:
+        if (self.add_bias) & (not (self.batch_norm | self.batch_renorm)):
             self.b = get_tf_tensor(name="b")
         super().restore()
 
 
-class Pool2d(AbstractLayer):
+class Pool2d(BaseLayer):
     """
     Build a two dimensional pooling layer. The pooling is an operator which aims to reduce the dimension of an image
     without loss of relevant information. It can be view as a filter making aggregation of input at a local level.
@@ -702,13 +709,13 @@ class Pool2d(AbstractLayer):
     ----
 
         width: int
-            Width of the filter.
+            Width of the pooling.
 
         height: int
-            height of the filter.
+            height of the pooling.
 
         stride: Tuple[int, int]
-            Stride for the filter moving. The first element is the height stride whereas the second is the width stride.
+            Stride for the pooling moving. The first element is the height stride whereas the second is the width stride.
 
         padding: str
             Padding can be SAME or VALID. If padding is SAME, apply padding to input so that input image gets fully
@@ -718,17 +725,11 @@ class Pool2d(AbstractLayer):
             Number of positions skip between two filter entries. The first element is the height dilation whereas the
             second is the width dilation. If None, no dilation is used.
 
+        pooling_type: str
+            Pooling operator to use. Must be MAX, MIN or AVG.
+
         name: str
             Name of the layer.
-
-    Attributes
-    ----------
-
-        w : Variable with size (height, width, input_channel, n_filter)
-            Convolution weights variable.
-
-        b : Variable with size (n_filter,)
-            Convolution bias variable.
 
 
     """
@@ -819,4 +820,172 @@ class Pool2d(AbstractLayer):
         """
         Restore input/output tensor and all layer variables.
         """
+        super().restore()
+
+
+class Res2d(BaseLayer):
+    """Build a residual layer.
+
+    This layer takes input the previous output tensor and the input of an older layer. If :math:`f` represent all
+    operation done from the older layer input :math:`x`, the operator computed is the following:
+
+        .. math::
+
+                f(x) + x
+
+    This formalization constrain the network to search an image noise correction of the original input `x` using all
+    operator define in the function :math:`f`. This residual correction allows next layer to considers less noisy input
+    in order to make the inference task.
+
+    The old input can have dimensions not similar to the residual part. To counter this a pooling step is done to
+    reduce the 2 first dimensions whereas a zero padding is applied on the channels dimension. These points make the
+    assumption the residual part must have a number of channels higher or equal to the number of channel of the input.
+    However the height and the width of the residual parts must be lower or equal to thus of the input tensor. Pooling
+    and padding are applied only if these conditions are not reach.
+
+    Args
+    ----
+
+        width: int, None
+            Width of the pooling to apply if dimension reduction is needed.
+
+        height: int, None
+            Height of the pooling to apply if dimension reduction is needed.
+
+        stride: Tuple[int, int]
+            Stride for the filter moving. The first element is the height stride whereas the second is the width stride.
+
+        padding: str
+            Padding can be SAME or VALID. If padding is SAME, apply padding to input so that input image gets fully
+            covered by filter and stride whereas VALID skip input not covered by the filter.
+
+        dilation: Tuple[int, int]
+            Number of positions skip between two filter entries. The first element is the height dilation whereas the
+            second is the width dilation. If None, no dilation is used.
+
+        pooling_type: str
+            Pooling operator to use. Must be MAX, MIN or AVG.
+
+        name: str
+            Name of the layer.
+
+    Attributes
+    ----------
+
+        x_lag: tf.Tensor
+            Input tensor of a previous layer.
+
+        pool: Pool2d
+            Pooling layer used to reduce the old input tensor.
+
+
+
+    """
+
+    def __init__(self,
+                 width: Union[int, None] = None,
+                 height: Union[int, None] = None,
+                 stride: Union[Tuple[int, int], None] = None,
+                 padding: Union[str, None] = None,
+                 dilation: Union[Tuple[int, int], None] = None,
+                 pooling_type: Union[str, None] = None,
+                 name: str = "Residual") -> None:
+
+        super().__init__(name=name)
+
+        self.x_lag: Union[tf.Tensor, None] = None
+        self.pool = Pool2d(width, height, stride, padding, dilation, pooling_type, self.name + "/pool")
+
+    def build(self, x: tf.Tensor, x_lag: tf.Tensor) -> tf.Tensor:
+
+        """
+        Build the Res2d layer using the 4 dimensional input tensor x.
+
+        Args
+        ----
+
+            x: tf.Tensor
+                Original tensor.
+
+            x_lag: tf.Tensor
+                Transformed tensor.
+
+        Returns
+        -------
+
+            tf.Tensor
+                Layer output Tensor.
+        """
+
+        self.x_lag = x_lag
+        return super().build(x)
+
+    def _check_input(self) -> None:
+        """Check if both input respect all dimension conditions."""
+
+        check_tensor(self.x, shape_dim=4)
+        check_tensor(self.x_lag, shape_dim=4)
+
+        if self.x.shape[3] < self.x_lag.shape[3]:
+            raise TypeError(f"{self.name}: x must have a number of channel higher or equal than x_lag. "
+                            f"Channel for x is {self.x.shape[3].value} whereas is {self.x_lag.shape[3].value} "
+                            "for x_lag.")
+
+        if self.x.shape[1] > self.x_lag.shape[1]:
+            raise TypeError(f"{self.name}: x must have a height lower or equal than x_lag. "
+                            f"Height for x is {self.x.shape[1].value} whereas is {self.x_lag.shape[1].value}"
+                            " for x_lag.")
+
+        elif self.x.shape[1] < self.x_lag.shape[1]:
+            if any([x is None for x in [self.pool.height, self.pool.stride, self.pool.padding]]):
+                raise TypeError("x_lag reduction needed. You must feed value for height, stride and padding. ")
+            dilation = 0 if self.pool.dilation is None else self.pool.dilation[0]
+            new_dim = get_dim_reduction(self.x_lag.shape[1].value, self.pool.height, dilation, self.pool.stride[0],
+                                        self.pool.padding)
+
+            if new_dim != self.x.shape[1]:
+                raise TypeError(f"{self.name}: After transformation height of x must be equal than x_lag. "
+                                f"Height for x_lag becomes {new_dim} whereas is {self.x.shape[1].value} for x.")
+
+        if self.x.shape[2] > self.x_lag.shape[2]:
+            raise TypeError(f"{self.name}: x must have width lower or equal than x_lag. "
+                            f"Width for x is {self.x.shape[2].value} whereas is {self.x_lag.shape[2].value} for x_lag.")
+
+        elif self.x.shape[2] < self.x_lag.shape[2]:
+            if any([x is None for x in [self.pool.width, self.pool.stride, self.pool.padding]]):
+                raise TypeError("x_lag reduction needed. You must feed value for width, stride and padding. ")
+            dilation = 0 if self.pool.dilation is None else self.pool.dilation[1]
+            new_dim = get_dim_reduction(self.x_lag.shape[2].value, self.pool.width, dilation, self.pool.stride[1],
+                                        self.pool.padding)
+
+            if new_dim != self.x.shape[2]:
+                raise TypeError(f"{self.name}: After transformation width of x must be equal than x_lag. "
+                                f"Width for x_lag becomes {new_dim} whereas is {self.x.shape[2].value} for x.")
+
+    def _operator(self) -> None:
+        """
+        Apply the pooling layer on the past input layer if needed and apply a zero padding on it channel dimension.
+        Finally compute the residual layer by summing the residual parts with the transform old input layer.
+        """
+
+        if self.pool.width is not None:
+            self.x_out = self.pool.build(self.x_lag)
+        else:
+            self.x_out = self.x_lag
+
+        if self.x.shape[-1] > self.x_lag.shape[-1]:
+            delta = int(self.x.shape[-1]) - int(self.x_lag.shape[-1])
+            self.x_out = tf.pad(self.x_out, [[0, 0], [0, 0], [0, 0], [delta, 0]])
+
+        elif self.x.shape[-1] < self.x_lag.shape[-1]:
+                raise TypeError("Channel dimension of x must be higher or equal to channel dimension of x_lag. "
+                                f"Dimension of x is {self.x.shape[-1]} whereas is {self.x_lag.shape[-1]} for x_lag.")
+
+        self.x_out = tf.add(self.x, self.x_out)
+
+    def restore(self) -> None:
+        """
+        Restore input/output tensor and all layer variables.
+        """
+        self.pool.restore()
         super().restore()

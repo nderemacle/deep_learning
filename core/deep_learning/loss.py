@@ -2,10 +2,10 @@ from typing import Sequence, Union, Tuple
 
 import tensorflow as tf
 
-from core.deep_learning.abstract_operator import AbstractLoss
+from core.deep_learning.base_operator import BaseLoss
 
 
-class CrossEntropy(AbstractLoss):
+class CrossEntropy(BaseLoss):
     """
     Build a cross entropy loss function for classification problems. Given an output network which predict :math:`C`
     class, learns network parameters by minimising for all observations the following function function:
@@ -95,7 +95,7 @@ class CrossEntropy(AbstractLoss):
         super().restore()
 
 
-class MeanSquareError(AbstractLoss):
+class MeanSquareError(BaseLoss):
     """
     Build a mean square error loss function allowing to learn one or many objective function in same time. If the
     problem has :math:`C` objective variable to predict, the following function is minimize for each observation:

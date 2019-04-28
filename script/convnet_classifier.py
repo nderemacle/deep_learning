@@ -25,11 +25,13 @@ def main():
     clf = ConvNetClassifier(name="MNIST_Classifier", use_gpu=False)
 
     conv_params = [
-        {"type": "CONV", "shape": (5, 5, 32), "stride": (2, 2), "padding": "VALID", "add_bias": True,
+        {"type": "CONV", "shape": (3, 3, 3), "stride": (2, 2), "padding": "VALID", "add_bias": False,
          "act_funct": None, "dilation": None},
-        {"type": "POOL", "shape": (5, 5), "stride": (2, 2), "padding": "VALID", "dilation": None,
-         "pooling_type": "MAX"}
-    ]
+        {"type": "POOL", "shape": (3, 3), "stride": (2, 2), "padding": "VALID", "dilation": None,
+         "pooling_type": "MAX"},
+        {"type": "RES", "lag": 2, "shape": (6, 6), "stride": (4, 4), "padding": "VALID", "dilation": None,
+         "pooling_type": "AVG"}]
+
     clf.build(conv_params=conv_params,
               fc_size=(64, 128),
               input_dim=(28, 28, 1),
@@ -50,9 +52,9 @@ def main():
     print("First training begin:")
     clf.fit(x=x_train,
             y=one_hot_encoding(y_train),
-            n_epoch=2,
+            n_epoch=3,
             batch_size=32,
-            learning_rate=1e-3,
+            learning_rate=1e-2,
             keep_proba=0.8,
             rmin=1,
             rmax=1,
@@ -69,7 +71,7 @@ def main():
     clf.save(path_folder="output/ConvNetClassifier/")
     del clf
 
-    # Restore the mlp
+    # Restore the network
     clf = ConvNetClassifier(use_gpu=False)
     clf.restore(path_folder="output/ConvNetClassifier/")
 
@@ -77,7 +79,7 @@ def main():
     print("Second training begin:")
     clf.fit(x=x_train,
             y=one_hot_encoding(y_train),
-            n_epoch=10,
+            n_epoch=3,
             batch_size=32,
             learning_rate=1e-3,
             keep_proba=0.8,

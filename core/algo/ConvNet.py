@@ -1,17 +1,17 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import List, Union, Dict, Any, Sequence
 
 import numpy as np
 import tensorflow as tf
 
-from core.deep_learning.abstract_architecture import AbstractArchitecture
-from core.deep_learning.abstract_operator import AbstractLoss
-from core.deep_learning.layer import FullyConnected, Conv2d, Pool2d
+from core.deep_learning.base_architecture import BaseArchitecture
+from core.deep_learning.base_operator import BaseLoss
+from core.deep_learning.layer import FullyConnected, Conv2d, Pool2d, Res2d
 from core.deep_learning.loss import CrossEntropy, MeanSquareError
 from core.utils.validation import check_array
 
 
-class AbstractConvNet(AbstractArchitecture, ABC):
+class BaseConvNet(BaseArchitecture):
     """This class set the major core of a Convolution Neural Network (ConvNet).
 
     The ConvNet takes as input a 3D tensor of input data which are filtered using a series of convolution, pooling and
@@ -92,7 +92,7 @@ class AbstractConvNet(AbstractArchitecture, ABC):
         self.l_conv: Union[List[Union[Conv2d]], None] = None
         self.l_fc: Union[List[FullyConnected], None] = None
         self.l_output: Union[FullyConnected, None] = None
-        self.l_loss: Union[AbstractLoss, None] = None
+        self.l_loss: Union[BaseLoss, None] = None
 
     def build(self, conv_params: Sequence[Dict[str, Any]], fc_size: Sequence[int], input_dim: Sequence[int],
               output_dim: int, act_funct: Union[str, None] = "relu", law_name: str = "uniform", law_param: float = 0.1,
@@ -119,12 +119,22 @@ class AbstractConvNet(AbstractArchitecture, ABC):
 
             * type == ``POOL``:
 
-                * **shape**: (Tuple[int]) - Tuple of filter shape (height, width, filter).
+                * **shape**: (Tuple[int]) - Tuple of pooling shape (height, width, filter).
                 * **stride**: (Tuple[int]) - Tuple indicating the strides to use (heights, width).
                 * **padding**: (str) -  The padding method to use "SAME" or "VALID".
                 * **dilation**: (None, Tuple[int]) - Tuple indicating the dilation level to use (heights, width).
                   If None no dilation is used.
                 * **pooling_type**: (str) - Type of pooling to use. Possible values are: ``MAX``, ``MIN``, ``AVG``
+
+            * type == ``RES``:
+
+                * **lag**: (int) - Output lag to consider for residual comparison.
+                * **shape**: (Tuple[int], None) - Tuple of pooling reshaping (height, width, filter).
+                * **stride**: (Tuple[int], None) - Tuple indicating the strides to use (heights, width).
+                * **padding**: (str, None) -  The padding method to use "SAME" or "VALID".
+                * **dilation**: (None, Tuple[int]) - Tuple indicating the dilation level to use (heights, width).
+                  If None no dilation is used.
+                * **pooling_type**: (str, None) - Type of pooling to use. Possible values are: ``MAX``, ``MIN``, ``AVG``
 
         Warnings
         --------
@@ -211,56 +221,111 @@ class AbstractConvNet(AbstractArchitecture, ABC):
         super()._build()
 
         # Define input and target tensor
-        self.x = self._placeholder(tf.float32, (None,) + self.input_dim, name="x")
+        self.x = self._placeholder(tf.float32, (None,) + tuple(self.input_dim), name="x")
         self.y = self._placeholder(tf.float32, (None, self.output_dim), name="y")
 
         # Define all fully connected layer
         self.l_conv = []
         weights = []
-        i = 0
         self.x_out = self.x
-        for param in self.conv_params:
-
+        for param, i in zip(self.conv_params, range(len(self.conv_params))):
             if param["type"] == "CONV":
                 self.l_conv.append(
-                    Conv2d(width=param["shape"][1], height=param["shape"][0], filter=param["shape"][2],
-                           stride=param["stride"], dilation=param["dilation"], padding=param["padding"],
-                           add_bias=param["add_bias"], act_funct=param["act_funct"], dropout=self.dropout,
-                           batch_norm=self.batch_norm, batch_renorm=self.batch_renorm, is_training=self.is_training,
-                           name=f"ConvStep{i}", law_name=self.law_name, law_param=self.law_param,
-                           keep_proba=self.keep_proba, decay=self.decay, epsilon=self.epsilon,
-                           decay_renorm=self.decay_renorm, rmin=self.rmin, rmax=self.rmax, dmax=self.dmax))
+                    Conv2d(width=param["shape"][1],
+                           height=param["shape"][0],
+                           filter=param["shape"][2],
+                           stride=param["stride"],
+                           dilation=param["dilation"],
+                           padding=param["padding"],
+                           add_bias=param["add_bias"],
+                           act_funct=param["act_funct"],
+                           dropout=self.dropout,
+                           batch_norm=self.batch_norm,
+                           batch_renorm=self.batch_renorm,
+                           is_training=self.is_training,
+                           name=f"ConvStep{i}",
+                           law_name=self.law_name,
+                           law_param=self.law_param,
+                           keep_proba=self.keep_proba,
+                           decay=self.decay,
+                           epsilon=self.epsilon,
+                           decay_renorm=self.decay_renorm,
+                           rmin=self.rmin,
+                           rmax=self.rmax,
+                           dmax=self.dmax))
+
                 self.x_out = self.l_conv[-1].build(self.x_out)
                 weights.append(self.l_conv[-1].w)
 
             elif param["type"] == "POOL":
                 self.l_conv.append(
-                    Pool2d(width=param["shape"][1], height=param["shape"][0], stride=param["stride"],
-                           dilation=param["dilation"], padding=param["padding"], pooling_type=param["pooling_type"],
+                    Pool2d(width=param["shape"][1],
+                           height=param["shape"][0],
+                           stride=param["stride"],
+                           dilation=param["dilation"],
+                           padding=param["padding"],
+                           pooling_type=param["pooling_type"],
                            name=f"ConvStep{i}"))
+
                 self.x_out = self.l_conv[-1].build(self.x_out)
 
-            i += 1
+            elif param["type"] == "RES":
+                if len(self.l_conv) - param["lag"] < 0:
+                    raise TypeError(f"Too high lag for layer {i}. "
+                                    f"Get {param['lag']} whereas {len(self.l_conv)} layers are already set.")
+                else:
+                    x_lag = self.l_conv[-param["lag"]].x
 
-        # TODO: Find a solution for build/restore reshaping
+                width = None if param["shape"] is None else param["shape"][1]
+                heigth = None if param["shape"] is None else param["shape"][0]
+                self.l_conv.append(
+                    Res2d(width=width,
+                          height=heigth,
+                          stride=param["stride"],
+                          padding=param["padding"],
+                          dilation=param["dilation"],
+                          pooling_type=param["pooling_type"],
+                          name=f"ConvStep{i}"))
+
+                self.x_out = self.l_conv[-1].build(self.x_out, x_lag)
+
+            else:
+                list_type = ['CONV', 'POOL', 'RES']
+                raise TypeError(f"Later type must be in {list_type}")
+
+        # Flatten the current netork state. TODO: Find a solution for build/restore reshaping
         self.x_out = tf.reshape(self.x_out, [-1, int(np.prod(self.x_out.shape[1:]))])
 
-        i = 0
-        self.fc_size = []
-        for s in self.fc_size:
+        # Build all fully connected layers
+        self.l_fc = []
+        for s, i in zip(self.fc_size, range(len(self.fc_size))):
             self.l_fc.append(
-                FullyConnected(size=s, act_funct=self.act_funct, dropout=self.dropout, batch_norm=self.batch_norm,
-                               batch_renorm=self.batch_renorm, is_training=self.is_training, name=f"FcLayer{i}",
-                               law_name=self.law_name, law_param=self.law_param, keep_proba=self.keep_proba,
-                               decay=self.decay, decay_renorm=self.decay_renorm, epsilon=self.epsilon,
-                               rmin=self.rmin, rmax=self.rmax, dmax=self.dmax))
+                FullyConnected(size=s,
+                               act_funct=self.act_funct,
+                               dropout=self.dropout,
+                               batch_norm=self.batch_norm,
+                               batch_renorm=self.batch_renorm,
+                               is_training=self.is_training,
+                               name=f"FcLayer{i}",
+                               law_name=self.law_name,
+                               law_param=self.law_param,
+                               keep_proba=self.keep_proba,
+                               decay=self.decay,
+                               decay_renorm=self.decay_renorm,
+                               epsilon=self.epsilon,
+                               rmin=self.rmin,
+                               rmax=self.rmax,
+                               dmax=self.dmax))
 
             self.x_out = self.l_fc[-1].build(self.x_out)
             weights.append(self.l_fc[-1].w)
-            i += 1
 
         # Define the final output layer
         self.l_output = FullyConnected(size=self.output_dim,
+                                       act_funct=None,
+                                       batch_norm=False,
+                                       batch_renorm=False,
+                                       keep_proba=None,
                                        name=f"OutputLayer",
                                        law_name=self.law_name,
                                        law_param=self.law_param)
@@ -417,7 +482,7 @@ class AbstractConvNet(AbstractArchitecture, ABC):
         return params
 
 
-class ConvNetClassifier(AbstractConvNet):
+class ConvNetClassifier(BaseConvNet):
     """This class allow to train a Convolution Network for classification problems.
 
        The ConvNet takes as input a 3D tensor of input data which are filtered using a series of convolution, pooling and
@@ -525,7 +590,7 @@ class ConvNetClassifier(AbstractConvNet):
             return y_pred / y_pred.sum(1).reshape(-1, 1)
 
 
-class ConvNetRegressor(AbstractConvNet):
+class ConvNetRegressor(BaseConvNet):
     """This class allow to train a Convolution Network for regression problems.
 
     The ConvNet takes as input a 3D tensor of input data which are filtered using a series of convolution, pooling and

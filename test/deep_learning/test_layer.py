@@ -1,11 +1,11 @@
 import unittest
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import tensorflow as tf
 
 import core.deep_learning.env as env
-from core.deep_learning.layer import AbstractLayer, FullyConnected, Conv1d, MinMax, Conv2d, Pool2d
+from core.deep_learning.layer import BaseLayer, FullyConnected, Conv1d, MinMax, Conv2d, Pool2d, Res2d
 
 # 2d and 3d array for testing
 X_2d = np.array([
@@ -27,7 +27,7 @@ X_4d = np.array([
      [[0, 0, 0], [1, 2, -3]]]])
 
 
-def test_operator(self: tf.test.TestCase, sess: tf.Session, layer: AbstractLayer, x_input: np.ndarray,
+def test_operator(self: tf.test.TestCase, sess: tf.Session, layer: BaseLayer, x_input: np.ndarray,
                   expected_output: np.ndarray):
     """This method allow to test the operator of a layer """
 
@@ -37,14 +37,14 @@ def test_operator(self: tf.test.TestCase, sess: tf.Session, layer: AbstractLayer
     self.assertAllEqual(output, expected_output)
 
 
-def test_restore(self: tf.test.TestCase, layer: AbstractLayer, input_shape: List[int],
-                 tensors: List[str] = ("x", "x_out")):
+def test_restore(self: tf.test.TestCase, layer: BaseLayer, input_shape: List[int],
+                 tensors: List[str] = ("x", "x_out"), build_args: Tuple = ()):
     """This methods allow to test the restoration process of a Layer"""
 
     x_input = tf.placeholder(tf.float32, input_shape)
 
     # create tensor inside the tensorflow graph
-    layer.build(x_input)
+    layer.build(x_input, *build_args)
 
     # Set all restored attribute to None
     old_tensor = {}
@@ -56,7 +56,7 @@ def test_restore(self: tf.test.TestCase, layer: AbstractLayer, input_shape: List
     env.RESTORE = True
 
     # Restore tensor
-    layer.build(x_input)
+    layer.build(x_input, *build_args)
 
     env.RESTORE = False
 
@@ -191,7 +191,7 @@ class TestConv2dLayer(tf.test.TestCase):
 class TestPool2D(tf.test.TestCase):
 
     def test_operator_min_max(self):
-        # Simple Conv2d MAX
+        # Simple Pool2d MAX
         with self.test_session() as sess:
             X = np.ones((10, 32, 32, 1)).astype(np.float32)
             X[0, 0, 0, 0] = 10
@@ -204,7 +204,7 @@ class TestPool2D(tf.test.TestCase):
 
             test_operator(self, sess, layer, X, expected_output)
 
-        # Simple Conv2d MIN
+        # Simple Poolv2d MIN
         with self.test_session() as sess:
             X = np.ones((10, 32, 32, 1)).astype(np.float32)
             X[0, 0, 0, 0] = 10
@@ -229,7 +229,7 @@ class TestPool2D(tf.test.TestCase):
             test_operator(self, sess, layer, X, expected_output)
 
     def test_operator_avg(self):
-        # Simple Conv2d AVG
+        # Simple Pool2d AVG
         with self.test_session() as sess:
             X = np.ones((10, 32, 32, 1)).astype(np.float32)
 
@@ -244,6 +244,51 @@ class TestPool2D(tf.test.TestCase):
         layer = Pool2d(width=3, height=3, stride=(1, 1), dilation=None, padding="VALID",
                        pooling_type="MAX", name="TestRestore")
         test_restore(self, layer, [None, 16, 16, 3], ["x", "x_out"])
+
+
+class TestRes2dLayer(tf.test.TestCase):
+
+    def test_operator(self):
+        # Simple Res2d
+        with self.test_session() as sess:
+            X = np.ones((10, 32, 32, 3)).astype(np.float32)
+            X_lag = np.ones((10, 32, 32, 3)).astype(np.float32)
+
+            layer = Res2d(name="TestIdentity")
+            layer.x_lag = X_lag
+            expected_output = np.ones((10, 32, 32, 3)) * 2
+
+            test_operator(self, sess, layer, X, expected_output)
+
+        # Reshape Res2d
+        with self.test_session() as sess:
+            X = np.ones((10, 30, 30, 3)).astype(np.float32)
+            X_lag = np.ones((10, 32, 32, 3)).astype(np.float32)
+
+            layer = Res2d(width=3, height=3, stride=(1, 1), padding="VALID", pooling_type="MAX", name="TestReshape")
+            layer.x_lag = X_lag
+            expected_output = np.ones((10, 30, 30, 3)) * 2
+
+            test_operator(self, sess, layer, X, expected_output)
+
+        # Pad Channel Res2d
+        with self.test_session() as sess:
+            X = np.ones((10, 32, 32, 10)).astype(np.float32)
+            X_lag = np.ones((10, 32, 32, 3)).astype(np.float32)
+
+            layer = Res2d(name="TestPad")
+            layer.x_lag = X_lag
+            expected_output = np.ones((10, 32, 32, 10)) * 2
+            expected_output[..., :-3] = 1
+
+            test_operator(self, sess, layer, X, expected_output)
+
+    def test_restore(self):
+        # With bias
+        layer = Res2d(name="TestIdentity")
+
+        X_lag = tf.placeholder(tf.float32, [None, 16, 16, 3])
+        test_restore(self, layer, [None, 16, 16, 3], ["x", "x_out", "x_lag"], (X_lag,))
 
 
 if __name__ == '__main__':

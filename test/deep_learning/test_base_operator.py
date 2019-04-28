@@ -3,10 +3,10 @@ import unittest
 import tensorflow as tf
 
 import core.deep_learning.env as env
-from core.deep_learning.abstract_operator import AbstractOperator
+from core.deep_learning.base_operator import BaseOperator
 
 
-class Operator(AbstractOperator):
+class Operator(BaseOperator):
     def __init__(self, name: str):
         super().__init__(name)
         self.has_build = False

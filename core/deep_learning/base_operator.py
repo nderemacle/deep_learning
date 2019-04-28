@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Union, Any, Sequence, Tuple
 
 import tensorflow as tf
@@ -8,8 +8,8 @@ from core.deep_learning.tf_utils import get_tf_tensor, get_act_funct, identity
 from core.utils.validation import check_tensor, check_variable
 
 
-class AbstractOperator(ABC):
-    """Abstract class implementing the build or restore operator concept.
+class BaseOperator:
+    """Base class implementing the build or restore operator concept.
 
     The main objective of the framework is to build state of the art deep learning operator where the code
     used to deploy Tensorflow operators is exactly the same than the code used to restore them. Today the framework
@@ -36,10 +36,10 @@ class AbstractOperator(ABC):
         >>>
         >>> import tensorflow as tf
         >>>
-        >>> from core.deep_learning.abstract_operator import AbstractOperator
+        >>> from core.deep_learning.abstract_operator import BaseOperator
         >>> from core.deep_learning.tf_utils import get_tf_tensor
         >>>
-        >>> class Sqrt(AbstractOperator):
+        >>> class Sqrt(BaseOperator):
         ...
         ...     def __init__(self, name: str):
         ...         super().__init__(name)
@@ -116,10 +116,10 @@ class AbstractOperator(ABC):
         raise NotImplementedError
 
 
-class AbstractLayer(AbstractOperator, ABC):
+class BaseLayer(BaseOperator):
     """This class set a cortex for the implementation of a layer.
 
-    An abstract layer is a cortex for any kind of deep learning layers. It inherit of all AbstractOperator properties
+    A base layer is a cortex for any kind of deep learning layers. It inherit of all BaseOperator properties
     and allows layers to access to often used deep learning methods such that the activation_function, batch
     normalization or dropout.
 
@@ -187,9 +187,9 @@ class AbstractLayer(AbstractOperator, ABC):
 
         >>> import tensorflow as tf
         >>>
-        >>> from core.deep_learning.abstract_operator import AbstractLayer
+        >>> from core.deep_learning.abstract_operator import BaseLayer
         >>>
-        >>> class Sqrt(AbstractLayer):
+        >>> class Sqrt(BaseLayer):
         ...
         ...     def __init__(self, name: str):
         ...        super().__init__(name=name)
@@ -381,6 +381,11 @@ class AbstractLayer(AbstractOperator, ABC):
 
         """
 
+        if self.batch_renorm:
+            renorm_clipping = {'rmin': self.rmin, 'rmax': self.rmax, 'dmax': self.dmax}
+        else:
+            renorm_clipping = None
+
         self.x_out = tf.keras.layers.BatchNormalization(
             axis=-1,
             momentum=self.decay,
@@ -388,7 +393,7 @@ class AbstractLayer(AbstractOperator, ABC):
             center=True,
             scale=True,
             renorm=self.batch_renorm,
-            renorm_clipping={'rmin': self.rmin, 'rmax': self.rmax, 'dmax': self.dmax},
+            renorm_clipping=renorm_clipping,
             renorm_momentum=self.decay_renorm,
             trainable=True)(self.x_out, training=self.is_training)
 
@@ -400,8 +405,8 @@ class AbstractLayer(AbstractOperator, ABC):
         self.x_out = act_funct(self.x_out)
 
 
-class AbstractLoss(AbstractOperator, ABC):
-    """This class set a cortex for the implementation of a loss.
+class BaseLoss(BaseOperator):
+    """This class set a base for the implementation of a loss.
 
     The class takes inherit all property of the AbstractOperator class to use the restore or build operator process.
     The loss can be view as a graph operator taking as input a target tensor y and and a network prediction tensor
@@ -445,9 +450,9 @@ class AbstractLoss(AbstractOperator, ABC):
         >>>
         >>> import tensorflow as tf
         >>>
-        >>> from core.deep_learning.abstract_operator import AbstractLoss
+        >>> from core.deep_learning.abstract_operator import BaseLoss
         >>>
-        >>> class MAE(AbstractLoss):
+        >>> class MAE(BaseLoss):
         ...
         ...     def __init__(self, penalization_rate: Union[tf.Tensor, float] = 0.5, penalization_type: str = None):
         ...         super().__init__(penalization_rate, penalization_type, "mae")
@@ -572,7 +577,7 @@ class AbstractLoss(AbstractOperator, ABC):
 
         self._set_predict()
 
-        if (self.penalization_type is not None) & (len(self.weights) != 0):
+        if (self.penalization_type is not None) & (self.penalization_rate != 0) & (len(self.weights) != 0):
             assert self.loss is not None
             self._compute_penalization()
             self.loss_opt = tf.add(self.loss, tf.multiply(self.penalization_rate, self.penality))

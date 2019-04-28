@@ -248,3 +248,34 @@ def get_optimizer(name: str, learning_rate: Union[tf.Tensor, float]) -> tf.train
         list_optimizer = ['RMSProp', 'SGD', 'Adam']
         raise TypeError(
             f"{name} isn't a valid optimiser. optimiser_type must be in {list_optimizer}")
+
+
+def get_dim_reduction(n: int, f: int, d: int, s: int, p: str = "VALID") -> int:
+    """
+    Compute the Tensorflow dimension reduction after a convolution step.
+    Args
+    ----
+        n: int
+            Input dimension size.
+
+        f: int
+            Filter size.
+
+        d: int
+            Dilation size. Must be 0 if not dilation is used.
+
+        s: int
+            Stride size.
+
+        p: str
+            Algorithm type. Must be ``SAME`` or ``VALID``.
+
+    Returns:
+
+    """
+
+    if p == "SAME":
+        return int(n / s)
+    else:
+        dim = (n - f - (f - 1) * (d)) / s + 1
+        return int(dim // 1)
