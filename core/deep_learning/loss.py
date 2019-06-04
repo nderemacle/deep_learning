@@ -1,4 +1,4 @@
-from typing import Sequence, Union, Tuple
+from typing import Sequence, Union, Tuple, Optional
 
 import tensorflow as tf
 
@@ -31,7 +31,7 @@ class CrossEntropy(BaseLoss):
 
     """
 
-    def __init__(self, penalization_rate: Union[tf.Tensor, float] = 0.5, penalization_type: Union[str, None] = None,
+    def __init__(self, penalization_rate: Union[tf.Tensor, float] = 0.5, penalization_type: Optional[str] = None,
                  name: str = "cross_entropy"):
         super().__init__(penalization_rate, penalization_type, name)
 
@@ -118,7 +118,7 @@ class MeanSquareError(BaseLoss):
             Layer name for the Tensorflow graph.
     """
 
-    def __init__(self, penalization_rate: (tf.Tensor, float) = 0.5, penalization_type: str = None,
+    def __init__(self, penalization_rate: Union[tf.Tensor, float] = 0.5, penalization_type: Optional[str] = None,
                  name: str = "mean_square_error"):
         super().__init__(penalization_rate, penalization_type, name)
 

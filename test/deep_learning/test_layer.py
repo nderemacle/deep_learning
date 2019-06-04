@@ -29,7 +29,7 @@ X_4d = np.array([
 
 def test_operator(self: tf.test.TestCase, sess: tf.Session, layer: BaseLayer, x_input: np.ndarray,
                   expected_output: np.ndarray):
-    """This method allow to test the operator of a layer """
+    """This method allows to test the operator of a layer """
 
     layer.x = tf.placeholder(tf.float32, x_input.shape)
     layer._operator()
@@ -39,7 +39,7 @@ def test_operator(self: tf.test.TestCase, sess: tf.Session, layer: BaseLayer, x_
 
 def test_restore(self: tf.test.TestCase, layer: BaseLayer, input_shape: List[int],
                  tensors: List[str] = ("x", "x_out"), build_args: Tuple = ()):
-    """This methods allow to test the restoration process of a Layer"""
+    """This methods allows to test the restoration process of a Layer"""
 
     x_input = tf.placeholder(tf.float32, input_shape)
 

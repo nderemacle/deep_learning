@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Union, Dict, Any, Sequence
+from typing import List, Union, Dict, Any, Sequence, Optional
 
 import numpy as np
 import tensorflow as tf
@@ -67,38 +67,38 @@ class BaseConvNet(BaseArchitecture):
 
         self.conv_params: Sequence[Dict[str, Any]] = []
         self.fc_size: Sequence[int] = []
-        self.input_dim: Union[Sequence[int], None] = None
-        self.output_dim: Union[int, None] = None
-        self.act_funct: Union[str, None] = "relu"
+        self.input_dim: Optional[Sequence[int]] = None
+        self.output_dim: Optional[int] = None
+        self.act_funct: Optional[str] = "relu"
 
         self.dropout: bool = False
         self.batch_norm: bool = False
         self.batch_renorm: bool = False
         self.penalization_rate: float = 0.
-        self.penalization_type: Union[str, None] = None
+        self.penalization_type: Optional[str] = None
         self.law_name: str = "uniform"
         self.law_param: float = 0.1
         self.decay: float = 0.99
         self.epsilon: float = 0.001
         self.decay_renorm: float = 0.99
 
-        self.x: Union[tf.placeholder, None] = None
-        self.y: Union[tf.placeholder, None] = None
-        self.x_out: Union[tf.Tensor, None] = None
-        self.y_pred: Union[tf.Tensor, None] = None
-        self.loss: Union[tf.Tensor, None] = None
-        self.optimizer: Union[tf.Tensor, None] = None
+        self.x: Optional[tf.placeholder] = None
+        self.y: Optional[tf.placeholder]  = None
+        self.x_out: Optional[tf.Tensor] = None
+        self.y_pred: Optional[tf.Tensor] = None
+        self.loss: Optional[tf.Tensor] = None
+        self.optimizer: Optional[tf.Tensor] = None
 
-        self.l_conv: Union[List[Union[Conv2d]], None] = None
-        self.l_fc: Union[List[FullyConnected], None] = None
-        self.l_output: Union[FullyConnected, None] = None
-        self.l_loss: Union[BaseLoss, None] = None
+        self.l_conv: Optional[List[Union[Conv2d]]] = None
+        self.l_fc: Optional[List[FullyConnected]] = None
+        self.l_output: Optional[FullyConnected] = None
+        self.l_loss: Optional[BaseLoss] = None
 
     def build(self, conv_params: Sequence[Dict[str, Any]], fc_size: Sequence[int], input_dim: Sequence[int],
-              output_dim: int, act_funct: Union[str, None] = "relu", law_name: str = "uniform", law_param: float = 0.1,
+              output_dim: int, act_funct: Optional[str] = "relu", law_name: str = "uniform", law_param: float = 0.1,
               dropout: bool = False, batch_norm: bool = False, batch_renorm: bool = False, decay: float = 0.99,
               decay_renorm: float = 0.99, epsilon: float = 0.001, penalization_rate: float = 0.,
-              penalization_type: Union[str, None] = None, optimizer_name: str = "Adam") -> None:
+              penalization_type: Optional[str] = None, optimizer_name: str = "Adam") -> None:
 
         """Build the network architecture.
 
@@ -416,7 +416,7 @@ class BaseConvNet(BaseArchitecture):
                 if verbose:
                     print(f'Epoch {epoch}: {m_loss}')
 
-    def predict(self, x: np.ndarray, batch_size: Union[int, None] = None) -> np.ndarray:
+    def predict(self, x: np.ndarray, batch_size: Optional[int] = None) -> np.ndarray:
 
         """
         Make predictions using the ``x`` array. If ``batch_size`` is not None predictions are predicted by mini-batch.
@@ -553,7 +553,7 @@ class ConvNetClassifier(BaseConvNet):
 
         self.optimizer = self._minimize(self.loss_opt, name="optimizer")
 
-    def predict_proba(self, x: np.ndarray, batch_size: int = None) -> np.ndarray:
+    def predict_proba(self, x: np.ndarray, batch_size: Optional[int] = None) -> np.ndarray:
         """
         Predict a vector of probability for each label. If ``batch_size`` is not None predictions are predicted
         by mini-batch

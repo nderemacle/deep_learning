@@ -1,4 +1,4 @@
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 
 import numpy as np
 import tensorflow as tf
@@ -85,15 +85,15 @@ class FullyConnected(BaseLayer):
 
     def __init__(self,
                  size: int,
-                 act_funct: Union[str, None] = None,
+                 act_funct: Optional[str] = None,
                  dropout: bool = False,
                  batch_norm: bool = False,
                  batch_renorm: bool = False,
-                 is_training: Union[tf.Tensor, None] = None,
+                 is_training: Optional[Union[tf.Tensor, bool]] = None,
                  name: str = "fc",
                  law_name: str = "uniform",
                  law_param: float = 0.1,
-                 keep_proba: Union[tf.Tensor, float, None] = None,
+                 keep_proba: Optional[Union[tf.Tensor, float]] = None,
                  decay: float = 0.99,
                  epsilon: float = 0.001,
                  decay_renorm: float = 0.99,
@@ -105,15 +105,15 @@ class FullyConnected(BaseLayer):
                          decay, epsilon, decay_renorm, rmin, rmax, dmax, name)
 
         self.size = size
-        self.w: Union[tf.Variable, None] = None
-        self.b: Union[tf.Variable, None] = None
+        self.w: Optional[tf.Variable] = None
+        self.b: Optional[tf.Variable] = None
 
     def _check_input(self) -> None:
         """Assert the input tensor is 2 dimensional."""
 
         check_tensor(self.x, shape_dim=2)
 
-    def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None) -> None:
+    def _init_variable(self, w_init: Optional[np.ndarray] = None, b_init: Optional[np.ndarray] = None) -> None:
         """Initialize the weight and bias. If init matrix are input variable are initialize using them.
 
         Args
@@ -144,8 +144,8 @@ class FullyConnected(BaseLayer):
 
     def build(self,
               x: tf.Tensor,
-              w_init: np.ndarray = None,
-              b_init: np.ndarray = None) -> tf.Tensor:
+              w_init: Optional[np.ndarray] = None,
+              b_init: Optional[np.ndarray] = None) -> tf.Tensor:
         """
         Call the build parents method and return the layer output.
 
@@ -276,15 +276,15 @@ class Conv1d(BaseLayer):
                  stride: int = 1,
                  padding: str = "VALID",
                  add_bias: bool = True,
-                 act_funct: Union[str, None] = "relu",
+                 act_funct: Optional[str] = "relu",
                  dropout: bool = False,
                  batch_norm: bool = False,
                  batch_renorm: bool = False,
-                 is_training: Union[tf.Tensor, None] = None,
+                 is_training: Optional[Union[tf.Tensor, bool]] = None,
                  name: str = "conv1D",
                  law_name: str = "uniform",
                  law_param: float = 0.1,
-                 keep_proba: Union[tf.Tensor, float, None] = None,
+                 keep_proba: Optional[Union[tf.Tensor, float]] = None,
                  decay: float = 0.99,
                  epsilon: float = 0.001,
                  decay_renorm: float = 0.99,
@@ -303,15 +303,15 @@ class Conv1d(BaseLayer):
         self.padding = padding
         self.add_bias = add_bias
 
-        self.w: Union[tf.Variable, None] = None
-        self.b: Union[tf.Variable, None] = None
+        self.w: Optional[tf.Variable] = None
+        self.b: Optional[tf.Variable] = None
 
     def _check_input(self) -> None:
         """Assert the input tensor is 3 dimensional."""
 
         check_tensor(self.x, shape_dim=3)
 
-    def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None) -> None:
+    def _init_variable(self, w_init: Optional[np.ndarray] = None, b_init: Optional[np.ndarray] = None) -> None:
         """
         Set all filter variable. Filter can be initialize using outside array.
 
@@ -347,8 +347,8 @@ class Conv1d(BaseLayer):
 
     def build(self,
               x: tf.Tensor,
-              w_init: Union[np.ndarray, None] = None,
-              b_init: Union[np.ndarray, None] = None) -> tf.Tensor:
+              w_init: Optional[np.ndarray] = None,
+              b_init: Optional[np.ndarray] = None) -> tf.Tensor:
         """
         Build the convolution taking in entry the x_input tensor.
 
@@ -571,18 +571,18 @@ class Conv2d(BaseLayer):
                  height: int,
                  filter: int,
                  stride: Tuple[int, int] = (1, 1),
-                 dilation: Union[Tuple[int, int], None] = None,
+                 dilation: Optional[Tuple[int, int]] = None,
                  padding: str = "VALID",
                  add_bias: bool = False,
-                 act_funct: Union[str, None] = None,
+                 act_funct: Optional[str] = None,
                  dropout: bool = False,
                  batch_norm: bool = False,
                  batch_renorm: bool = False,
-                 is_training: Union[tf.Tensor, None] = None,
+                 is_training: Optional[Union[tf.Tensor, bool]] = None,
                  name: str = "conv2D",
                  law_name: str = "uniform",
                  law_param: float = 0.1,
-                 keep_proba: Union[tf.Tensor, float, None] = None,
+                 keep_proba: Optional[Union[tf.Tensor, bool]] = None,
                  decay: float = 0.99,
                  epsilon: float = 0.001,
                  decay_renorm: float = 0.99,
@@ -601,8 +601,8 @@ class Conv2d(BaseLayer):
         self.padding = padding
         self.add_bias = add_bias
 
-        self.w: Union[tf.Variable, None] = None
-        self.b: Union[tf.Variable, None] = None
+        self.w: Optional[tf.Variable] = None
+        self.b: Optional[tf.Variable] = None
 
     def _check_input(self) -> None:
 
@@ -618,7 +618,7 @@ class Conv2d(BaseLayer):
             raise (f"{self.name}: Input heights must be higher or equal to filter heights."
                    f"Input heights {self.x.shape[2]}, filter heights {self.width}")
 
-    def _init_variable(self, w_init: np.ndarray = None, b_init: np.ndarray = None) -> None:
+    def _init_variable(self, w_init: Optional[np.ndarray] = None, b_init: Optional[np.ndarray] = None) -> None:
         """Initialize the weight and bias. If init matrix are input variable are initialize using them.
 
         Args
@@ -739,7 +739,7 @@ class Pool2d(BaseLayer):
                  height: int,
                  stride: Tuple[int, int] = (1, 1),
                  padding: str = "VALID",
-                 dilation: Union[Tuple[int, int], None] = None,
+                 dilation: Optional[Tuple[int, int]] = None,
                  pooling_type: str = "MAX",
                  name: str = "Pool2D"):
 
@@ -883,12 +883,12 @@ class Res2d(BaseLayer):
     """
 
     def __init__(self,
-                 width: Union[int, None] = None,
-                 height: Union[int, None] = None,
-                 stride: Union[Tuple[int, int], None] = None,
-                 padding: Union[str, None] = None,
-                 dilation: Union[Tuple[int, int], None] = None,
-                 pooling_type: Union[str, None] = None,
+                 width: Optional[int] = None,
+                 height: Optional[int] = None,
+                 stride: Optional[Tuple[int, int]] = None,
+                 padding: Optional[str] = None,
+                 dilation: Optional[Tuple[int, int]] = None,
+                 pooling_type: Optional[str] = None,
                  name: str = "Residual") -> None:
 
         super().__init__(name=name)

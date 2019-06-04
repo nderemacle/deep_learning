@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Union, Any, Sequence, Tuple
+from typing import Union, Any, Sequence, Tuple, Optional
 
 import tensorflow as tf
 
@@ -36,7 +36,7 @@ class BaseOperator:
         >>>
         >>> import tensorflow as tf
         >>>
-        >>> from core.deep_learning.abstract_operator import BaseOperator
+        >>> from core.deep_learning.base_operator import BaseOperator
         >>> from core.deep_learning.tf_utils import get_tf_tensor
         >>>
         >>> class Sqrt(BaseOperator):
@@ -187,7 +187,7 @@ class BaseLayer(BaseOperator):
 
         >>> import tensorflow as tf
         >>>
-        >>> from core.deep_learning.abstract_operator import BaseLayer
+        >>> from core.deep_learning.base_operator import BaseLayer
         >>>
         >>> class Sqrt(BaseLayer):
         ...
@@ -206,21 +206,21 @@ class BaseLayer(BaseOperator):
     """
 
     def __init__(self,
-                 act_funct: str = None,
+                 act_funct: Optional[str] = None,
                  dropout: bool = False,
                  batch_norm: bool = False,
                  batch_renorm: bool = False,
-                 is_training: Union[tf.Tensor, None] = None,
+                 is_training: Optional[Union[tf.Tensor, bool]] = None,
                  law_name: str = "uniform",
                  law_param: float = 0.1,
-                 keep_proba: Union[tf.Tensor, float, None] = None,
+                 keep_proba: Optional[Union[tf.placeholder, float]] = None,
                  decay: float = 0.99,
                  epsilon: float = 0.001,
                  decay_renorm: float = 0.001,
                  rmin: Union[tf.Tensor, float] = 0.33,
                  rmax: Union[tf.Tensor, float] = 3,
                  dmax: Union[tf.Tensor, float] = 5,
-                 name: Union[str, None] = None):
+                 name: Optional[str] = None):
 
         super().__init__(name)
 
@@ -450,7 +450,7 @@ class BaseLoss(BaseOperator):
         >>>
         >>> import tensorflow as tf
         >>>
-        >>> from core.deep_learning.abstract_operator import BaseLoss
+        >>> from core.deep_learning.base_operator import BaseLoss
         >>>
         >>> class MAE(BaseLoss):
         ...

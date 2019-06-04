@@ -1,4 +1,4 @@
-from typing import Sequence, Union, Callable
+from typing import Sequence, Union, Callable, Optional
 
 import numpy as np
 import tensorflow as tf
@@ -44,8 +44,8 @@ def random_law(shape: Sequence[int], law_name: str, law_param: float, dtype: tf.
         raise TypeError(f"{law_name} isn't a valide law_name. Name must be in {list_law}")
 
 
-def variable(shape: Sequence[int], initial_value: Union[np.ndarray, None] = None, law_name: str = "uniform",
-             law_param: float = 0.1, name: Union[str, None] = None, dtype: tf.DType = tf.float32) -> tf.Variable:
+def variable(shape: Sequence[int], initial_value: Optional[np.ndarray] = None, law_name: str = "uniform",
+             law_param: float = 0.1, name: Optional[str] = None, dtype: tf.DType = tf.float32) -> tf.Variable:
     """
     Return a Tensorflow Variable object uninitialised using either a random number law generator or a deterministic
     value allowing the use no implemented random law generator or the use of transfer learning methods.
@@ -130,7 +130,7 @@ def get_act_funct(name: str = 'relu') -> Callable[[tf.Tensor], tf.Tensor]:
             f"{name} isn't a valide activation function. Methods must be in {list_act_funct}")
 
 
-def get_tf_tensor(name: str, graph: Union[tf.Graph, None] = None) -> tf.Tensor:
+def get_tf_tensor(name: str, graph: Optional[tf.Graph] = None) -> tf.Tensor:
     """
     Return the Tensorflow tensor with the given name. Each tensor must be include inside a scope or a sub scope.
     Regarding the mechanise of the framework, if a tensor is instance at the network level its name should be
@@ -160,7 +160,7 @@ def get_tf_tensor(name: str, graph: Union[tf.Graph, None] = None) -> tf.Tensor:
         return g.get_tensor_by_name(tensor_name + ":0")
 
 
-def get_tf_operation(name: str, graph: Union[tf.Graph, None] = None) -> tf.Tensor:
+def get_tf_operation(name: str, graph: Optional[tf.Graph] = None) -> tf.Tensor:
     """
     Return the Tensorflow operation with the given name. Each operation must be include inside a scope or a sub scope.
     Regarding the mechanise of the framework, if an operation is instance at the network level its name should be
@@ -190,7 +190,7 @@ def get_tf_operation(name: str, graph: Union[tf.Graph, None] = None) -> tf.Tenso
         return g.get_operation_by_name(operation_name)
 
 
-def identity(x: tf.Tensor, name: str, graph: Union[tf.Graph, None] = None) -> tf.Tensor:
+def identity(x: tf.Tensor, name: str, graph: Optional[tf.Graph] = None) -> tf.Tensor:
     """
     Give or force a name for a given tensor.
 

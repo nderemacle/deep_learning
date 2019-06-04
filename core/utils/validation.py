@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 
 import numpy as np
 import tensorflow as tf
@@ -22,7 +22,7 @@ def check_array(x: np.ndarray, shape: Tuple):
     assert np.all(np.isfinite(x))
 
 
-def get_all_tensor_name(graph: tf.Graph = None):
+def get_all_tensor_name(graph: Optional[tf.Graph] = None):
     """
     Return a list with all instance tensor in a graph.
 
@@ -41,7 +41,7 @@ def get_all_tensor_name(graph: tf.Graph = None):
     return [t.name for t in _graph.get_operations() + tf.global_variables()]
 
 
-def is_in_graph(name: str, graph: tf.Graph = None):
+def is_in_graph(name: str, graph: Optional[tf.Graph] = None):
     """
     Return a list with all instance tensor in a graph.
 
@@ -61,7 +61,7 @@ def is_in_graph(name: str, graph: tf.Graph = None):
         raise NameError(f"{name} does not exist.")
 
 
-def is_not_in_graph(name: str, graph: tf.Graph = None):
+def is_not_in_graph(name: str, graph: Optional[tf.Graph] = None):
     """
     Return a list with all instance tensor in a graph.
 
@@ -81,7 +81,7 @@ def is_not_in_graph(name: str, graph: tf.Graph = None):
         raise NameError(f"{name} already exist.")
 
 
-def check_tensor(x: tf.Tensor, shape: Union[Tuple, None] = None, shape_dim: Union[int, None] = None):
+def check_tensor(x: tf.Tensor, shape: Optional[Tuple] = None, shape_dim: Optional[int] = None):
     if not isinstance(x, tf.Tensor):
         raise TypeError(f"Expected tf.Tensor type object but received {type(x)}.")
 
@@ -96,7 +96,7 @@ def check_tensor(x: tf.Tensor, shape: Union[Tuple, None] = None, shape_dim: Unio
                             f" a tensor with shape_dim {x.shape.ndims}")
 
 
-def check_variable(x: tf.Variable, shape: Union[Tuple, None] = None, shape_dim: Union[int, None] = None):
+def check_variable(x: tf.Variable, shape: Optional[Tuple] = None, shape_dim: Optional[int] = None):
     if not isinstance(x, tf.Variable):
         raise TypeError(f"Expected tf.Variable type object but received {type(x)}.")
 

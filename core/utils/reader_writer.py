@@ -1,16 +1,17 @@
 import json
 import pickle as pk
+from typing import Dict, Any
 
 import numpy as np
 
 
-def read_numpy(path: str):
+def read_numpy(path: str) -> np.ndarray:
     assert path.endswith(".npy")
 
     return np.load(path)
 
 
-def read_json(path: str):
+def read_json(path: str) -> Dict[Any, Any]:
     assert path.endswith(".json")
 
     return json.load(open(path, "rb"))
@@ -28,7 +29,7 @@ def write_pickle(f, path: str):
     pk.dump(f, open(path, 'wb'))
 
 
-def read_pickle(path: str):
+def read_pickle(path: str) -> Any:
     assert path.endswith(".pkl")
 
     return pk.load(open(path, "rb"))

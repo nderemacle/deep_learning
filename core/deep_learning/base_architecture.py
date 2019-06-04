@@ -1,7 +1,7 @@
 import os
 import traceback
 from abc import abstractmethod
-from typing import Any, Dict, Union, Sequence
+from typing import Any, Dict, Union, Sequence, Optional
 
 import numpy as np
 import tensorflow as tf
@@ -73,12 +73,12 @@ class BaseArchitecture:
         self.optimizer_name = "Adam"
         self.learning_curve = []
 
-        self.learning_rate: Union[tf.placeholder, None] = None
-        self.keep_proba: Union[tf.placeholder, None] = None
-        self.is_training: Union[tf.placeholder, None] = None
-        self.rmax: Union[tf.placeholder, None] = None
-        self.rmin: Union[tf.placeholder, None] = None
-        self.dmax: Union[tf.placeholder, None] = None
+        self.learning_rate: Optional[tf.placeholder] = None
+        self.keep_proba: Optional[tf.placeholder] = None
+        self.is_training: Optional[tf.placeholder] = None
+        self.rmax: Optional[tf.placeholder] = None
+        self.rmin: Optional[tf.placeholder] = None
+        self.dmax: Optional[tf.placeholder] = None
 
     def _set_session(self) -> tf.Session:
         """
