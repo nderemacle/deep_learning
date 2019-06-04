@@ -113,27 +113,39 @@ class FullyConnected(BaseLayer):
 
         check_tensor(self.x, shape_dim=2)
 
-    def _init_variable(self, w_init: Optional[np.ndarray] = None, b_init: Optional[np.ndarray] = None) -> None:
-        """Initialize the weight and bias. If init matrix are input variable are initialize using them.
+    def _init_variable(self, w: Optional[tf.Variable] = None, b: Optional[tf.Variable] = None) -> None:
+        """
+        Initialize the weight and bias. If init matrix are input variable are initialize using them.
 
         Args
         ----
 
-            w_init : np.array with shape (input_dim, size), None
-                Matrix to initialize the weight variable.
+            w : tf.Variable, None
+                If not None use this variable as weight.
 
-            b_init : np.array with shape (size,), None
-                Matrix of bias to initialize bias.
+            b : tf.Variable, None
+                If not None use this variable as bias.
         """
 
         input_dim = self.x.shape[1].value
         w_shape = (input_dim, self.size)
+        if w is None:
+            self.w = variable(w_shape, None, self.law_name, self.law_param, "w", tf.float32)
+        else:
+            if w.shape != w_shape:
+                raise TypeError("Weight variable must have suitable dimensions regarding input dimension. "
+                                f"W shape is {w.shape} whereas x shape is {self.x.shape}")
+            self.w = tf.identity(w, name="w")
 
-        self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
-
-        if not (self.batch_norm | self.batch_renorm):
+        if not (self.batch_norm or self.batch_renorm):
             b_shape = (self.size,)
-            self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
+            if b is None:
+                    self.b = variable(b_shape, None, self.law_name, self.law_param, "b", tf.float32)
+            else:
+                if b.shape != b_shape:
+                    raise TypeError("Bias variable must have suitable dimensions regarding W shape. "
+                                    f"b shape is {b.shape} whereas w shape is {self.w.shape}")
+                self.b = tf.identity(b, name="b")
 
     def _operator(self) -> None:
         """compute the linear operator :math:`b + W \\times x`."""
@@ -144,8 +156,8 @@ class FullyConnected(BaseLayer):
 
     def build(self,
               x: tf.Tensor,
-              w_init: Optional[np.ndarray] = None,
-              b_init: Optional[np.ndarray] = None) -> tf.Tensor:
+              w: Optional[tf.Variable] = None,
+              b: Optional[tf.Variable] = None) -> tf.Tensor:
         """
         Call the build parents method and return the layer output.
 
@@ -155,11 +167,11 @@ class FullyConnected(BaseLayer):
             x: tf.Tensor
                 Input array with shape (n_observation, size)
 
-            w_init : np.array with shape (input_dim, size), None
-                Matrix to initialize the weight variable.
+            w : tf.Variable, None
+                If not None use this variable as weight.
 
-            b_init : np.array with shape (size,), None
-                Matrix of bias to initialize bias.
+            b : tf.Variable, None
+                If not None use this variable as bias.
 
         Returns
         -------
@@ -168,7 +180,7 @@ class FullyConnected(BaseLayer):
                 Layer output Tensor.
         """
 
-        return super().build(x, w_init, b_init)
+        return super().build(x, w, b)
 
     def restore(self) -> None:
         """
@@ -311,28 +323,40 @@ class Conv1d(BaseLayer):
 
         check_tensor(self.x, shape_dim=3)
 
-    def _init_variable(self, w_init: Optional[np.ndarray] = None, b_init: Optional[np.ndarray] = None) -> None:
+    def _init_variable(self, w: Optional[tf.Variable] = None, b: Optional[tf.Variable] = None) -> None:
         """
         Set all filter variable. Filter can be initialize using outside array.
 
         Args
         ----
 
-            w_init: array with size (width, n_channel, n_filter)
-                Array which can be used to initialized weight filter variable.
+            w : tf.Variable, None
+                If not None use this variable as weight.
 
-            b_init: array with size (n_filter,)
-                Array which can be sue dto initialized bias filter variable.
+            b : tf.Variable, None
+                If not None use this variable as bias.
         """
 
         width, n_channel = self.x.shape[1].value, self.x.shape[2].value
-
         w_shape = (self.width, n_channel, self.channels)
-        self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
 
-        if (self.add_bias) & (not (self.batch_norm | self.batch_renorm)):
+        if w is None:
+            self.w = variable(w_shape, None, self.law_name, self.law_param, "w", tf.float32)
+        else:
+            if w.shape != w_shape:
+                raise TypeError("Weight variable must have suitable dimensions regarding input dimension. "
+                                f"W shape is {w.shape} whereas x shape is {self.x.shape}")
+            self.w = tf.identity(w, name="w")
+
+        if self.add_bias and not (self.batch_norm or self.batch_renorm):
             b_shape = (self.channels,)
-            self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
+            if b is None:
+                self.b = variable(b_shape, None, self.law_name, self.law_param, "b", tf.float32)
+            else:
+                if b.shape != b_shape:
+                    raise TypeError("Bias variable must have suitable dimensions regarding W shape. "
+                                    f"b shape is {b.shape} whereas w shape is {self.w.shape}")
+                self.b = tf.identity(b, name="b")
 
     def _operator(self) -> None:
         """
@@ -347,8 +371,8 @@ class Conv1d(BaseLayer):
 
     def build(self,
               x: tf.Tensor,
-              w_init: Optional[np.ndarray] = None,
-              b_init: Optional[np.ndarray] = None) -> tf.Tensor:
+              w: Optional[tf.Variable] = None,
+              b: Optional[tf.Variable] = None) -> tf.Tensor:
         """
         Build the convolution taking in entry the x_input tensor.
 
@@ -358,11 +382,11 @@ class Conv1d(BaseLayer):
             x: tf.Tensor
                 Input 3 dimensional tensor having the format 'NWC'.
 
-            w_init: np.array with shape (width, n_channel, n_filter), None
-                Array to initialize the weight variable.
+            w : tf.Variable, None
+                If not None use this variable as weight.
 
-            b_init : np.array with shape (n_filter,), None
-                Array to initialize bias.
+            b : tf.Variable, None
+                If not None use this variable as bias.
 
         Returns
         -------
@@ -371,7 +395,7 @@ class Conv1d(BaseLayer):
                 Layer output Tensor.
         """
 
-        return super().build(x, w_init, b_init)
+        return super().build(x, w, b)
 
     def restore(self) -> None:
         """
@@ -379,7 +403,7 @@ class Conv1d(BaseLayer):
         """
 
         self.w = get_tf_tensor(name="w")
-        if (self.add_bias) & (not (self.batch_norm | self.batch_renorm)):
+        if self.add_bias and not (self.batch_norm | self.batch_renorm):
             self.b = get_tf_tensor(name="b")
         super().restore()
 
@@ -618,30 +642,42 @@ class Conv2d(BaseLayer):
             raise (f"{self.name}: Input heights must be higher or equal to filter heights."
                    f"Input heights {self.x.shape[2]}, filter heights {self.width}")
 
-    def _init_variable(self, w_init: Optional[np.ndarray] = None, b_init: Optional[np.ndarray] = None) -> None:
-        """Initialize the weight and bias. If init matrix are input variable are initialize using them.
+    def _init_variable(self, w: Optional[tf.Variable] = None, b: Optional[tf.Variable] = None) -> None:
+        """
+        Initialize the weight and bias. If init matrix are input variable are initialize using them.
 
         Args
         ----
 
-            w_init : np.array with shape (height, width, input_channel, channel), None
-                Matrix to initialize the filter weight variable.
+            w : tf.Variable, None
+                If not None use this variable as weight.
 
-            b_init : np.array with shape (channel,), None
-                Matrix of filter bias to initialize bias.
+            b : tf.Variable, None
+                If not None use this variable as bias.
         """
 
         input_channel = self.x.shape[3].value
         w_shape = (self.height, self.width, input_channel, self.filter)
 
-        self.w = variable(w_shape, w_init, self.law_name, self.law_param, "w", tf.float32)
+        if w is None:
+            self.w = variable(w_shape, None, self.law_name, self.law_param, "w", tf.float32)
+        else:
+            if w.shape != w_shape:
+                raise TypeError("Weight variable must have suitable dimensions regarding input dimension. "
+                                f"W shape is {w.shape} whereas x shape is {self.x.shape}")
+            self.w = tf.identity(w, name="w")
 
-        if (self.add_bias) & (not (self.batch_norm | self.batch_renorm)):
+        if self.add_bias and not (self.batch_norm or self.batch_renorm):
             b_shape = (self.filter,)
-            self.b = variable(b_shape, b_init, self.law_name, self.law_param, "b", tf.float32)
+            if b is None:
+                self.b = variable(b_shape, None, self.law_name, self.law_param, "b", tf.float32)
+            else:
+                if b.shape != b_shape:
+                    raise TypeError("Bias variable must have suitable dimensions regarding W shape. "
+                                    f"b shape is {b.shape} whereas w shape is {self.w.shape}")
+                self.b = tf.identity(b, name="b")
 
-    def build(self,
-              x: tf.Tensor) -> tf.Tensor:
+    def build(self, x: tf.Tensor, w: Optional[tf.Variable] = None, b: Optional[tf.Variable] = None) -> tf.Tensor:
 
         """
         Build the Conv2d layer using the 4 dimensional input tensor x.
@@ -652,6 +688,12 @@ class Conv2d(BaseLayer):
             x: tf.Tensor
                 Input tensor filtered by the layer.
 
+            w : tf.Variable, None
+                If not None use this variable as weight.
+
+            b : tf.Variable, None
+                If not None use this variable as bias.
+
         Returns
         -------
 
@@ -659,7 +701,7 @@ class Conv2d(BaseLayer):
                 Layer output Tensor.
         """
 
-        return super().build(x)
+        return super().build(x, w, b)
 
     def _operator(self) -> None:
 
@@ -686,7 +728,7 @@ class Conv2d(BaseLayer):
         """
 
         self.w = get_tf_tensor(name="w")
-        if (self.add_bias) & (not (self.batch_norm | self.batch_renorm)):
+        if self.add_bias and not (self.batch_norm or self.batch_renorm):
             self.b = get_tf_tensor(name="b")
         super().restore()
 
