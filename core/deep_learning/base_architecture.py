@@ -1,7 +1,7 @@
 import os
 import traceback
 from abc import abstractmethod
-from typing import Any, Dict, Union, Sequence, Optional
+from typing import Any, Dict, Union, Sequence, Optional, List
 
 import numpy as np
 import tensorflow as tf
@@ -306,7 +306,8 @@ class BaseArchitecture:
         finally:
             env.RESTORE = False
 
-    def _minimize(self, f: tf.Tensor, name: str = "optimizer") -> Union[tf.train.Optimizer, tf.Tensor]:
+    def _minimize(self, f: tf.Tensor, name: str = "optimizer", var_list: Optional[List[tf.Variable]] = None) \
+            -> Union[tf.train.Optimizer, tf.Tensor]:
 
         """
         Return an optimizer which minimize a tensor f. Add all parameters store in the UPDATE_OPS such that all moving
@@ -321,6 +322,9 @@ class BaseArchitecture:
             name : str
                 name of the tensor optimizer.
 
+            var_list: List[tf.Variable], None
+                If not None minimize f over all variable inside var_list.
+
         Returns
         -------
 
@@ -333,7 +337,7 @@ class BaseArchitecture:
         else:
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):
-                return get_optimizer(self.optimizer_name, self.learning_rate).minimize(f, name=name)
+                return get_optimizer(self.optimizer_name, self.learning_rate).minimize(f, name=name, var_list=var_list)
 
     def _placeholder(self, dtype: tf.DType, shape: Union[Sequence[Union[int, None]], int, None],
                      name: str) -> tf.placeholder:

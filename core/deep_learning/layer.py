@@ -134,17 +134,17 @@ class FullyConnected(BaseLayer):
         else:
             if w.shape != w_shape:
                 raise TypeError("Weight variable must have suitable dimensions regarding input dimension. "
-                                f"W shape is {w.shape} whereas x shape is {self.x.shape}")
+                                f"W shape is {w.shape} whereas expected shape is {w_shape}")
             self.w = tf.identity(w, name="w")
 
         if not (self.batch_norm or self.batch_renorm):
             b_shape = (self.size,)
             if b is None:
-                    self.b = variable(b_shape, None, self.law_name, self.law_param, "b", tf.float32)
+                self.b = variable(b_shape, None, self.law_name, self.law_param, "b", tf.float32)
             else:
                 if b.shape != b_shape:
                     raise TypeError("Bias variable must have suitable dimensions regarding W shape. "
-                                    f"b shape is {b.shape} whereas w shape is {self.w.shape}")
+                                    f"b shape is {b.shape} whereas expected shape is {self.b.shape}")
                 self.b = tf.identity(b, name="b")
 
     def _operator(self) -> None:
@@ -1020,8 +1020,8 @@ class Res2d(BaseLayer):
             self.x_out = tf.pad(self.x_out, [[0, 0], [0, 0], [0, 0], [delta, 0]])
 
         elif self.x.shape[-1] < self.x_lag.shape[-1]:
-                raise TypeError("Channel dimension of x must be higher or equal to channel dimension of x_lag. "
-                                f"Dimension of x is {self.x.shape[-1]} whereas is {self.x_lag.shape[-1]} for x_lag.")
+            raise TypeError("Channel dimension of x must be higher or equal to channel dimension of x_lag. "
+                            f"Dimension of x is {self.x.shape[-1]} whereas is {self.x_lag.shape[-1]} for x_lag.")
 
         self.x_out = tf.add(self.x, self.x_out)
 

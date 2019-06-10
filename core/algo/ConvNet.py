@@ -61,7 +61,7 @@ class BaseConvNet(BaseArchitecture):
             Loss layer object.
     """
 
-    def __init__(self, name: str = 'AbstractConvNet', use_gpu: bool = False):
+    def __init__(self, name: str = 'BaseConvNet', use_gpu: bool = False):
 
         super().__init__(name, use_gpu)
 
@@ -83,7 +83,7 @@ class BaseConvNet(BaseArchitecture):
         self.decay_renorm: float = 0.99
 
         self.x: Optional[tf.placeholder] = None
-        self.y: Optional[tf.placeholder]  = None
+        self.y: Optional[tf.placeholder] = None
         self.x_out: Optional[tf.Tensor] = None
         self.y_pred: Optional[tf.Tensor] = None
         self.loss: Optional[tf.Tensor] = None
@@ -395,9 +395,6 @@ class BaseConvNet(BaseArchitecture):
         sample_index = np.arange(len(x))
         n_split = len(x) // batch_size
 
-        m_loss = 0
-        n = 0
-
         with self.graph.as_default():
             for epoch in range(n_epoch):
                 np.random.shuffle(sample_index)
@@ -406,15 +403,10 @@ class BaseConvNet(BaseArchitecture):
                     feed_dict.update({self.x: x[batch_index, ...], self.y: y[batch_index, ...]})
                     _, loss = self.sess.run([self.optimizer, self.loss], feed_dict=feed_dict)
 
-                    m_loss *= n
-                    m_loss += loss
-                    n += 1
-                    m_loss /= n
-
                     self.learning_curve.append(loss)
 
                 if verbose:
-                    print(f'Epoch {epoch}: {m_loss}')
+                    print(f'Epoch {epoch}: {self.learning_curve[-1]}')
 
     def predict(self, x: np.ndarray, batch_size: Optional[int] = None) -> np.ndarray:
 

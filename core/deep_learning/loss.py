@@ -2,7 +2,8 @@ from typing import Sequence, Union, Tuple, Optional
 
 import tensorflow as tf
 
-from core.deep_learning.base_operator import BaseLoss
+from core.deep_learning.base_operator import BaseLoss, BaseOperator
+from core.deep_learning.tf_utils import get_tf_tensor
 
 
 class CrossEntropy(BaseLoss):
@@ -184,3 +185,62 @@ class MeanSquareError(BaseLoss):
         """
 
         super().restore()
+
+
+class GanLoss(BaseOperator):
+
+    def __init__(self, name: str = "mean_square_error"):
+        super().__init__(name)
+
+        self.D_out: Optional[tf.Tensor] = None
+        self.DG_out: Optional[tf.Tensor] = None
+
+        self.D_loss: Optional[tf.Tensor] = None
+        self.G_loss: Optional[tf.Tensor] = None
+
+    def check_input(self) -> None:
+        """
+        Check all input tensors are 2 dimensional.
+        """
+        pass
+
+    def _set_loss(self) -> None:
+        """
+        Set the loss tensor.
+        """
+
+        self.D_out = tf.identity(self.D_out, name="D_out")
+        self.DG_out = tf.identity(self.DG_out, name="DG_out")
+
+        cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+
+        self.D_loss = -tf.reduce_mean(tf.log(self.D_out + 1e-8) + tf.log(1. - self.DG_out + 1e-8))
+        self.G_loss = -tf.reduce_mean(tf.log(self.DG_out + 1e-8))
+
+        self.D_loss = tf.identity(self.D_loss, name='D_loss')
+        self.G_loss = tf.identity(self.G_loss, name='G_loss')
+
+    def build(self, D_out: tf.Tensor, DG_out: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
+        super().build(D_out, DG_out)
+
+        return self.D_loss, self.G_loss
+
+    def _build(self, D_out: tf.Tensor, DG_out: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
+        self.D_out = D_out
+        self.DG_out = DG_out
+
+        self.check_input()
+
+        self._set_loss()
+
+        return self.D_loss, self.G_loss
+
+    def restore(self) -> None:
+        """
+        Restore all loss tensor from the current graph.
+        """
+
+        self.D_out = get_tf_tensor(name='D_out')
+        self.DG_out = get_tf_tensor(name='DG_out')
+        self.D_loss = get_tf_tensor(name='D_loss')
+        self.G_loss = get_tf_tensor(name='G_loss')

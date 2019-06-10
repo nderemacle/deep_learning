@@ -124,8 +124,10 @@ def get_act_funct(name: str = 'relu') -> Callable[[tf.Tensor], tf.Tensor]:
         return tf.nn.softplus
     elif name == 'softsign':
         return tf.nn.softsign
+    elif name == 'leaky_relu':
+        return tf.nn.leaky_relu
     else:
-        list_act_funct = ['relu', 'sigmoid', 'tanh', 'relu6', 'crelu', 'elu', 'softplus', 'softsign']
+        list_act_funct = ['relu', 'sigmoid', 'tanh', 'relu6', 'crelu', 'elu', 'softplus', 'softsign', 'leaky_relu']
         raise TypeError(
             f"{name} isn't a valide activation function. Methods must be in {list_act_funct}")
 

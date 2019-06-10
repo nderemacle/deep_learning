@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Tuple, List, Union, Dict, Any, Sequence, Optional
+from typing import Tuple, List, Dict, Any, Sequence, Optional
 
 import numpy as np
 import tensorflow as tf
@@ -59,7 +59,7 @@ class BaseMlp(BaseArchitecture):
             Loss layer object.
     """
 
-    def __init__(self, name: str = 'AbstractMlp', use_gpu: bool = False):
+    def __init__(self, name: str = 'BaseMlp', use_gpu: bool = False):
 
         super().__init__(name, use_gpu)
 
@@ -276,9 +276,6 @@ class BaseMlp(BaseArchitecture):
         sample_index = np.arange(len(x))
         n_split = len(x) // batch_size
 
-        m_loss = 0
-        n = 0
-
         with self.graph.as_default():
             for epoch in range(n_epoch):
                 np.random.shuffle(sample_index)
@@ -287,15 +284,10 @@ class BaseMlp(BaseArchitecture):
                     feed_dict.update({self.x: x[batch_index, :], self.y: y[batch_index, :]})
                     _, loss = self.sess.run([self.optimizer, self.loss], feed_dict=feed_dict)
 
-                    m_loss *= n
-                    m_loss += loss
-                    n += 1
-                    m_loss /= n
-
                     self.learning_curve.append(loss)
 
                 if verbose:
-                    print(f'Epoch {epoch}: {m_loss}')
+                    print(f'Epoch {epoch}: {self.learning_curve[-1]}')
 
     def predict(self, x: np.ndarray, batch_size: Optional[int] = None) -> np.ndarray:
 
