@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Union, Any, Sequence, Tuple, Optional
+from typing import Union, Any, Sequence, Tuple, Optional, Callable
 
 import tensorflow as tf
 
@@ -206,7 +206,7 @@ class BaseLayer(BaseOperator):
     """
 
     def __init__(self,
-                 act_funct: Optional[str] = None,
+                 act_funct: Optional[Union[str, Callable]] = None,
                  dropout: bool = False,
                  batch_norm: bool = False,
                  batch_renorm: bool = False,
@@ -401,7 +401,10 @@ class BaseLayer(BaseOperator):
 
         """Use an activation function on the output class attribute."""
 
-        act_funct = get_act_funct(self.act_funct)
+        if callable(self.act_funct):
+            act_funct = self.act_funct
+        else:
+            act_funct = get_act_funct(self.act_funct)
         self.x_out = act_funct(self.x_out)
 
 

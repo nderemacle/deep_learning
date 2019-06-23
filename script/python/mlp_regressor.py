@@ -10,6 +10,10 @@ def rmse(y, y_pred):
     return np.sqrt(np.mean(np.power(y - y_pred, 2)))
 
 
+def sigmoid(x: tf.Tensor) -> tf.Tensor:
+    return tf.sigmoid(x)
+
+
 def main():
     # Load and prepare data
     boston = tf.keras.datasets.boston_housing
@@ -28,6 +32,7 @@ def main():
               input_dim=13,
               output_dim=1,
               act_funct='tanh',
+              final_funct=sigmoid,
               dropout=False,
               batch_norm=True,
               batch_renorm=True,

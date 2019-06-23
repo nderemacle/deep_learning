@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Tuple, List, Dict, Any, Sequence, Optional
+from typing import Tuple, List, Dict, Any, Sequence, Optional, Union, Callable
 
 import numpy as np
 import tensorflow as tf
@@ -66,7 +66,8 @@ class BaseMlp(BaseArchitecture):
         self.layer_size: Tuple = ()
         self.input_dim: Optional[int] = None
         self.output_dim: Optional[int] = None
-        self.act_funct: str = 'relu'
+        self.act_funct: Optional[Union[str, Callable]] = 'relu'
+        self.final_funct: Optional[Union[str, Callable]] = None
 
         self.dropout: bool = False
         self.batch_norm: bool = False
@@ -90,10 +91,22 @@ class BaseMlp(BaseArchitecture):
         self.l_output: Optional[FullyConnected] = None
         self.l_loss: Optional[BaseLoss] = None
 
-    def build(self, layer_size: Sequence[int], input_dim: int, output_dim: int, act_funct: Optional[str] = "relu",
-              law_name: str = "uniform", law_param: float = 0.1, dropout: bool = True, batch_norm: bool = False,
-              batch_renorm: bool = False, decay: float = 0.999, decay_renorm: float = 0.99, epsilon: float = 0.001,
-              penalization_rate: float = 0., penalization_type: Optional[str] = None,
+    def build(self,
+              layer_size: Sequence[int],
+              input_dim: int,
+              output_dim: int,
+              act_funct: Optional[Union[str, Callable]] = "relu",
+              final_funct: Optional[Union[str, Callable]] = None,
+              law_name: str = "uniform",
+              law_param: float = 0.1,
+              dropout: bool = True,
+              batch_norm: bool = False,
+              batch_renorm: bool = False,
+              decay: float = 0.99,
+              decay_renorm: float = 0.99,
+              epsilon: float = 0.001,
+              penalization_rate: float = 0.,
+              penalization_type: Optional[str] = None,
               optimizer_name: str = "Adam") -> None:
 
         """
@@ -111,8 +124,12 @@ class BaseMlp(BaseArchitecture):
             output_dim: int
                 Number of target variable to predict.
 
-            act_funct: str, None
-                Name of the activation function. If None, no activation function is used.
+            act_funct: str, None, Callable
+                Name or callable object of the activation function. If None, no activation function is used.
+
+            final_funct: str, None, Callable
+                Name or callable object of the function to use for the final layer. If None, no function is used.
+
 
             batch_norm: bool
                 If True apply the batch normalization method.
@@ -156,6 +173,7 @@ class BaseMlp(BaseArchitecture):
                       input_dim=input_dim,
                       output_dim=output_dim,
                       act_funct=act_funct,
+                      final_funct=final_funct,
                       law_name=law_name,
                       law_param=law_param,
                       dropout=dropout,
@@ -208,6 +226,10 @@ class BaseMlp(BaseArchitecture):
         # Define the final output layer
         self.l_output = FullyConnected(size=self.output_dim,
                                        name=f"OutputLayer",
+                                       batch_norm=False,
+                                       batch_renorm=False,
+                                       keep_proba=None,
+                                       act_funct=self.final_funct,
                                        law_name=self.law_name,
                                        law_param=self.law_param)
 
@@ -339,6 +361,7 @@ class BaseMlp(BaseArchitecture):
             'input_dim': self.input_dim,
             'output_dim': self.output_dim,
             'act_funct': self.act_funct,
+            'final_funct': self.final_funct,
             'dropout': self.dropout,
             'batch_norm': self.batch_norm,
             'batch_renorm': self.batch_renorm,

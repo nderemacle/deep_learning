@@ -1,4 +1,4 @@
-from typing import Tuple, List, Dict, Any, Sequence, Optional
+from typing import List, Dict, Any, Sequence, Optional, Union, Callable
 
 import numpy as np
 import tensorflow as tf
@@ -8,23 +8,22 @@ from core.deep_learning.layer import FullyConnected
 from core.deep_learning.loss import GanLoss
 from core.utils.validation import check_array
 
+
 class NeuralNetParams:
 
     def __init__(self, input_dim: int,
-                       output_dim: int,
-                       layer_size: Sequence[int] = (),
-                       act_funct: Optional[str] = None,
-                       final_funct: Optional[str] = None,
-                       dropout: bool = False,
-                       batch_norm: bool = False,
-                       batch_renorm: bool = False,
-                       law_name: str = "unform",
-                       law_param: float = 0.01,
-                       decay: float = 0.99,
-                       epsilon: float = 0.001,
-                       decay_renorm: float = 0.99):
-
-
+                 output_dim: int,
+                 layer_size: Sequence[int] = (),
+                 act_funct: Optional[Union[str, Callable]] = None,
+                 final_funct: Optional[Union[str, Callable]] = None,
+                 dropout: bool = False,
+                 batch_norm: bool = False,
+                 batch_renorm: bool = False,
+                 law_name: str = "unform",
+                 law_param: float = 0.01,
+                 decay: float = 0.99,
+                 epsilon: float = 0.001,
+                 decay_renorm: float = 0.99):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.layer_size = layer_size
@@ -43,7 +42,6 @@ class NeuralNetParams:
 class NeuralNetStruct:
 
     def __init__(self):
-
         self.x: Optional[tf.placeholder] = None
         self.l_fc: Optional[List[FullyConnected]] = None
         self.l_output: Optional[FullyConnected] = None
@@ -110,17 +108,15 @@ class Gan(BaseArchitecture):
 
         self.l_loss: Optional[GanLoss] = None
 
-
-
     def build(self,
               input_dim: int,
               noise_dim: int,
               dis_layer_size: Sequence[int] = (100,),
               gen_layer_size: Sequence[int] = (100,),
-              dis_act_funct: Optional[str] = "relu",
-              gen_act_funct: Optional[str] = "relu",
-              gen_final_funct: Optional[str] = "relu",
-              dis_final_funct: str = 'sigmoid',
+              dis_act_funct: Optional[Union[str, Callable]] = "relu",
+              gen_act_funct: Optional[Union[str, Callable]] = "relu",
+              gen_final_funct: Optional[Union[str, Callable]] = "relu",
+              dis_final_funct: Optional[Union[str, Callable]] = 'sigmoid',
               dis_law_name: str = "uniform",
               gen_law_name: str = "uniform",
               dis_law_param: float = 0.1,
@@ -260,6 +256,9 @@ class Gan(BaseArchitecture):
         # Define the final output layer
         net_struct.l_output = FullyConnected(size=net_params.output_dim,
                                              act_funct=net_params.final_funct,
+                                             batch_norm=False,
+                                             batch_renorm=False,
+                                             keep_proba=None,
                                              name=f"OutputLayer_{name}",
                                              law_name=net_params.law_name,
                                              law_param=net_params.law_param)
@@ -289,7 +288,7 @@ class Gan(BaseArchitecture):
         self.dis_gen_network = NeuralNetStruct()
         self.dis_gen_network.x = self.gen_network.l_output.x_out
         self._build_sub_network(net_params=self.dis_params, net_struct=self.dis_gen_network, name="dis_gen",
-                                weights= [l.w for l in self.dis_network.l_fc] + [self.dis_network.l_output.w],
+                                weights=[l.w for l in self.dis_network.l_fc] + [self.dis_network.l_output.w],
                                 bias=[l.b for l in self.dis_network.l_fc] + [self.dis_network.l_output.b])
 
         # Set all loss
@@ -357,7 +356,7 @@ class Gan(BaseArchitecture):
                     z = np.random.uniform(-1, 1, (len(batch_index), self.noise_dim))
                     dis_feed_dict.update({self.dis_network.x: x[batch_index, :], self.gen_network.x: z})
                     _, dis_loss = self.sess.run([self.dis_network.optimizer, self.dis_network.loss],
-                                              feed_dict=dis_feed_dict)
+                                                feed_dict=dis_feed_dict)
                     # Update Generator
                     z = np.random.uniform(-1, 1, (batch_size, self.noise_dim))
                     gen_feed_dict.update({self.gen_network.x: z})

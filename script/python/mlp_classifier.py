@@ -15,6 +15,10 @@ def one_hot_encoding(x: np.ndarray):
     return np.eye(n_values)[x]
 
 
+def relu(x: tf.Tensor) -> tf.Tensor:
+    return tf.maximum(x, 0)
+
+
 def main():
     # Load and prepare data
     mnist = tf.keras.datasets.mnist
@@ -27,7 +31,7 @@ def main():
     clf.build(layer_size=(64, 128),
               input_dim=784,
               output_dim=10,
-              act_funct='relu',
+              act_funct=relu,
               dropout=False,
               batch_norm=False,
               batch_renorm=False,

@@ -3193,7 +3193,8 @@
                                             activation function:</p>
                                         <div class="math">
                                             <p><img alt="y = \sigma(b + W \times x)"
-                                                    src="_images/math/e46a511372dd904f507071088ce7cc82c0eb65b0.png"/></p>
+                                                    src="_images/math/e46a511372dd904f507071088ce7cc82c0eb65b0.png"/>
+                                            </p>
                                         </div>
                                         <p>To prevent overfitting the class allows the used of state of the art deep
                                             learning regularization method: batch
@@ -3381,11 +3382,13 @@
                                             (Width, filters):</p>
                                         <div class="math">
                                             <p><img alt="\sigma(b + W \otimes x)"
-                                                    src="_images/math/5e2627e27dc3ccb22f42bf70e8867b6ccac8be17.png"/></p>
+                                                    src="_images/math/5e2627e27dc3ccb22f42bf70e8867b6ccac8be17.png"/>
+                                            </p>
                                         </div>
                                         <p>Where <img alt="\otimes"
                                                       class="math"
-                                                      src="_images/math/0f548ef53ce12dd373ce8484a54a66f278b1b616.png"/> is the convolution operation. The output width
+                                                      src="_images/math/0f548ef53ce12dd373ce8484a54a66f278b1b616.png"/>
+                                            is the convolution operation. The output width
                                             size can change regarding the filter_width,
                                             the stride and the padding selected.</p>
                                         <table class="docutils field-list" frame="void" rules="none">
@@ -3674,14 +3677,17 @@
                                             to extract information from
                                             input spaced by a given rate. Given a filter weight <img alt="W"
                                                                                                      class="math"
-                                                                                                     src="_images/math/953bde2ab2fca30897f66185e5b37b73747b8b46.png"/> with
+                                                                                                     src="_images/math/953bde2ab2fca30897f66185e5b37b73747b8b46.png"/>
+                                            with
                                             shape (h, w, c, f) and an input subset
                                             <img alt="x"
                                                  class="math"
-                                                 src="_images/math/a59f68a4202623bb859a7093f0316bf466e6f75d.png"/> with shape (h, w, c), the convolution operation is:</p>
+                                                 src="_images/math/a59f68a4202623bb859a7093f0316bf466e6f75d.png"/> with
+                                            shape (h, w, c), the convolution operation is:</p>
                                         <div class="math">
-                                            <p><img alt="o[i, j, f] = \sum_{h} \sum_{w}  \sum_{c} x[i -h, j - w, c] * W[h, w, c, f]"
-                                                    src="_images/math/e162cbc670a9ba2bbe572a1c988b0a8a671b6026.png"/>
+                                            <p>
+                                                <img alt="o[i, j, f] = \sum_{h} \sum_{w}  \sum_{c} x[i -h, j - w, c] * W[h, w, c, f]"
+                                                     src="_images/math/e162cbc670a9ba2bbe572a1c988b0a8a671b6026.png"/>
                                             </p>
                                         </div>
                                         <p>The output width size can change regarding the filter_width, the stride and
@@ -3689,19 +3695,24 @@
                                             level necessary:</p>
                                         <div class="math">
                                             <p><img alt="\cfrac{A - F - (F - 1 )D)}{S} + 1"
-                                                    src="_images/math/8328dbcbbe399f63fddf0bf2233707165343d86a.png"/></p>
+                                                    src="_images/math/8328dbcbbe399f63fddf0bf2233707165343d86a.png"/>
+                                            </p>
                                         </div>
                                         <p>where <img alt="A"
                                                       class="math"
-                                                      src="_images/math/0043fe6507e9b1d112e07a2801e24927e267dd50.png"/> represent the size of an input axis, <img alt="F"
-                                                                                                          class="math"
-                                                                                                          src="_images/math/a3965ac90c9513644606210339d525386626dcb2.png"/> the
+                                                      src="_images/math/0043fe6507e9b1d112e07a2801e24927e267dd50.png"/>
+                                            represent the size of an input axis, <img alt="F"
+                                                                                      class="math"
+                                                                                      src="_images/math/a3965ac90c9513644606210339d525386626dcb2.png"/>
+                                            the
                                             filter size, <img alt="D"
                                                               class="math"
-                                                              src="_images/math/3cf5aa5abe312e6fd4996975341a43aa566e8d8d.png"/> the dilation rate and
+                                                              src="_images/math/3cf5aa5abe312e6fd4996975341a43aa566e8d8d.png"/>
+                                            the dilation rate and
                                             <img alt="S"
                                                  class="math"
-                                                 src="_images/math/1dbc400fcc213305415872f9f625cd2828f97a00.png"/> the stride use.</p>
+                                                 src="_images/math/1dbc400fcc213305415872f9f625cd2828f97a00.png"/> the
+                                            stride use.</p>
                                         <table class="docutils field-list" frame="void" rules="none">
                                             <col class="field-name"/>
                                             <col class="field-body"/>
@@ -4010,17 +4021,20 @@
                                         <p>This layer takes input the previous output tensor and the input of an older
                                             layer. If <img alt="f"
                                                            class="math"
-                                                           src="_images/math/875eb40014526135383caa89fd500ae40a835f56.png"/> represent all
+                                                           src="_images/math/875eb40014526135383caa89fd500ae40a835f56.png"/>
+                                            represent all
                                             operation done from the older layer input <img alt="x"
                                                                                            class="math"
-                                                                                           src="_images/math/a59f68a4202623bb859a7093f0316bf466e6f75d.png"/>, the operator
+                                                                                           src="_images/math/a59f68a4202623bb859a7093f0316bf466e6f75d.png"/>,
+                                            the operator
                                             computed is the following:</p>
                                         <blockquote>
                                             <div>
                                                 <div class="math">
                                                     <p>
                                                         <img alt="f(x) + x"
-                                                             src="_images/math/519492ad294917f749b3fb82b3e1f70429d86c0a.png"/></p>
+                                                             src="_images/math/519492ad294917f749b3fb82b3e1f70429d86c0a.png"/>
+                                                    </p>
                                                 </div>
                                             </div>
                                         </blockquote>
@@ -4028,7 +4042,8 @@
                                             of the original input <cite>x</cite> using all
                                             operator define in the function <img alt="f"
                                                                                  class="math"
-                                                                                 src="_images/math/875eb40014526135383caa89fd500ae40a835f56.png"/>. This residual correction
+                                                                                 src="_images/math/875eb40014526135383caa89fd500ae40a835f56.png"/>.
+                                            This residual correction
                                             allows next layer to considers less noisy input
                                             in order to make the inference task.</p>
                                         <p>The old input can have dimensions not similar to the residual part. To
@@ -4186,13 +4201,15 @@
                                             class, learns network parameters by minimising for all observations the
                                             following function function:</p>
                                         <div class="math">
-                                            <p><img alt="- \sum_{c=1}^{C} y_{c} \log(p_{c}) \quad \text{with} \quad p_{c} = \frac{\exp(o_{c})}{\sum_{i=1}^{C} \exp(o_i)}"
-                                                    src="_images/math/cc0caabb95cfb3b2256bd2a77fd854cff8f888ac.png"/>
+                                            <p>
+                                                <img alt="- \sum_{c=1}^{C} y_{c} \log(p_{c}) \quad \text{with} \quad p_{c} = \frac{\exp(o_{c})}{\sum_{i=1}^{C} \exp(o_i)}"
+                                                     src="_images/math/cc0caabb95cfb3b2256bd2a77fd854cff8f888ac.png"/>
                                             </p>
                                         </div>
                                         <p>The final predicted label is the output network <img alt="o_{c}"
                                                                                                 class="math"
-                                                                                                src="_images/math/4b31c6ac33249811b5839ac1ef883cb26d7d0162.png"/> with the
+                                                                                                src="_images/math/4b31c6ac33249811b5839ac1ef883cb26d7d0162.png"/>
+                                            with the
                                             highest value.</p>
                                         <table class="docutils field-list" frame="void" rules="none">
                                             <col class="field-name"/>
@@ -4341,11 +4358,13 @@
                                             objective function in same time. If the
                                             problem has <img alt="C"
                                                              class="math"
-                                                             src="_images/math/afce44aa7c55836ca9345404c22fc7b599d2ed84.png"/> objective variable to predict, the following
+                                                             src="_images/math/afce44aa7c55836ca9345404c22fc7b599d2ed84.png"/>
+                                            objective variable to predict, the following
                                             function is minimize for each observation:</p>
                                         <div class="math">
                                             <p><img alt="\frac{1}{C} \sum_{c=1}^{C} (y_c - \hat{y_c})^2"
-                                                    src="_images/math/ad629b5d3b425691d320f548a132edfb5623a1eb.png"/></p>
+                                                    src="_images/math/ad629b5d3b425691d320f548a132edfb5623a1eb.png"/>
+                                            </p>
                                         </div>
                                         <table class="docutils field-list" frame="void" rules="none">
                                             <col class="field-name"/>
@@ -4911,6 +4930,8 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
+
+
 
 </script>
 

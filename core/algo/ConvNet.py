@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Union, Dict, Any, Sequence, Optional
+from typing import List, Union, Dict, Any, Sequence, Optional, Callable
 
 import numpy as np
 import tensorflow as tf
@@ -69,7 +69,8 @@ class BaseConvNet(BaseArchitecture):
         self.fc_size: Sequence[int] = []
         self.input_dim: Optional[Sequence[int]] = None
         self.output_dim: Optional[int] = None
-        self.act_funct: Optional[str] = "relu"
+        self.act_funct: Optional[Union[str, Callable]] = "relu"
+        self.final_funct: Optional[Union[str, Callable]] = None
 
         self.dropout: bool = False
         self.batch_norm: bool = False
@@ -94,11 +95,24 @@ class BaseConvNet(BaseArchitecture):
         self.l_output: Optional[FullyConnected] = None
         self.l_loss: Optional[BaseLoss] = None
 
-    def build(self, conv_params: Sequence[Dict[str, Any]], fc_size: Sequence[int], input_dim: Sequence[int],
-              output_dim: int, act_funct: Optional[str] = "relu", law_name: str = "uniform", law_param: float = 0.1,
-              dropout: bool = False, batch_norm: bool = False, batch_renorm: bool = False, decay: float = 0.99,
-              decay_renorm: float = 0.99, epsilon: float = 0.001, penalization_rate: float = 0.,
-              penalization_type: Optional[str] = None, optimizer_name: str = "Adam") -> None:
+    def build(self,
+              conv_params: Sequence[Dict[str, Any]],
+              fc_size: Sequence[int],
+              input_dim: Sequence[int],
+              output_dim: int,
+              act_funct: Optional[Union[str, Callable]] = "relu",
+              final_funct: Optional[Union[str, Callable]] = None,
+              law_name: str = "uniform",
+              law_param: float = 0.1,
+              dropout: bool = False,
+              batch_norm: bool = False,
+              batch_renorm: bool = False,
+              decay: float = 0.99,
+              decay_renorm: float = 0.99,
+              epsilon: float = 0.001,
+              penalization_rate: float = 0.,
+              penalization_type: Optional[str] = None,
+              optimizer_name: str = "Adam") -> None:
 
         """Build the network architecture.
 
@@ -156,8 +170,11 @@ class BaseConvNet(BaseArchitecture):
                 Number of target variable to predict.
 
             act_funct: str, None
-                Name of the activation function used for the fully connected layer. If None, no activation function is
-                used.
+                Name or callable object of the activation function used for the fully connected layer.
+                If None, no activation function is used.
+
+            final_funct: str, None, Callable
+                Name or callable object of the function to use for the final layer. If None, no function is used.
 
             dropout: bool
                 Whether to use dropout or not.
@@ -202,6 +219,7 @@ class BaseConvNet(BaseArchitecture):
                       input_dim=tuple(input_dim),
                       output_dim=output_dim,
                       act_funct=act_funct,
+                      final_funct=final_funct,
                       dropout=dropout,
                       law_name=law_name,
                       law_param=law_param,
@@ -322,7 +340,7 @@ class BaseConvNet(BaseArchitecture):
 
         # Define the final output layer
         self.l_output = FullyConnected(size=self.output_dim,
-                                       act_funct=None,
+                                       act_funct=self.final_funct,
                                        batch_norm=False,
                                        batch_renorm=False,
                                        keep_proba=None,
@@ -459,6 +477,7 @@ class BaseConvNet(BaseArchitecture):
             'input_dim': self.input_dim,
             'output_dim': self.output_dim,
             'act_funct': self.act_funct,
+            'final_funct': self.final_funct,
             'dropout': self.dropout,
             'batch_norm': self.batch_norm,
             'batch_renorm': self.batch_renorm,
