@@ -31,32 +31,31 @@ def main():
     # Build and train a first time the network
     gen = Gan(name="GAN_MNIST", use_gpu=False)
 
-    gen.build(G_layer_size=(256, 512),
-              D_layer_size=(512, 256),
-              input_dim=784,
+    gen.build(input_dim=784,
               noise_dim=100,
-              D_act_funct='leaky_relu',
-              G_act_funct='leaky_relu',
-              D_final_funct='sigmoid',
-              G_final_funct='sigmoid',
-              dropout=False,
-              batch_norm=False,
-              batch_renorm=False,
-              law_name='uniform',
-              law_param=1e-2,
-              penalization_rate=0.,
-              penalization_type='L2',
-              optimizer_name="Adam",
-              decay=0.99,
-              decay_renorm=0.99,
-              epsilon=0.001)
+              dis_layer_size=(512, 256),
+              gen_layer_size=(256, 512),
+              dis_act_funct='leaky_relu',
+              gen_act_funct='leaky_relu',
+              dis_final_funct='sigmoid',
+              gen_final_funct='sigmoid',
+              dis_law_name="uniform",
+              gen_law_name="uniform",
+              dis_law_param=1e-2,
+              gen_law_param=1e-2,
+              dis_dropout=False,
+              gen_dropout=False,
+              dis_batch_norm=False,
+              gen_batch_norm=False,
+              dis_batch_renorm=False,
+              gen_batch_renorm=False,
+              optimizer_name="Adam")
 
     print("First training begin:")
     gen.fit(x=x,
-            n_epoch=10,
+            n_epoch=1,
             batch_size=100,
             learning_rate=2e-4,
-            keep_proba=0.3,
             verbose=True)
 
     # Save the network and free the memory
@@ -70,7 +69,7 @@ def main():
     # Continue the training
     print("Second training begin:")
     gen.fit(x=x,
-            n_epoch=2,
+            n_epoch=1,
             batch_size=256,
             learning_rate=1e-4,
             verbose=True)

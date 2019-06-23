@@ -8,6 +8,48 @@ from core.deep_learning.layer import FullyConnected
 from core.deep_learning.loss import GanLoss
 from core.utils.validation import check_array
 
+class NeuralNetParams:
+
+    def __init__(self, input_dim: int,
+                       output_dim: int,
+                       layer_size: Sequence[int] = (),
+                       act_funct: Optional[str] = None,
+                       final_funct: Optional[str] = None,
+                       dropout: bool = False,
+                       batch_norm: bool = False,
+                       batch_renorm: bool = False,
+                       law_name: str = "unform",
+                       law_param: float = 0.01,
+                       decay: float = 0.99,
+                       epsilon: float = 0.001,
+                       decay_renorm: float = 0.99):
+
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.layer_size = layer_size
+        self.act_funct = act_funct
+        self.final_funct = final_funct
+        self.dropout = dropout
+        self.batch_norm = batch_norm
+        self.batch_renorm = batch_renorm
+        self.law_name = law_name
+        self.law_param = law_param
+        self.decay = decay
+        self.epsilon = epsilon
+        self.decay_renorm = decay_renorm
+
+
+class NeuralNetStruct:
+
+    def __init__(self):
+
+        self.x: Optional[tf.placeholder] = None
+        self.l_fc: Optional[List[FullyConnected]] = None
+        self.l_output: Optional[FullyConnected] = None
+        self.loss: Optional[tf.Tensor] = None
+        self.optimizer: Optional[tf.Tensor] = None
+
 
 class Gan(BaseArchitecture):
     """
@@ -58,48 +100,44 @@ class Gan(BaseArchitecture):
 
         super().__init__(name, use_gpu)
 
-        self.G_layer_size: Tuple = ()
-        self.D_layer_size: Tuple = ()
-        self.D_act_funct: str = 'relu'
-        self.G_act_funct: str = 'relu'
-        self.G_final_funct: str = 'tanh'
-        self.D_final_funct: str = 'tanh'
-
-        self.input_dim: Optional[int] = None
+        self.gen_params: Optional[NeuralNetParams] = None
+        self.dis_params: Optional[NeuralNetParams] = None
         self.noise_dim: Optional[int] = None
 
-        self.dropout: bool = False
-        self.batch_norm: bool = False
-        self.batch_renorm: bool = False
-        self.penalization_rate: float = 0.
-        self.penalization_type: Optional[str] = None
-        self.law_name: str = "uniform"
-        self.law_param: float = 0.1
-        self.decay: float = 0.99
-        self.epsilon: float = 0.001
-        self.decay_renorm: float = 0.99
-
-        self.x: Optional[tf.placeholder] = None
-        self.D_optimizer: Optional[tf.Tensor] = None
-        self.G_optimizer: Optional[tf.Tensor] = None
-
-        self.D_l_fc: Optional[List[FullyConnected]] = None
-        self.D_l_output: Optional[FullyConnected] = None
-        self.G_l_fc: Optional[List[FullyConnected]] = None
-        self.G_l_output: Optional[FullyConnected] = None
-        self.DG_l_fc: Optional[List[FullyConnected]] = None
-        self.DG_l_output: Optional[FullyConnected] = None
+        self.gen_network: Optional[NeuralNetStruct] = None
+        self.dis_network: Optional[NeuralNetStruct] = None
+        self.dis_gen_network: Optional[NeuralNetStruct] = None
 
         self.l_loss: Optional[GanLoss] = None
-        self.D_loss: Optional[tf.Tensor] = None
-        self.G_loss: Optional[tf.Tensor] = None
 
-    def build(self, D_layer_size: Sequence[int], G_layer_size: Sequence[int], input_dim: int, noise_dim: int,
-              D_act_funct: Optional[str] = "relu", G_act_funct: Optional[str] = "relu",
-              G_final_funct: Optional[str] = "relu", D_final_funct: str = 'sigmoid', law_name: str = "uniform",
-              law_param: float = 0.1, dropout: bool = True, batch_norm: bool = False, batch_renorm: bool = False,
-              decay: float = 0.999, decay_renorm: float = 0.99, epsilon: float = 0.001, penalization_rate: float = 0.,
-              penalization_type: Optional[str] = None, optimizer_name: str = "Adam") -> None:
+
+
+    def build(self,
+              input_dim: int,
+              noise_dim: int,
+              dis_layer_size: Sequence[int] = (100,),
+              gen_layer_size: Sequence[int] = (100,),
+              dis_act_funct: Optional[str] = "relu",
+              gen_act_funct: Optional[str] = "relu",
+              gen_final_funct: Optional[str] = "relu",
+              dis_final_funct: str = 'sigmoid',
+              dis_law_name: str = "uniform",
+              gen_law_name: str = "uniform",
+              dis_law_param: float = 0.1,
+              gen_law_param: float = 0.1,
+              dis_dropout: bool = False,
+              gen_dropout: bool = False,
+              dis_batch_norm: bool = False,
+              gen_batch_norm: bool = False,
+              dis_batch_renorm: bool = False,
+              gen_batch_renorm: bool = False,
+              dis_decay: float = 0.99,
+              gen_decay: float = 0.99,
+              dis_decay_renorm: float = 0.99,
+              gen_decay_renorm: float = 0.99,
+              dis_epsilon: float = 0.001,
+              gen_epsilon: float = 0.001,
+              optimizer_name: str = "Adam") -> None:
 
         """
         Build the network architecture.
@@ -154,110 +192,114 @@ class Gan(BaseArchitecture):
 
         """
 
-        super().build(D_layer_size=D_layer_size,
-                      G_layer_size=G_layer_size,
-                      noise_dim=noise_dim,
-                      input_dim=input_dim,
-                      D_act_funct=D_act_funct,
-                      G_act_funct=G_act_funct,
-                      D_final_funct=D_final_funct,
-                      G_final_funct=G_final_funct,
-                      law_name=law_name,
-                      law_param=law_param,
-                      dropout=dropout,
-                      batch_norm=batch_norm,
-                      batch_renorm=batch_renorm,
-                      decay=decay,
-                      decay_renorm=decay_renorm,
-                      epsilon=epsilon,
-                      penalization_rate=penalization_rate,
-                      penalization_type=penalization_type,
-                      optimizer_name=optimizer_name)
+        self.gen_params = NeuralNetParams(input_dim=noise_dim,
+                                          output_dim=input_dim,
+                                          layer_size=gen_layer_size,
+                                          act_funct=gen_act_funct,
+                                          final_funct=gen_final_funct,
+                                          dropout=gen_dropout,
+                                          batch_norm=gen_batch_norm,
+                                          batch_renorm=gen_batch_renorm,
+                                          law_name=gen_law_name,
+                                          law_param=gen_law_param,
+                                          decay=gen_decay,
+                                          epsilon=gen_epsilon,
+                                          decay_renorm=gen_decay_renorm)
 
-    def _build_sub_network(self, x: tf.placeholder, layer_size: Sequence[int], output_dim: int, name: str,
-                           act_funct: Optional[str] = 'relu', final_funct: Optional[str] = None,
+        self.dis_params = NeuralNetParams(input_dim=input_dim,
+                                          output_dim=1,
+                                          layer_size=dis_layer_size,
+                                          act_funct=dis_act_funct,
+                                          final_funct=dis_final_funct,
+                                          dropout=dis_dropout,
+                                          batch_norm=dis_batch_norm,
+                                          batch_renorm=dis_batch_renorm,
+                                          law_name=dis_law_name,
+                                          law_param=dis_law_param,
+                                          decay=dis_decay,
+                                          epsilon=dis_epsilon,
+                                          decay_renorm=dis_decay_renorm)
+
+        super().build(optimizer_name=optimizer_name, noise_dim=noise_dim)
+
+    def _build_sub_network(self,
+                           net_params: NeuralNetParams,
+                           net_struct: NeuralNetStruct,
+                           name: str,
                            weights: Optional[Sequence[tf.Variable]] = None,
-                           bias: Optional[Sequence[tf.Variable]] = None) -> Tuple[List[FullyConnected], FullyConnected]:
+                           bias: Optional[Sequence[tf.Variable]] = None):
 
         # Define all fully connected layer
-        l_fc = []
+        net_struct.l_fc = []
         i = 0
-        x_out = x
-        for s in layer_size:
-            l_fc.append(
+        x_out = net_struct.x
+        for s in net_params.layer_size:
+            net_struct.l_fc.append(
                 FullyConnected(size=s,
-                               act_funct=act_funct,
+                               act_funct=net_params.act_funct,
                                keep_proba=self.keep_proba,
-                               dropout=self.dropout,
-                               batch_norm=self.batch_norm,
-                               batch_renorm=self.batch_renorm,
+                               dropout=net_params.dropout,
+                               batch_norm=net_params.batch_norm,
+                               batch_renorm=net_params.batch_renorm,
                                is_training=self.is_training,
                                name=f"FcLayer_{name}_{i}",
-                               law_name=self.law_name,
-                               law_param=self.law_param,
-                               decay=self.decay,
-                               decay_renorm=self.decay_renorm,
-                               epsilon=self.epsilon,
+                               law_name=net_params.law_name,
+                               law_param=net_params.law_param,
+                               decay=net_params.decay,
+                               decay_renorm=net_params.decay_renorm,
+                               epsilon=net_params.epsilon,
                                rmin=self.rmin,
                                rmax=self.rmax,
                                dmax=self.dmax))
 
             w = None if weights is None else weights[i]
             b = None if bias is None else bias[i]
-            x_out = l_fc[-1].build(x_out, w, b)
+            x_out = net_struct.l_fc[-1].build(x_out, w, b)
             i += 1
 
         # Define the final output layer
-        l_output = FullyConnected(size=output_dim,
-                                  act_funct=final_funct,
-                                  name=f"OutputLayer_{name}",
-                                  law_name=self.law_name,
-                                  law_param=self.law_param)
+        net_struct.l_output = FullyConnected(size=net_params.output_dim,
+                                             act_funct=net_params.final_funct,
+                                             name=f"OutputLayer_{name}",
+                                             law_name=net_params.law_name,
+                                             law_param=net_params.law_param)
 
         w = None if weights is None else weights[-1]
         b = None if bias is None else bias[-1]
-        l_output.build(x_out, w, b)
-
-        return l_fc, l_output
+        net_struct.l_output.build(x_out, w, b)
 
     def _build(self) -> None:
 
         """Build the MLP Network architecture."""
         super()._build()
 
-        # Define input and noise tensor
-        self.x = self._placeholder(tf.float32, (None, self.input_dim), name="x")
-        self.z = self._placeholder(tf.float32, (None, self.noise_dim), name="z")
+        # Build the discriminator
+        self.dis_network = NeuralNetStruct()
+        self.dis_network.x = self._placeholder(tf.float32, (None, self.dis_params.input_dim), name="x_dis")
+        self._build_sub_network(net_params=self.dis_params, net_struct=self.dis_network, name="dis")
+        list_dis_var = tf.global_variables()
 
-        # Build all Discriminator and Generator layers
-        self.D_l_fc, self.D_l_output = self._build_sub_network(self.x, self.D_layer_size, 1, "D",
-                                                               act_funct=self.D_act_funct,
-                                                               final_funct=self.D_final_funct)
+        # Build the generator
+        self.gen_network = NeuralNetStruct()
+        self.gen_network.x = self._placeholder(tf.float32, (None, self.gen_params.input_dim), name="x_gen")
+        self._build_sub_network(net_params=self.gen_params, net_struct=self.gen_network, name="gen")
+        list_gen_var = list(filter(lambda v: v not in list_dis_var, tf.global_variables()))
 
-        list_D_var = tf.global_variables()
+        # Build the Dis(Gen) network
+        self.dis_gen_network = NeuralNetStruct()
+        self.dis_gen_network.x = self.gen_network.l_output.x_out
+        self._build_sub_network(net_params=self.dis_params, net_struct=self.dis_gen_network, name="dis_gen",
+                                weights= [l.w for l in self.dis_network.l_fc] + [self.dis_network.l_output.w],
+                                bias=[l.b for l in self.dis_network.l_fc] + [self.dis_network.l_output.b])
 
-        self.G_l_fc, self.G_l_output = self._build_sub_network(self.z, self.G_layer_size, self.input_dim, "G",
-                                                               act_funct=self.G_act_funct,
-                                                               final_funct=self.G_final_funct)
-
-        list_G_var = list(filter(lambda v: v not in list_D_var, tf.global_variables()))
-
-        # Build all D(G) layers
-        weights = [l.w for l in self.D_l_fc] + [self.D_l_output.w]
-        bias = [l.b for l in self.D_l_fc] + [self.D_l_output.b]
-        self.DG_l_fc, self.DG_l_output = self._build_sub_network(self.G_l_output.x_out, self.D_layer_size,
-                                                                 1, "DG", act_funct=self.D_act_funct,
-                                                                 final_funct=self.D_final_funct,
-                                                                 weights=weights, bias=bias)
-
-        # Set the GAN loss function
+        # Set all loss
         self.l_loss = GanLoss(name="GanLoss")
-        (self.D_loss,
-         self.G_loss) = self.l_loss.build(self.D_l_output.x_out, self.DG_l_output.x_out)
+        self.dis_network.loss, self.gen_network.loss = self.l_loss.build(self.dis_network.l_output.x_out,
+                                                                         self.dis_gen_network.l_output.x_out)
 
-        # Set the optimizer
-        self.D_optimizer = self._minimize(self.D_loss, name="D_optimizer", var_list=list_D_var)
-        self.G_optimizer = self._minimize(self.G_loss, name="G_optimizer", var_list=list_G_var)
+        # Set all optimizer
+        self.dis_network.optimizer = self._minimize(self.dis_network.loss, name="dis_optimizer", var_list=list_dis_var)
+        self.gen_network.optimizer = self._minimize(self.gen_network.loss, name="gen_optimizer", var_list=list_gen_var)
 
     def fit(self, x: np.ndarray, n_epoch: int = 1, batch_size: int = 10, learning_rate: float = 0.001,
             keep_proba: float = 1., rmax: float = 3., rmin: float = 0.33, dmax: float = 5,
@@ -300,25 +342,29 @@ class Gan(BaseArchitecture):
 
         """
 
-        check_array(x, shape=(-1, self.input_dim))
+        check_array(x, shape=(-1, self.dis_params.input_dim))
         N = len(x)
         n_split = N // batch_size
         sample_index = np.arange(len(x))
+        dis_feed_dict = self._get_feed_dict(True, learning_rate, keep_proba, rmin, rmax, dmax)
+        gen_feed_dict = self._get_feed_dict(True, learning_rate, keep_proba, rmin, rmax, dmax)
 
         with self.graph.as_default():
             for epoch in range(n_epoch):
                 np.random.shuffle(sample_index)
                 for batch_index in np.array_split(sample_index, n_split):
+                    # Update Discriminator
                     z = np.random.uniform(-1, 1, (len(batch_index), self.noise_dim))
-                    feed_dict = self._get_feed_dict(True, learning_rate, keep_proba, rmin, rmax, dmax)
-                    feed_dict.update({self.x: x[batch_index, :],
-                                      self.z: z})
-                    _, D_loss = self.sess.run([self.D_optimizer, self.D_loss], feed_dict=feed_dict)
-                    feed_dict = self._get_feed_dict(True, learning_rate, keep_proba, rmin, rmax, dmax)
-                    z = np.random.uniform(-1, 1, (len(batch_index), self.noise_dim))
-                    feed_dict.update({self.z: z})
-                    _, G_loss = self.sess.run([self.G_optimizer, self.G_loss], feed_dict=feed_dict)
-                    self.learning_curve.append((D_loss, G_loss))
+                    dis_feed_dict.update({self.dis_network.x: x[batch_index, :], self.gen_network.x: z})
+                    _, dis_loss = self.sess.run([self.dis_network.optimizer, self.dis_network.loss],
+                                              feed_dict=dis_feed_dict)
+                    # Update Generator
+                    z = np.random.uniform(-1, 1, (batch_size, self.noise_dim))
+                    gen_feed_dict.update({self.gen_network.x: z})
+                    _, gen_loss = self.sess.run([self.gen_network.optimizer, self.gen_network.loss],
+                                                feed_dict=gen_feed_dict)
+                    # Update Learning Curve
+                    self.learning_curve.append((dis_loss, gen_loss))
 
                 if verbose:
                     print(f'Epoch {epoch}: {self.learning_curve[-1]}')
@@ -345,8 +391,8 @@ class Gan(BaseArchitecture):
 
         with self.graph.as_default():
             feed_dict = self._get_feed_dict(is_training=False, keep_proba=1.)
-            feed_dict.update({self.z: np.random.uniform(-1, 1, (N, self.noise_dim))})
-            return self.sess.run(self.G_l_output.x_out, feed_dict=feed_dict)
+            feed_dict.update({self.gen_network.x: np.random.uniform(-1, 1, (N, self.noise_dim))})
+            return self.sess.run(self.gen_network.l_output.x_out, feed_dict=feed_dict)
 
     def get_params(self) -> Dict[str, Any]:
 
@@ -361,23 +407,11 @@ class Gan(BaseArchitecture):
         """
 
         params = {
-            'G_layer_size': self.G_layer_size,
-            'D_layer_size': self.D_layer_size,
-            'input_dim': self.input_dim,
-            'noise_dim': self.noise_dim,
-            'D_act_funct': self.D_act_funct,
-            'G_act_funct': self.G_act_funct,
-            'G_final_funct': self.G_final_funct,
-            'D_final_funct': self.D_final_funct,
-            'dropout': self.dropout,
-            'batch_norm': self.batch_norm,
-            'batch_renorm': self.batch_renorm,
-            'law_name': self.law_name,
-            'law_param': self.law_param,
-            'penalization_rate': self.penalization_rate,
-            'decay': self.decay,
-            'decay_renorm': self.decay_renorm,
-            'epsilon': self.epsilon}
+            "gen_params": self.gen_params,
+            "dis_params": self.dis_params,
+            "noise_dim": self.noise_dim,
+            "optimizer_name": self.optimizer_name,
+        }
 
         params.update(super().get_params())
 

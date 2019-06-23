@@ -192,11 +192,11 @@ class GanLoss(BaseOperator):
     def __init__(self, name: str = "mean_square_error"):
         super().__init__(name)
 
-        self.D_out: Optional[tf.Tensor] = None
-        self.DG_out: Optional[tf.Tensor] = None
+        self.dis_out: Optional[tf.Tensor] = None
+        self.dis_gen_out: Optional[tf.Tensor] = None
 
-        self.D_loss: Optional[tf.Tensor] = None
-        self.G_loss: Optional[tf.Tensor] = None
+        self.dis_loss: Optional[tf.Tensor] = None
+        self.gen_loss: Optional[tf.Tensor] = None
 
     def check_input(self) -> None:
         """
@@ -209,38 +209,38 @@ class GanLoss(BaseOperator):
         Set the loss tensor.
         """
 
-        self.D_out = tf.identity(self.D_out, name="D_out")
-        self.DG_out = tf.identity(self.DG_out, name="DG_out")
+        self.dis_out = tf.identity(self.dis_out, name="dis_out")
+        self.dis_gen_out = tf.identity(self.dis_gen_out, name="dis_gen_out")
 
         cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
-        self.D_loss = -tf.reduce_mean(tf.log(self.D_out + 1e-8) + tf.log(1. - self.DG_out + 1e-8))
-        self.G_loss = -tf.reduce_mean(tf.log(self.DG_out + 1e-8))
+        self.dis_loss = -tf.reduce_mean(tf.log(self.dis_out + 1e-8) + tf.log(1. - self.dis_gen_out + 1e-8))
+        self.gen_loss = -tf.reduce_mean(tf.log(self.dis_gen_out + 1e-8))
 
-        self.D_loss = tf.identity(self.D_loss, name='D_loss')
-        self.G_loss = tf.identity(self.G_loss, name='G_loss')
+        self.dis_loss = tf.identity(self.dis_loss, name='dis_loss')
+        self.gen_loss = tf.identity(self.gen_loss, name='gen_loss')
 
-    def build(self, D_out: tf.Tensor, DG_out: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
-        super().build(D_out, DG_out)
+    def build(self, dis_out: tf.Tensor, dis_gen_out: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
+        super().build(dis_out, dis_gen_out)
 
-        return self.D_loss, self.G_loss
+        return self.dis_loss, self.gen_loss
 
-    def _build(self, D_out: tf.Tensor, DG_out: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
-        self.D_out = D_out
-        self.DG_out = DG_out
+    def _build(self, dis_out: tf.Tensor, dis_gen_out: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
+        self.dis_out = dis_out
+        self.dis_gen_out = dis_gen_out
 
         self.check_input()
 
         self._set_loss()
 
-        return self.D_loss, self.G_loss
+        return self.dis_loss, self.gen_loss
 
     def restore(self) -> None:
         """
         Restore all loss tensor from the current graph.
         """
 
-        self.D_out = get_tf_tensor(name='D_out')
-        self.DG_out = get_tf_tensor(name='DG_out')
-        self.D_loss = get_tf_tensor(name='D_loss')
-        self.G_loss = get_tf_tensor(name='G_loss')
+        self.dis_out = get_tf_tensor(name='dis_out')
+        self.dis_gen_out = get_tf_tensor(name='dis_gen_out')
+        self.dis_loss = get_tf_tensor(name='dis_loss')
+        self.gen_loss = get_tf_tensor(name='gen_loss')
