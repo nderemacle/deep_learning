@@ -53,7 +53,7 @@ def main():
 
     print("First training begin:")
     gen.fit(x=x,
-            n_epoch=1,
+            n_epoch=10,
             batch_size=100,
             learning_rate=2e-4,
             verbose=True)

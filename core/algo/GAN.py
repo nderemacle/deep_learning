@@ -11,7 +11,8 @@ from core.utils.validation import check_array
 
 class NeuralNetParams:
 
-    def __init__(self, input_dim: int,
+    def __init__(self,
+                 input_dim: int,
                  output_dim: int,
                  layer_size: Sequence[int] = (),
                  act_funct: Optional[Union[str, Callable]] = None,
@@ -24,6 +25,7 @@ class NeuralNetParams:
                  decay: float = 0.99,
                  epsilon: float = 0.001,
                  decay_renorm: float = 0.99):
+
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.layer_size = layer_size
@@ -42,6 +44,7 @@ class NeuralNetParams:
 class NeuralNetStruct:
 
     def __init__(self):
+
         self.x: Optional[tf.placeholder] = None
         self.l_fc: Optional[List[FullyConnected]] = None
         self.l_output: Optional[FullyConnected] = None
@@ -368,7 +371,40 @@ class Gan(BaseArchitecture):
                 if verbose:
                     print(f'Epoch {epoch}: {self.learning_curve[-1]}')
 
-    def predict(self, N: int) -> np.ndarray:
+    def predict(self, x: np.ndarray, batch_size: Optional[int] = None) -> np.ndarray:
+
+        """
+        Make predictions using the ``x`` array. If ``batch_size`` is not None predictions are predicted by mini-batch.
+
+        Args
+        ----
+
+            x : array with shape (n_observation, input_dim)
+                Array of input which must have a dimension equal to input_dim.
+
+            batch_size : int, None
+                Number of observations to used for each prediction step. If None predict all label using a single step.
+
+        Returns
+        -------
+            array with shape (n_observation,)
+                Array of predictions
+         """
+
+        check_array(x, shape=(-1, self.dis_params.input_dim))
+
+        n_split = 1 if batch_size is None else len(x) // batch_size
+
+        with self.graph.as_default():
+            feed_dict = self._get_feed_dict(is_training=False, keep_proba=1.)
+            y_predict = []
+            for x_batch in [x] if batch_size is None else np.array_split(x, n_split, axis=0):
+                feed_dict.update({self.dis_network.x: x_batch})
+                y_predict.append(self.sess.run(self.dis_network.l_output.x_out, feed_dict=feed_dict))
+
+            return np.concatenate(y_predict, 0)
+
+    def generate(self, N: int) -> np.ndarray:
 
         """
         Make predictions using the ``x`` array. If ``batch_size`` is not None predictions are predicted by mini-batch.
