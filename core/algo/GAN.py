@@ -20,7 +20,7 @@ class NeuralNetParams:
                  dropout: bool = False,
                  batch_norm: bool = False,
                  batch_renorm: bool = False,
-                 law_name: str = "unform",
+                 law_name: str = "uniform",
                  law_param: float = 0.01,
                  decay: float = 0.99,
                  epsilon: float = 0.001,
@@ -44,7 +44,6 @@ class NeuralNetParams:
 class NeuralNetStruct:
 
     def __init__(self):
-
         self.x: Optional[tf.placeholder] = None
         self.l_fc: Optional[List[FullyConnected]] = None
         self.l_output: Optional[FullyConnected] = None
@@ -54,12 +53,11 @@ class NeuralNetStruct:
 
 class Gan(BaseArchitecture):
     """
-    This class set the major core of a Multi Layer Perceptron neural network. The neural network architecture
-    takes as input a linear vector of input data put in a succession of fully connected layers. In the end a
-    last layer reduce the dimensionality of the network to match with the number of target variables to predict.
-
-    The abstract schema assume the child class must define the methods to set the loss function. In ths way it is simple
-    to enlarge this architecture to any type of problems.
+    This class allows to train a Generative Adversary Neural Network. A GAN is composed by two neural network: the
+    discriminator and the generator. The generator aims to generates fake input in order to increase the error of the
+    discriminator which aims to predict if an input come from the generator or from real data. Both network play against
+    each other making at the optimum the generator generate sample such the discriminator is not able to know which
+    sample is real or fake.
 
     Args
     ----
@@ -74,27 +72,25 @@ class Gan(BaseArchitecture):
     Attributes
     ----------
 
+        gen_params: NeuralNetParams, None
+            Parameters of the generator
 
-        x: tf.Tensor, None
-            Input tensor of the network.
+        dis_params: NeuralNetParams, None
+            Parameters of the discriminator
 
-        x_out: tf.Tensor, None
-            Output of the network.
+        noise_dim: int, None
+            Dimension of the nois array.
 
-        loss: tf.Tensor, None
-            Loss function optimized to train the MLP.
+        gen_network: NeuralNetStruct, None
+            Object owning all layer of the generator.
 
-        y_pred: tf.Tensor, None
-            Prediction tensor.
+        dis_network: NeuralNetStruct, None
+            Object owning all layer of the discriminator.
 
-        l_fc: List[FullyConnected], None
-            List containing all fully connected layer objects.
+        l_loss: GanLoss, None
+            Loss layer of the gan.
 
-        l_output: FullyConnected, None
-            Final layer for network output reduction.
 
-        l_loss: AbstractLoss, None
-            Loss layer object.
     """
 
     def __init__(self, name: str = 'BaseGan', use_gpu: bool = False):
@@ -143,51 +139,86 @@ class Gan(BaseArchitecture):
 
         Args
         ----
+            input_dim: int
+                DImension of input to generate.
 
-            layer_size: Sequence[int]
+            noise_dim: int
+                Size of the array of random noise.
+
+            dis_layer_size: Sequence[int]
                 Number of neurons for each fully connected step.
 
-            input_dim: int
-                Number of input data.
+            gen_layer_size: Sequence[int]
+                Number of neurons for each fully connected step.
 
-            act_funct: str, None
+            dis_act_funct: str, None
                 Name of the activation function. If None, no activation function is used.
 
-            batch_norm: bool
-                If True apply the batch normalization method.
+            gen_act_funct: str, None
+                Name of the activation function. If None, no activation function is used.
 
-            batch_renorm: bool
-                If True apply the batch renormalization method.
+            dis_final_funct: str, None, Callable
+                Name or callable object of the function to use for the final layer. If None, no function is used.
 
-            dropout: bool
-                Whether to use dropout or not.
+            gen_final_funct: str, None, Callable
+                Name or callable object of the function to use for the final layer. If None, no function is used.
 
-            penalization_rate : float
-                Penalization rate if regularization is used.
-
-            penalization_type: None, str
-                Indicates the type of penalization to use if not None.
-
-            law_name: str
+            dis_law_name: str
                 Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
 
-            law_param: float
+            gen_law_name: str
+                Law of the random law to used. Must be "normal" for normal law or "uniform" for uniform law.
+
+            dis_law_param: float
                 Law parameters dependent to the initialised law choose. If uniform, all tensor
                 elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
                 using a N(0, law_parameters).
 
-            decay: float
+            gen_law_param: float
+                Law parameters dependent to the initialised law choose. If uniform, all tensor
+                elements are initialized using U(-law_params, law_params) and if normal all parameters are initialized
+                using a N(0, law_parameters).
+
+            dis_dropout: bool
+                Whether to use dropout or not.
+
+            gen_dropout: bool
+                Whether to use dropout or not.
+
+            dis_batch_norm: bool
+                If True apply the batch normalization method.
+
+            gen_batch_norm: bool
+                If True apply the batch normalization method.
+
+            dis_batch_renorm: bool
+                If True apply the batch renormalization method.
+
+            gen_batch_renorm: bool
+                If True apply the batch renormalization method.
+
+            dis_decay: float
                 Decay used to update the moving average of the batch norm. The moving average is used to learn the
                 empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
 
-            epsilon: float
-                Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+            gen_decay: float
+                Decay used to update the moving average of the batch norm. The moving average is used to learn the
+                empirical mean and variance of the output layer. It is recommended to set this value between (0.9, 1.).
 
-            decay_renorm: float
+            dis_decay_renorm: float
                 Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
 
-            optimizer_name: str
-                Name of the optimization method use to train the network.
+            gen_decay_renorm: float
+                Decay used to update by moving average the mu and sigma parameters when batch renormalization is used.
+
+            dis_epsilon: float
+                Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+
+            gen_epsilon: float
+                Parameters used to avoid infinity problem when scaling the output layer during the batch normalization.
+
+            optimizer_name: sr
+                Name of the optimizer to use.
 
         """
 
@@ -227,6 +258,10 @@ class Gan(BaseArchitecture):
                            name: str,
                            weights: Optional[Sequence[tf.Variable]] = None,
                            bias: Optional[Sequence[tf.Variable]] = None):
+
+        """Build either the discriminator or the generator. If weights or biase are not None use it to initialise
+        all layer.
+        """
 
         # Define all fully connected layer
         net_struct.l_fc = []
@@ -272,7 +307,7 @@ class Gan(BaseArchitecture):
 
     def _build(self) -> None:
 
-        """Build the MLP Network architecture."""
+        """Build the Network architecture."""
         super()._build()
 
         # Build the discriminator
@@ -307,16 +342,13 @@ class Gan(BaseArchitecture):
             keep_proba: float = 1., rmax: float = 3., rmin: float = 0.33, dmax: float = 5,
             verbose: bool = True) -> None:
 
-        """ Fit the MLP ``n_epoch`` using the ``x`` and ``y`` array of observations.
+        """ Fit the GAN ``n_epoch`` using the ``x`` and ``y`` array of observations.
 
         Args
         ----
 
             x: array with shape (n_observation, input_dim)
                 Array of input which must have a dimension equal to input_dim.
-
-            y: array with shape (n_observation, output_dim)
-                Array of target which must have a dimension equal to output_dim.
 
             n_epoch: int
                 Number of epochs to train the neural network.
@@ -404,7 +436,7 @@ class Gan(BaseArchitecture):
 
             return np.concatenate(y_predict, 0)
 
-    def generate(self, N: int) -> np.ndarray:
+    def generate(self, n: int) -> np.ndarray:
 
         """
         Make predictions using the ``x`` array. If ``batch_size`` is not None predictions are predicted by mini-batch.
@@ -412,11 +444,8 @@ class Gan(BaseArchitecture):
         Args
         ----
 
-            x : array with shape (n_observation, input_dim)
-                Array of input which must have a dimension equal to input_dim.
-
-            batch_size : int, None
-                Number of observations to used for each prediction step. If None predict all label using a single step.
+            n: int
+                SIze of the sample to generate.
 
         Returns
         -------
@@ -426,7 +455,7 @@ class Gan(BaseArchitecture):
 
         with self.graph.as_default():
             feed_dict = self._get_feed_dict(is_training=False, keep_proba=1.)
-            feed_dict.update({self.gen_network.x: np.random.uniform(-1, 1, (N, self.noise_dim))})
+            feed_dict.update({self.gen_network.x: np.random.uniform(-1, 1, (n, self.noise_dim))})
             return self.sess.run(self.gen_network.l_output.x_out, feed_dict=feed_dict)
 
     def get_params(self) -> Dict[str, Any]:

@@ -13,7 +13,7 @@ from core.utils.validation import check_array
 
 class BaseMlp(BaseArchitecture):
     """
-    This class set the major core of a Multi Layer Perceptron neural network. The neural network architecture
+    This class set the major core of a Multi Layer Perceptron. The neural network architecture
     takes as input a linear vector of input data put in a succession of fully connected layers. In the end a
     last layer reduce the dimensionality of the network to match with the number of target variables to predict.
 
