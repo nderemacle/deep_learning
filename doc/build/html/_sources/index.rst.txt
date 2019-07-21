@@ -29,6 +29,13 @@ ConvNet Algorithm
    :inherited-members:
    :show-inheritance:
 
+GAN Algorithm
+-----------------
+
+.. automodule:: core.algo.GAN
+   :members:
+   :inherited-members:
+   :show-inheritance:
 
 Deep Learning
 =============

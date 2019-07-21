@@ -199,9 +199,6 @@ class GanLoss(BaseOperator):
         self.gen_loss: Optional[tf.Tensor] = None
 
     def check_input(self) -> None:
-        """
-        Check all input tensors are 2 dimensional.
-        """
         pass
 
     def _set_loss(self) -> None:
@@ -211,8 +208,6 @@ class GanLoss(BaseOperator):
 
         self.dis_out = tf.identity(self.dis_out, name="dis_out")
         self.dis_gen_out = tf.identity(self.dis_gen_out, name="dis_gen_out")
-
-        cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
         self.dis_loss = -tf.reduce_mean(tf.log(self.dis_out + 1e-8) + tf.log(1. - self.dis_gen_out + 1e-8))
         self.gen_loss = -tf.reduce_mean(tf.log(self.dis_gen_out + 1e-8))

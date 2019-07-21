@@ -342,7 +342,7 @@ class Gan(BaseArchitecture):
             keep_proba: float = 1., rmax: float = 3., rmin: float = 0.33, dmax: float = 5,
             verbose: bool = True) -> None:
 
-        """ Fit the GAN ``n_epoch`` using the ``x`` and ``y`` array of observations.
+        """ Fit the GAN ``n_epoch`` using the ``x`` array of observations.
 
         Args
         ----
@@ -439,7 +439,7 @@ class Gan(BaseArchitecture):
     def generate(self, n: int) -> np.ndarray:
 
         """
-        Make predictions using the ``x`` array. If ``batch_size`` is not None predictions are predicted by mini-batch.
+        Generate random sample using the generator.
 
         Args
         ----
